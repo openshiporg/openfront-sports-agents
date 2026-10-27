@@ -6,6 +6,8 @@ A modern full-stack application combining Next.js 15 with KeystoneJS 6, featurin
 
 [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/TK5wC1?referralCode=I_tWSs)
 
+**Documentation:** [docs.openship.org/docs/openfront/sports-agents](https://docs.openship.org/docs/openfront/sports-agents)
+
 ## Architecture Overview
 
 This project features a **modern admin architecture** with:
