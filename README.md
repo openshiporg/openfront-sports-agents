@@ -1,3 +1,5 @@
+![openfront-sports-agents](.github/logo.svg)
+
 # Next.js + KeystoneJS Starter
 
 A modern full-stack application combining Next.js 15 with KeystoneJS 6, featuring admin dashboard implementation and sophisticated role-based permissions.
