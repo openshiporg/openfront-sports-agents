@@ -1,5 +1,6 @@
 import {permissions} from '../access';
 import {command,audit,transition,humanCode,authorizeAthlete} from '../lib/agencyCommand';
+import {applyInvoiceReceipt} from '../lib/invoiceReceipt';
 import {commission,allocateCommission,installmentAmounts,trustBalance,exactReversal} from '../lib/commission';
 async function locate(context:any,model:string,id:string,include:any={}){if(!context.session)throw new Error('Not authorized');const row=await context.prisma[model].findUnique({where:{id},include});if(!row)throw new Error('Record not found');return row;}
 export const agencyMutations = {
@@ -36,7 +37,7 @@ export const agencyMutations = {
  if(!a.scheduledPaymentIds?.length||new Set(a.scheduledPaymentIds).size!==a.scheduledPaymentIds.length)throw new Error('Unique scheduled payments required');
  const rows=await tx.scheduledPayment.findMany({where:{id:{in:a.scheduledPaymentIds},athleteId:a.athleteId,status:'received',invoiceId:null}});if(rows.length!==a.scheduledPaymentIds.length||new Set(rows.map((r:any)=>r.currencyCode)).size!==1)throw new Error('Received uninvoiced payments in one currency required');
  const invoice=await tx.commissionInvoice.create({data:{athleteId:a.athleteId,number:humanCode('INV'),totalCents:rows.reduce((n:number,r:any)=>n+r.commissionCents,0),currencyCode:rows[0].currencyCode,status:'draft',issuedAt:new Date(),dueAt:new Date(Date.now()+30*86400000)}});
- for(const row of rows){await tx.commissionInvoiceLine.create({data:{invoiceId:invoice.id,scheduledPaymentId:row.id,description:'Commission '+row.sourceKey,grossCents:row.grossCents,commissionBps:row.commissionBps,commissionCents:row.commissionCents,unitPriceCents:row.commissionCents,quantity:1,currencyCode:row.currencyCode}});await tx.scheduledPayment.update({where:{id:row.id},data:{invoiceId:invoice.id}});}
+ for(const row of rows){await tx.commissionInvoiceLine.create({data:{invoiceId:invoice.id,scheduledPaymentId:row.id,description:'Commission on payment due '+new Date(row.dueAt).toISOString().slice(0,10),grossCents:row.grossCents,commissionBps:row.commissionBps,commissionCents:row.commissionCents,unitPriceCents:row.commissionCents,quantity:1,currencyCode:row.currencyCode}});await tx.scheduledPayment.update({where:{id:row.id},data:{invoiceId:invoice.id}});}
  await audit(tx,c,'invoice.created','CommissionInvoice',invoice.id,null,invoice,a.idempotencyKey);return invoice;
  });},
  async voidCommissionInvoice(_:unknown,a:any,c:any){const row=await locate(c,'commissionInvoice',a.invoiceId);return command(c,'canManageCommissions',row.athleteId,'voidCommissionInvoice',a,async tx=>{
@@ -46,11 +47,7 @@ export const agencyMutations = {
  });},
  async sendCommissionInvoice(_:unknown,a:any,c:any){const row=await locate(c,'commissionInvoice',a.invoiceId);return command(c,'canManageCommissions',row.athleteId,'sendCommissionInvoice',a,async tx=>transition(tx,c,'commissionInvoice',row.id,['draft'],'sent',a.idempotencyKey));},
  async recordInvoicePayment(_:unknown,a:any,c:any){const row=await locate(c,'commissionInvoice',a.invoiceId);return command(c,'canManageCommissions',row.athleteId,'recordInvoicePayment',a,async tx=>{
- const invoice=await tx.commissionInvoice.findUnique({where:{id:row.id}});if(!Number.isSafeInteger(a.amountCents)||a.amountCents<1||a.amountCents>invoice.totalCents-invoice.paidCents||!a.reference?.trim())throw new Error('Valid payment amount and reference required');
- const paid=invoice.paidCents+a.amountCents;await transition(tx,c,'commissionInvoice',row.id,['sent','partially_paid'],paid===invoice.totalCents?'paid':'partially_paid',a.idempotencyKey,{paidCents:paid});
- const entry=await tx.commissionLedgerEntry.create({data:{entryKey:'receipt:'+a.idempotencyKey,athleteId:row.athleteId,invoiceId:row.id,entryType:'receipt',amountCents:-BigInt(a.amountCents),reason:a.reference,preparedById:c.session.itemId,occurredAt:new Date(),currencyCode:invoice.currencyCode}});
- const splits=await tx.agentSplit.findMany({where:{athleteId:row.athleteId}});if(splits.length){for(const split of allocateCommission(a.amountCents,splits.map((s:any)=>({userId:s.userId,shareBps:s.shareBps}))))await tx.commissionLedgerEntry.create({data:{entryKey:'split:'+entry.id+':'+split.userId,athleteId:row.athleteId,invoiceId:row.id,payeeUserId:split.userId,entryType:'split_to_agent',amountCents:BigInt(split.amountCents),reason:'Agent receipt allocation',preparedById:c.session.itemId,occurredAt:new Date(),currencyCode:invoice.currencyCode}});}
- return {id:invoice.id,paidCents:paid,status:paid===invoice.totalCents?'paid':'partially_paid'};
+ return applyInvoiceReceipt(tx,c,row.id,a.amountCents,a.reference,'receipt:'+a.idempotencyKey,a.idempotencyKey);
  });},
  async reverseLedgerEntry(_:unknown,a:any,c:any){const row=await locate(c,'commissionLedgerEntry',a.entryId);return command(c,'canManageCommissions',row.athleteId,'reverseLedgerEntry',a,async tx=>{
  const original=await tx.commissionLedgerEntry.findUnique({where:{id:row.id}});const reversed=await tx.commissionLedgerEntry.findUnique({where:{reversalKey:row.id}});if(!a.reason?.trim())throw new Error('Reversal reason required');

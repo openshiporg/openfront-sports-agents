@@ -1,14 +1,41 @@
 ![openfront-sports-agents](.github/logo.svg)
 
-# Next.js + KeystoneJS Starter
+# Openfront Sports Agents
 
-A modern full-stack application combining Next.js 15 with KeystoneJS 6, featuring admin dashboard implementation and sophisticated role-based permissions.
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fjunaid33%2Fnext-keystone-starter%2F&stores=[{"type"%3A"postgres"}])
-
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/TK5wC1?referralCode=I_tWSs)
+Open-source agency software for sports agents and NIL agencies: athlete roster and recruiting, representation agreements, playing contracts, endorsement deals, and commission billing that follows the money. Built on Next.js and KeystoneJS 6.
 
 **Documentation:** [docs.openship.org/docs/openfront/sports-agents](https://docs.openship.org/docs/openfront/sports-agents)
+
+## What is built
+
+**Data model (34 lists)**
+- Agency settings, staff roles, agent certifications (with expiry), teams.
+- Athletes with recruiting stage and a contact window, representation agreements (union cap enforced, one active agreement per athlete and scope), contacts, brands, interactions.
+- Playing contracts with contract years and incentives; endorsement deals with deliverables and an exclusivity conflict check.
+- Money: scheduled payments, commission invoices and snapshot lines, an append-only commission ledger with exact one-time reversals, agent splits, client trust accounts and entries, documents, tasks.
+- Append-only audit events, idempotency keys, and the Stripe/manual payment models (provider, collection, session, payment, refund, webhook event).
+- Money is integer cents (ledger amounts are bigint) with a currency code; rates are basis points.
+
+**Domain operations (custom GraphQL, each audited and idempotent, run under a per-athlete advisory lock)**
+`signRepresentationAgreement`, `recordContractSigned`, `generatePaymentSchedule`, `markPaymentReceived`, `draftCommissionInvoice`, `sendCommissionInvoice`, `voidCommissionInvoice`, `recordInvoicePayment`, `reverseLedgerEntry`, `postTrustEntry`, `moveRecruitingStage`, `activateEndorsementDeal`, `completeDeliverable`, `generateAutoTasks`, `checkEndorsementConflicts`.
+Commission accrues when the athlete is paid (`floor(gross x bps / 10000)`, remainder recorded); agent splits use largest remainder. Pure money math is in `features/keystone/lib/commission.ts` with unit tests (`npm run test:security` runs the security tests; run `node --import tsx --test features/keystone/lib/*.test.ts` for all).
+
+**Dashboard (`/dashboard`)**: Money (receivable, expected 90-day commission, overdue payments, deliverables, expirations), Clients (roster and nine-tab detail), Recruiting board, Contracts, Endorsements (pipeline and deliverables), Commissions (payments, invoices, ledger, agent payouts), Trust, Brands and contacts, Tasks, Certifications, Payment providers, Settings. Permissions are role checkboxes; staff only see athletes they lead or support unless the role can view all clients.
+
+**Onboarding**: sidebar card, then a setup dialog with a complete or basic template (agency, staff, athletes, agreements, contracts, deals, invoices, ledger, trust).
+
+**Public site and client payments (no design applied yet)**: published athletes with a brand inquiry form (creates a contact, an interaction and a task), and an invoice lookup by email and invoice number that leads to a Stripe card payment and a confirmation page. These use only custom GraphQL operations with a signed per-invoice guest proof; raw lists are not exposed. Stripe runs in test mode with the keys in `.env`.
+
+**MCP**: the NKS MCP transport (`/api/mcp-transport`) works against this schema and respects the signed-in user's permissions. OAuth for MCP clients is included.
+
+## Run it
+
+```bash
+# create .env with DATABASE_URL, SESSION_SECRET, PUBLIC_SIGNUPS_ALLOWED=false and Stripe test keys
+npm install
+npm run dev            # applies migrations, then starts Next.js
+```
+Open `/dashboard/init` to create the first admin, then run setup from the sidebar.
 
 ## The Openfront Ecosystem
 
@@ -43,6 +70,7 @@ Every Openfront is open source and self-hostable. Try any of them on its live de
 | Openfront Sportsbook | Markets, bets and results | [openfront-sportsbook](https://github.com/openshiporg/openfront-sportsbook) | [sportsbook.openship.org](https://sportsbook.openship.org) | [Docs](https://docs.openship.org/docs/openfront/sportsbook) |
 | Openfront Financial | Accounts, portfolios and advisory | [openfront-financial](https://github.com/openshiporg/openfront-financial) | [financial.openship.org](https://financial.openship.org) | [Docs](https://docs.openship.org/docs/openfront/financial) |
 | Openfront Analytics | Privacy-friendly website analytics | [analytics](https://github.com/openshiporg/analytics) | [analytics.openship.org](https://analytics.openship.org) | [Docs](https://docs.openship.org/docs/openfront/analytics) |
+| Openfront Sports Agents | Athlete roster, contracts, endorsements and commission billing | [openfront-sports-agents](https://github.com/openshiporg/openfront-sports-agents) | | |
 | Openship | Order routing from sales channels to fulfillment | [openship](https://github.com/openshiporg/openship) | [os.openship.org](https://os.openship.org) | [Docs](https://docs.openship.org/docs/openship/ecommerce) |
 | Marketplace | Shop across Openfront stores | [marketplace](https://github.com/openshiporg/marketplace) | [marketplace.openship.org](https://marketplace.openship.org) | [Docs](https://docs.openship.org/docs/openfront/marketplace) |
 | **Openfront Sports Agents** (this repository) | Sports agency operations | [openfront-sports-agents](https://github.com/openshiporg/openfront-sports-agents) | [sports-agents.openship.org](https://sports-agents.openship.org) | [Docs](https://docs.openship.org/docs/openfront/sports-agents) |

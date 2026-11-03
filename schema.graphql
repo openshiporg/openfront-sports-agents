@@ -4488,7 +4488,9 @@ type Mutation {
   completeDeliverable(deliverableId: ID!, proofLink: String!, idempotencyKey: String!): AgencyJSON!
   activateEndorsementDeal(dealId: ID!, idempotencyKey: String!): AgencyJSON!
   generateAutoTasks: AgencyJSON!
-  payCommissionInvoice(invoiceId: ID!, idempotencyKey: String!): AgencyJSON!
+  submitInquiry(athleteId: ID!, name: String!, email: String!, organization: String, message: String!, idempotencyKey: String!): AgencyJSON!
+  payCommissionInvoice(invoiceId: ID!, proof: String, idempotencyKey: String!): AgencyJSON!
+  confirmCommissionPayment(paymentId: ID!, proof: String): AgencyJSON!
   ensureOnboardingRecord(entity: String!, data: AgencyJSON!): AgencyJSON!
   updateActiveUser(data: AgencyJSON!): AgencyJSON!
 }
@@ -4632,6 +4634,11 @@ type Query {
   myAthleteSummary: AgencyJSON!
   myDeliverables: AgencyJSON!
   myInvoices: AgencyJSON!
+  agencyName: String
+  agencyRoster: AgencyJSON!
+  agencyAthlete(athleteId: ID!): AgencyJSON!
+  lookupInvoice(email: String!, number: String!): AgencyJSON!
+  guestInvoice(invoiceId: ID!, proof: String): AgencyJSON!
 }
 
 union AuthenticatedItem = User

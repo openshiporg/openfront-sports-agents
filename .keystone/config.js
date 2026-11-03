@@ -5,6 +5,9 @@ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __esm = (fn, res) => function __init() {
+  return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+};
 var __export = (target, all) => {
   for (var name in all)
     __defProp(target, name, { get: all[name], enumerable: true });
@@ -26,6 +29,217 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+// features/keystone/utils/paymentState.ts
+function stripeRefundReference(id) {
+  if (id.startsWith("pi_")) return { payment_intent: id };
+  if (id.startsWith("ch_")) return { charge: id };
+  throw new Error("Stripe refund requires a payment intent or charge reference");
+}
+var init_paymentState = __esm({
+  "features/keystone/utils/paymentState.ts"() {
+    "use strict";
+  }
+});
+
+// features/integrations/payment/stripe.ts
+var stripe_exports = {};
+__export(stripe_exports, {
+  cancelPaymentFunction: () => cancelPaymentFunction,
+  capturePaymentFunction: () => capturePaymentFunction,
+  createPaymentFunction: () => createPaymentFunction,
+  generatePaymentLinkFunction: () => generatePaymentLinkFunction,
+  getPaymentStatusFunction: () => getPaymentStatusFunction,
+  handleWebhookFunction: () => handleWebhookFunction,
+  refundPaymentFunction: () => refundPaymentFunction
+});
+async function createPaymentFunction({ order, amount, currency, idempotencyKey }) {
+  const stripe = getStripeClient();
+  const paymentIntent = await stripe.paymentIntents.create(
+    {
+      amount,
+      currency: currency.toLowerCase(),
+      automatic_payment_methods: { enabled: true },
+      metadata: {
+        orderId: order?.id || "",
+        orderNumber: order?.orderNumber || ""
+      }
+    },
+    idempotencyKey ? { idempotencyKey } : void 0
+  );
+  return {
+    clientSecret: paymentIntent.client_secret,
+    paymentIntentId: paymentIntent.id
+  };
+}
+async function capturePaymentFunction({ paymentId, amount, idempotencyKey }) {
+  const stripe = getStripeClient();
+  const paymentIntent = await stripe.paymentIntents.capture(paymentId, {
+    ...amount == null ? {} : { amount_to_capture: amount }
+  }, idempotencyKey ? { idempotencyKey } : void 0);
+  return {
+    status: paymentIntent.status,
+    amount: paymentIntent.amount_received,
+    currencyCode: paymentIntent.currency.toUpperCase(),
+    data: paymentIntent
+  };
+}
+async function refundPaymentFunction({ paymentId, amount, idempotencyKey, refundId }) {
+  const stripe = getStripeClient();
+  const refund = refundId ? await stripe.refunds.retrieve(refundId) : await stripe.refunds.create(
+    { ...stripeRefundReference(paymentId), amount, ...idempotencyKey ? { metadata: { restaurantRefundKey: idempotencyKey } } : {} },
+    idempotencyKey ? { idempotencyKey } : void 0
+  );
+  return {
+    id: refund.id,
+    refundId: refund.id,
+    status: refund.status,
+    amount: refund.amount,
+    data: refund
+  };
+}
+async function getPaymentStatusFunction({ paymentId }) {
+  const stripe = getStripeClient();
+  const paymentIntent = await stripe.paymentIntents.retrieve(paymentId);
+  const refunds = [];
+  let refundsComplete = true;
+  for await (const refund of stripe.refunds.list({ payment_intent: paymentId, limit: 100 })) {
+    if (refunds.length >= 1e3) {
+      refundsComplete = false;
+      break;
+    }
+    refunds.push(refund);
+  }
+  return {
+    status: paymentIntent.status,
+    amount: paymentIntent.status === "succeeded" ? paymentIntent.amount_received : paymentIntent.amount,
+    currencyCode: paymentIntent.currency.toUpperCase(),
+    refunds,
+    refundsComplete,
+    data: paymentIntent
+  };
+}
+async function generatePaymentLinkFunction({ paymentId }) {
+  return `https://dashboard.stripe.com/payments/${paymentId}`;
+}
+async function handleWebhookFunction({ event, headers, rawBody }) {
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!webhookSecret) {
+    throw new Error("Stripe webhook secret is not configured");
+  }
+  const stripe = getStripeClient();
+  try {
+    if (!rawBody) throw new Error("Stripe webhook raw body is required");
+    const stripeEvent = stripe.webhooks.constructEvent(
+      rawBody,
+      headers["stripe-signature"],
+      webhookSecret
+    );
+    return {
+      isValid: true,
+      event: stripeEvent,
+      type: stripeEvent.type,
+      resource: stripeEvent.data.object
+    };
+  } catch (err) {
+    throw new Error(`Webhook signature verification failed: ${err?.message || "Unknown error"}`);
+  }
+}
+async function cancelPaymentFunction({ paymentId, idempotencyKey }) {
+  const stripe = getStripeClient();
+  const current = await stripe.paymentIntents.retrieve(paymentId);
+  if (current.status === "canceled") return { status: "cancelled" };
+  if (current.status === "succeeded") return { status: "succeeded" };
+  const cancelled = await stripe.paymentIntents.cancel(paymentId, {}, idempotencyKey ? { idempotencyKey } : void 0);
+  return { status: cancelled.status === "canceled" ? "cancelled" : cancelled.status };
+}
+var import_stripe, getStripeClient;
+var init_stripe = __esm({
+  "features/integrations/payment/stripe.ts"() {
+    "use strict";
+    import_stripe = __toESM(require("stripe"));
+    init_paymentState();
+    getStripeClient = () => {
+      const stripeKey = process.env.STRIPE_SECRET_KEY;
+      if (!stripeKey) {
+        throw new Error("Stripe secret key not configured");
+      }
+      return new import_stripe.default(stripeKey);
+    };
+  }
+});
+
+// features/integrations/payment/manual.ts
+var manual_exports = {};
+__export(manual_exports, {
+  cancelPaymentFunction: () => cancelPaymentFunction2,
+  capturePaymentFunction: () => capturePaymentFunction2,
+  createPaymentFunction: () => createPaymentFunction2,
+  generatePaymentLinkFunction: () => generatePaymentLinkFunction2,
+  getPaymentStatusFunction: () => getPaymentStatusFunction2,
+  handleWebhookFunction: () => handleWebhookFunction2,
+  refundPaymentFunction: () => refundPaymentFunction2
+});
+async function handleWebhookFunction2({ event, headers }) {
+  return {
+    isValid: true,
+    event,
+    type: event.type,
+    resource: event.data
+  };
+}
+async function createPaymentFunction2({ order, amount, currency }) {
+  return {
+    status: "pending",
+    data: {
+      status: "pending",
+      amount,
+      currency: currency.toLowerCase(),
+      orderId: order?.id
+    }
+  };
+}
+async function capturePaymentFunction2({ paymentId, amount }) {
+  return {
+    status: "captured",
+    amount,
+    data: {
+      status: "captured",
+      amount,
+      captured_at: (/* @__PURE__ */ new Date()).toISOString()
+    }
+  };
+}
+async function refundPaymentFunction2({ paymentId, amount }) {
+  return {
+    status: "refunded",
+    amount,
+    data: {
+      status: "refunded",
+      amount,
+      refunded_at: (/* @__PURE__ */ new Date()).toISOString()
+    }
+  };
+}
+async function getPaymentStatusFunction2({ paymentId }) {
+  return {
+    status: "succeeded",
+    data: {
+      status: "succeeded"
+    }
+  };
+}
+async function generatePaymentLinkFunction2({ paymentId }) {
+  return null;
+}
+async function cancelPaymentFunction2() {
+  return { status: "cancelled" };
+}
+var init_manual = __esm({
+  "features/integrations/payment/manual.ts"() {
+    "use strict";
+  }
+});
 
 // keystone.ts
 var keystone_exports = {};
@@ -1491,6 +1705,20 @@ function installmentAmounts(total, periods) {
   return Array.from({ length: periods }, (_, i) => Math.floor(total / periods) + (i < total % periods ? 1 : 0));
 }
 
+// features/keystone/lib/invoiceReceipt.ts
+async function applyInvoiceReceipt(tx, context, invoiceId, amountCents, reference, entryKey, requestId) {
+  const invoice = await tx.commissionInvoice.findUnique({ where: { id: invoiceId } });
+  if (!Number.isSafeInteger(amountCents) || amountCents < 1 || amountCents > invoice.totalCents - invoice.paidCents || !reference?.trim()) throw new Error("Valid payment amount and reference required");
+  const paid = invoice.paidCents + amountCents;
+  const status = paid === invoice.totalCents ? "paid" : "partially_paid";
+  await transition(tx, context, "commissionInvoice", invoice.id, ["sent", "partially_paid"], status, requestId, { paidCents: paid });
+  const preparedById = context.session?.itemId;
+  const entry = await tx.commissionLedgerEntry.create({ data: { entryKey, athleteId: invoice.athleteId, invoiceId: invoice.id, entryType: "receipt", amountCents: -BigInt(amountCents), reason: reference, ...preparedById ? { preparedById } : {}, occurredAt: /* @__PURE__ */ new Date(), currencyCode: invoice.currencyCode } });
+  const splits = await tx.agentSplit.findMany({ where: { athleteId: invoice.athleteId } });
+  if (splits.length) for (const split of allocateCommission(amountCents, splits.map((s) => ({ userId: s.userId, shareBps: s.shareBps })))) await tx.commissionLedgerEntry.create({ data: { entryKey: "split:" + entry.id + ":" + split.userId, athleteId: invoice.athleteId, invoiceId: invoice.id, payeeUserId: split.userId, entryType: "split_to_agent", amountCents: BigInt(split.amountCents), reason: "Agent receipt allocation", ...preparedById ? { preparedById } : {}, occurredAt: /* @__PURE__ */ new Date(), currencyCode: invoice.currencyCode } });
+  return { id: invoice.id, paidCents: paid, status };
+}
+
 // features/keystone/mutations/agency.ts
 async function locate(context, model, id, include = {}) {
   if (!context.session) throw new Error("Not authorized");
@@ -1558,7 +1786,7 @@ var agencyMutations = {
       if (rows.length !== a.scheduledPaymentIds.length || new Set(rows.map((r) => r.currencyCode)).size !== 1) throw new Error("Received uninvoiced payments in one currency required");
       const invoice = await tx.commissionInvoice.create({ data: { athleteId: a.athleteId, number: humanCode("INV"), totalCents: rows.reduce((n, r) => n + r.commissionCents, 0), currencyCode: rows[0].currencyCode, status: "draft", issuedAt: /* @__PURE__ */ new Date(), dueAt: new Date(Date.now() + 30 * 864e5) } });
       for (const row of rows) {
-        await tx.commissionInvoiceLine.create({ data: { invoiceId: invoice.id, scheduledPaymentId: row.id, description: "Commission " + row.sourceKey, grossCents: row.grossCents, commissionBps: row.commissionBps, commissionCents: row.commissionCents, unitPriceCents: row.commissionCents, quantity: 1, currencyCode: row.currencyCode } });
+        await tx.commissionInvoiceLine.create({ data: { invoiceId: invoice.id, scheduledPaymentId: row.id, description: "Commission on payment due " + new Date(row.dueAt).toISOString().slice(0, 10), grossCents: row.grossCents, commissionBps: row.commissionBps, commissionCents: row.commissionCents, unitPriceCents: row.commissionCents, quantity: 1, currencyCode: row.currencyCode } });
         await tx.scheduledPayment.update({ where: { id: row.id }, data: { invoiceId: invoice.id } });
       }
       await audit(tx, c, "invoice.created", "CommissionInvoice", invoice.id, null, invoice, a.idempotencyKey);
@@ -1583,16 +1811,7 @@ var agencyMutations = {
   async recordInvoicePayment(_, a, c) {
     const row = await locate(c, "commissionInvoice", a.invoiceId);
     return command(c, "canManageCommissions", row.athleteId, "recordInvoicePayment", a, async (tx) => {
-      const invoice = await tx.commissionInvoice.findUnique({ where: { id: row.id } });
-      if (!Number.isSafeInteger(a.amountCents) || a.amountCents < 1 || a.amountCents > invoice.totalCents - invoice.paidCents || !a.reference?.trim()) throw new Error("Valid payment amount and reference required");
-      const paid = invoice.paidCents + a.amountCents;
-      await transition(tx, c, "commissionInvoice", row.id, ["sent", "partially_paid"], paid === invoice.totalCents ? "paid" : "partially_paid", a.idempotencyKey, { paidCents: paid });
-      const entry = await tx.commissionLedgerEntry.create({ data: { entryKey: "receipt:" + a.idempotencyKey, athleteId: row.athleteId, invoiceId: row.id, entryType: "receipt", amountCents: -BigInt(a.amountCents), reason: a.reference, preparedById: c.session.itemId, occurredAt: /* @__PURE__ */ new Date(), currencyCode: invoice.currencyCode } });
-      const splits = await tx.agentSplit.findMany({ where: { athleteId: row.athleteId } });
-      if (splits.length) {
-        for (const split of allocateCommission(a.amountCents, splits.map((s) => ({ userId: s.userId, shareBps: s.shareBps })))) await tx.commissionLedgerEntry.create({ data: { entryKey: "split:" + entry.id + ":" + split.userId, athleteId: row.athleteId, invoiceId: row.id, payeeUserId: split.userId, entryType: "split_to_agent", amountCents: BigInt(split.amountCents), reason: "Agent receipt allocation", preparedById: c.session.itemId, occurredAt: /* @__PURE__ */ new Date(), currencyCode: invoice.currencyCode } });
-      }
-      return { id: invoice.id, paidCents: paid, status: paid === invoice.totalCents ? "paid" : "partially_paid" };
+      return applyInvoiceReceipt(tx, c, row.id, a.amountCents, a.reference, "receipt:" + a.idempotencyKey, a.idempotencyKey);
     });
   },
   async reverseLedgerEntry(_, a, c) {
@@ -1895,35 +2114,249 @@ async function updateActiveUser(_root, { data }, context) {
 }
 
 // features/keystone/mutations/portal.ts
-async function portalAthlete(c) {
-  if (!c.session?.itemId) throw new Error("Sign in required");
-  const athlete = await c.prisma.athlete.findFirst({ where: { portalUserId: c.session.itemId }, select: { id: true, fullName: true, sport: true, league: true } });
-  if (!athlete) throw new Error("Client profile not found");
-  return athlete;
+var import_node_crypto6 = __toESM(require("node:crypto"));
+
+// features/keystone/lib/invoiceProof.ts
+var import_node_crypto5 = __toESM(require("node:crypto"));
+function secret2() {
+  const value = process.env.SESSION_SECRET;
+  if (!value && process.env.NODE_ENV === "production") throw new Error("SESSION_SECRET is required");
+  return value || "this secret should only be used in testing";
 }
+var mac = (invoiceId, exp) => import_node_crypto5.default.createHmac("sha256", secret2()).update(`invoice-proof:${invoiceId}:${exp}`).digest("base64url");
+function signInvoiceProof(invoiceId, ttlSeconds = 7200, now = Date.now()) {
+  const exp = Math.floor(now / 1e3) + ttlSeconds;
+  return `${exp}.${mac(invoiceId, exp)}`;
+}
+function verifyInvoiceProof(invoiceId, proof, now = Date.now()) {
+  if (typeof proof !== "string") return false;
+  const [expText, sig] = proof.split(".");
+  const exp = Number(expText);
+  if (!Number.isInteger(exp) || !sig || exp < Math.floor(now / 1e3)) return false;
+  const expected = Buffer.from(mac(invoiceId, exp));
+  const given = Buffer.from(sig);
+  return expected.length === given.length && import_node_crypto5.default.timingSafeEqual(expected, given);
+}
+
+// features/integrations/payment/index.ts
+var paymentProviderAdapters = {
+  stripe: () => Promise.resolve().then(() => (init_stripe(), stripe_exports)),
+  manual: () => Promise.resolve().then(() => (init_manual(), manual_exports))
+};
+
+// features/keystone/utils/paymentProviderAdapter.ts
+var ADAPTERS = new Set(Object.keys(paymentProviderAdapters));
+var ADAPTER_OPERATIONS = /* @__PURE__ */ new Set(["createPaymentFunction", "capturePaymentFunction", "refundPaymentFunction", "getPaymentStatusFunction", "generatePaymentLinkFunction", "handleWebhookFunction", "cancelPaymentFunction"]);
+function paymentAdapterPayload(provider, args) {
+  const projectedProvider = { id: provider.id, code: provider.code, credentials: provider.credentials || {} };
+  const input = {};
+  for (const key of ["cart", "order", "amount", "currency", "idempotencyKey", "paymentId", "refundId", "event", "headers", "rawBody"]) {
+    if (args?.[key] !== void 0) input[key] = args[key];
+  }
+  for (const key of ["cart", "order"]) {
+    const record = input[key];
+    if (record && typeof record === "object") {
+      input[key] = Object.fromEntries(["id", "orderNumber", "orderType", "currencyCode", "subtotal", "tax", "tip", "discount", "total", "customerName", "customerEmail", "email"].filter((field) => record[field] !== void 0).map((field) => [field, record[field]]));
+    }
+  }
+  if (input.headers && typeof input.headers === "object") {
+    input.headers = Object.fromEntries(Object.entries(input.headers).filter(([key]) => key.toLowerCase() === "stripe-signature" || key.toLowerCase().startsWith("paypal-")));
+  }
+  return { ...input, provider: projectedProvider };
+}
+async function executeAdapterFunction({ provider, functionName, args }) {
+  if (!ADAPTER_OPERATIONS.has(functionName)) throw new Error("Unknown payment adapter operation");
+  const functionPath = provider?.[functionName];
+  if (typeof functionPath !== "string") throw new Error("Payment adapter is not configured");
+  const payload = paymentAdapterPayload(provider, args);
+  if (/^https?:/i.test(functionPath)) {
+    const endpoint2 = functionPath;
+    try {
+      const response = await fetch(endpoint2, {
+        method: "POST",
+        redirect: "error",
+        signal: AbortSignal.timeout(3e4),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (!response.ok) throw new Error("Payment adapter rejected request");
+      return await response.json();
+    } catch {
+      throw new Error("External payment adapter request failed; reconcile the original attempt before retrying");
+    }
+  }
+  if (!ADAPTERS.has(functionPath)) throw new Error("Unknown registered payment adapter");
+  const adapter = await paymentProviderAdapters[functionPath]();
+  const fn = adapter[functionName];
+  if (typeof fn !== "function") throw new Error("Payment adapter operation is unavailable");
+  try {
+    return await fn(payload);
+  } catch {
+    throw new Error(`Payment adapter ${functionName} failed; reconcile the original attempt before retrying`);
+  }
+}
+async function createPayment({ provider, cart, order, amount, currency, idempotencyKey }) {
+  return executeAdapterFunction({
+    provider,
+    functionName: "createPaymentFunction",
+    args: { cart, order, amount, currency, idempotencyKey }
+  });
+}
+async function getPaymentStatus({ provider, paymentId }) {
+  return executeAdapterFunction({
+    provider,
+    functionName: "getPaymentStatusFunction",
+    args: { paymentId }
+  });
+}
+
+// features/keystone/mutations/portal.ts
+var STRIPE_CODE = "pp_stripe_stripe";
+var EMAIL = /^[^\s@]{1,64}@[^\s@]{1,255}\.[^\s@]{2,}$/;
+var clip = (v, n) => String(v ?? "").trim().slice(0, n);
+async function portalAthlete(c) {
+  if (!c.session?.itemId) return null;
+  return c.prisma.athlete.findFirst({ where: { portalUserId: c.session.itemId }, select: { id: true, fullName: true, sport: true, league: true } });
+}
+async function invoiceAccess(c, invoiceId, proof) {
+  const invoice = await c.prisma.commissionInvoice.findUnique({ where: { id: String(invoiceId || "") }, include: { athlete: { select: { id: true, fullName: true, email: true } } } });
+  if (!invoice) throw new Error("Invoice not found");
+  const owner = await portalAthlete(c);
+  if (!(owner && owner.id === invoice.athleteId) && !verifyInvoiceProof(invoice.id, proof)) throw new Error("Invoice not found");
+  if (!["sent", "partially_paid", "paid"].includes(invoice.status)) throw new Error("Invoice not found");
+  return invoice;
+}
+var invoiceView = (i) => ({ id: i.id, number: i.number, status: i.status, totalCents: i.totalCents, paidCents: i.paidCents, balanceCents: i.totalCents - i.paidCents, currencyCode: i.currencyCode, dueAt: i.dueAt, athleteName: i.athlete?.fullName });
 var portalQueries = {
   async myAthleteSummary(_, a, c) {
     const athlete = await portalAthlete(c);
+    if (!athlete) throw new Error("Client profile not found");
     const [contracts, deals] = await Promise.all([c.prisma.playingContract.findMany({ where: { athleteId: athlete.id }, select: { id: true, status: true, startSeason: true, endSeason: true }, take: 100 }), c.prisma.endorsementDeal.findMany({ where: { athleteId: athlete.id }, select: { id: true, status: true, termStart: true, termEnd: true }, take: 100 })]);
     return { ...athlete, contracts, deals };
   },
   async myDeliverables(_, a, c) {
     const athlete = await portalAthlete(c);
+    if (!athlete) throw new Error("Client profile not found");
     return c.prisma.deliverable.findMany({ where: { deal: { athleteId: athlete.id } }, select: { id: true, kind: true, status: true, dueAt: true, proofLink: true }, take: 100, orderBy: { dueAt: "asc" } });
   },
   async myInvoices(_, a, c) {
     const athlete = await portalAthlete(c);
-    return c.prisma.commissionInvoice.findMany({ where: { athleteId: athlete.id }, select: { id: true, number: true, status: true, totalCents: true, paidCents: true, currencyCode: true, dueAt: true }, take: 100, orderBy: { createdAt: "desc" } });
+    if (!athlete) throw new Error("Client profile not found");
+    return c.prisma.commissionInvoice.findMany({ where: { athleteId: athlete.id, status: { in: ["sent", "partially_paid", "paid"] } }, select: { id: true, number: true, status: true, totalCents: true, paidCents: true, currencyCode: true, dueAt: true }, take: 100, orderBy: { createdAt: "desc" } });
+  },
+  async agencyName(_, a, c) {
+    return (await c.prisma.agency.findFirst({ select: { name: true } }))?.name || null;
+  },
+  async agencyRoster(_, a, c) {
+    return c.prisma.athlete.findMany({ where: { isPublic: true, status: "client" }, select: { id: true, fullName: true, preferredName: true, sport: true, league: true, position: true, image: true, team: { select: { name: true } } }, orderBy: { fullName: "asc" }, take: 100 });
+  },
+  async agencyAthlete(_, a, c) {
+    const row = await c.prisma.athlete.findFirst({ where: { id: String(a.athleteId || ""), isPublic: true, status: "client" }, select: { id: true, fullName: true, preferredName: true, sport: true, league: true, position: true, image: true, team: { select: { name: true } } } });
+    if (!row) throw new Error("Athlete not found");
+    return row;
+  },
+  async lookupInvoice(_, a, c) {
+    const email = clip(a.email, 320).toLowerCase(), number = clip(a.number, 64).toUpperCase();
+    const invoice = email && number ? await c.prisma.commissionInvoice.findFirst({ where: { number, status: { in: ["sent", "partially_paid", "paid"] } }, include: { athlete: { select: { id: true, email: true, portalUser: { select: { email: true } } } } } }) : null;
+    const match = invoice && [invoice.athlete?.email, invoice.athlete?.portalUser?.email].some((x) => x && String(x).toLowerCase() === email);
+    if (!invoice || !match) throw new Error("No invoice matches those details");
+    return { invoiceId: invoice.id, proof: signInvoiceProof(invoice.id) };
+  },
+  async guestInvoice(_, a, c) {
+    const invoice = await invoiceAccess(c, a.invoiceId, a.proof);
+    const [lines, payments] = await Promise.all([
+      c.prisma.commissionInvoiceLine.findMany({ where: { invoiceId: invoice.id }, select: { description: true, grossCents: true, commissionBps: true, commissionCents: true }, orderBy: { id: "asc" }, take: 200 }),
+      c.prisma.payment.findMany({ where: { orderId: invoice.id, status: "succeeded" }, select: { id: true, amount: true, cardBrand: true, cardLast4: true, processedAt: true }, orderBy: { processedAt: "asc" }, take: 50 })
+    ]);
+    return { ...invoiceView(invoice), lines, payments };
   }
 };
-var portalMutations = { async payCommissionInvoice(_, a, c) {
-  const athlete = await portalAthlete(c);
-  const invoice = await c.prisma.commissionInvoice.findFirst({ where: { id: a.invoiceId, athleteId: athlete.id }, select: { id: true, status: true } });
-  if (!invoice) throw new Error("Invoice not found");
-  if (!["sent", "partially_paid"].includes(invoice.status)) throw new Error("Invoice not payable");
-  throw new Error("Payment provider is not configured");
-} };
-var portalTypeDefs = `extend type Query { myAthleteSummary:AgencyJSON! myDeliverables:AgencyJSON! myInvoices:AgencyJSON! } extend type Mutation { payCommissionInvoice(invoiceId:ID!,idempotencyKey:String!):AgencyJSON! }`;
+async function stripeProvider(c) {
+  const provider = await c.prisma.paymentProvider.findFirst({ where: { code: STRIPE_CODE, isInstalled: true } });
+  if (!provider) throw new Error("Card payments are not configured");
+  return provider;
+}
+async function finalizeInvoicePayment(c, paymentId) {
+  const prisma = c.prisma;
+  const payment = await prisma.payment.findUnique({ where: { id: paymentId }, include: { paymentProvider: true } });
+  if (!payment || !payment.orderId) throw new Error("Payment not found");
+  if (payment.status === "succeeded") return payment;
+  const provider = await prisma.paymentProvider.findUnique({ where: { id: payment.paymentProviderId } });
+  const observed = await getPaymentStatus({ provider, paymentId: payment.providerPaymentId });
+  if (observed.status !== "succeeded") return { ...payment, status: observed.status === "requires_payment_method" ? "pending" : payment.status };
+  if (Number(observed.amount) !== payment.amount || String(observed.currencyCode).toUpperCase() !== payment.currencyCode) throw new Error("Provider amount differs from the invoice payment; reconciliation required");
+  const charge = observed.data?.latest_charge && typeof observed.data.latest_charge === "object" ? observed.data.latest_charge : null;
+  return prisma.$transaction(async (tx) => {
+    const invoice = await tx.commissionInvoice.findUnique({ where: { id: payment.orderId } });
+    await lockTransactionKey(tx, "athlete:" + invoice.athleteId);
+    const current = await tx.payment.findUnique({ where: { id: payment.id } });
+    if (current.status === "succeeded") return current;
+    try {
+      await applyInvoiceReceipt(tx, c, invoice.id, payment.amount, "Card payment " + payment.providerPaymentId, "receipt:payment:" + payment.id, "payment:" + payment.id);
+    } catch (e) {
+      await tx.payment.update({ where: { id: payment.id }, data: { status: "unknown", errorMessage: "Captured by the provider but not applied: " + e.message } });
+      return { ...current, status: "unknown" };
+    }
+    return tx.payment.update({ where: { id: payment.id }, data: { status: "succeeded", processedAt: /* @__PURE__ */ new Date(), cardBrand: charge?.payment_method_details?.card?.brand || "", cardLast4: charge?.payment_method_details?.card?.last4 || "" } });
+  }, { timeout: 6e4, maxWait: 15e3 });
+}
+var portalMutations = {
+  async submitInquiry(_, a, c) {
+    const key = clip(a.idempotencyKey, 100), name = clip(a.name, 120), email = clip(a.email, 320).toLowerCase(), org = clip(a.organization, 160), message = clip(a.message, 2e3);
+    if (!key || !name || !EMAIL.test(email) || !message) throw new Error("Name, a valid email and a message are required");
+    return c.prisma.$transaction(async (tx) => {
+      const athlete = await tx.athlete.findFirst({ where: { id: String(a.athleteId || ""), isPublic: true, status: "client" }, select: { id: true, leadAgentId: true, fullName: true } });
+      if (!athlete) throw new Error("Athlete not found");
+      const autoKey = "inquiry:" + import_node_crypto6.default.createHash("sha256").update(key + ":" + email).digest("hex").slice(0, 40);
+      if (await tx.task.findUnique({ where: { autoKey } })) return { received: true };
+      const contact = await tx.contact.findFirst({ where: { email, name } }) || await tx.contact.create({ data: { name, org, email, role: "Brand inquiry" } });
+      await tx.interaction.create({ data: { athleteId: athlete.id, contactId: contact.id, kind: "email", summary: message, occurredAt: /* @__PURE__ */ new Date() } });
+      await tx.task.create({ data: { autoKey, title: `Brand inquiry for ${athlete.fullName}${org ? " from " + org : ""}`, athleteId: athlete.id, assigneeId: athlete.leadAgentId || void 0, priority: "high", status: "open", dueAt: new Date(Date.now() + 2 * 864e5) } });
+      return { received: true };
+    }, { timeout: 3e4 });
+  },
+  // Starts (or resumes) a card payment for the invoice balance; returns the Stripe client secret.
+  async payCommissionInvoice(_, a, c) {
+    const key = clip(a.idempotencyKey, 100);
+    if (!key) throw new Error("Idempotency key required");
+    const invoice = await invoiceAccess(c, a.invoiceId, a.proof);
+    if (!["sent", "partially_paid"].includes(invoice.status) || invoice.totalCents - invoice.paidCents < 1) throw new Error("Invoice is not payable");
+    const provider = await stripeProvider(c);
+    const amount = invoice.totalCents - invoice.paidCents;
+    const reserved = await c.prisma.$transaction(async (tx) => {
+      await lockTransactionKey(tx, "athlete:" + invoice.athleteId);
+      const fresh = await tx.commissionInvoice.findUnique({ where: { id: invoice.id } });
+      if (!["sent", "partially_paid"].includes(fresh.status) || fresh.totalCents - fresh.paidCents !== amount) throw new Error("Invoice changed; reload and retry");
+      const existing = await tx.payment.findFirst({ where: { orderId: invoice.id, status: "pending", amount, paymentProviderId: provider.id }, orderBy: { createdAt: "desc" } });
+      if (existing) return existing;
+      return tx.payment.create({ data: { idempotencyKey: "invoice-pay:" + invoice.id + ":" + key, amount, currencyCode: invoice.currencyCode, status: "pending", paymentMethod: "credit_card", paymentProviderId: provider.id, orderId: invoice.id, reservedAt: /* @__PURE__ */ new Date(), providerPaymentId: "", data: {} } });
+    }, { timeout: 3e4 });
+    if (reserved.providerPaymentId && reserved.data?.clientSecret) return { paymentId: reserved.id, clientSecret: reserved.data.clientSecret, amountCents: amount, currencyCode: invoice.currencyCode, publishableKey: process.env.NEXT_PUBLIC_STRIPE_KEY || "" };
+    const created = await createPayment({ provider, order: { id: invoice.id, orderNumber: invoice.number }, amount, currency: invoice.currencyCode, idempotencyKey: reserved.idempotencyKey });
+    await c.prisma.payment.update({ where: { id: reserved.id }, data: { providerPaymentId: created.paymentIntentId, data: { clientSecret: created.clientSecret, paymentIntentId: created.paymentIntentId } } });
+    return { paymentId: reserved.id, clientSecret: created.clientSecret, amountCents: amount, currencyCode: invoice.currencyCode, publishableKey: process.env.NEXT_PUBLIC_STRIPE_KEY || "" };
+  },
+  async confirmCommissionPayment(_, a, c) {
+    const payment = await c.prisma.payment.findUnique({ where: { id: String(a.paymentId || "") }, select: { id: true, orderId: true } });
+    if (!payment?.orderId) throw new Error("Payment not found");
+    await invoiceAccess(c, payment.orderId, a.proof);
+    const done = await finalizeInvoicePayment(c, payment.id);
+    const invoice = await c.prisma.commissionInvoice.findUnique({ where: { id: payment.orderId }, include: { athlete: { select: { fullName: true } } } });
+    return { status: done.status, invoice: invoiceView(invoice) };
+  }
+};
+var portalTypeDefs = `
+ extend type Query {
+  myAthleteSummary:AgencyJSON! myDeliverables:AgencyJSON! myInvoices:AgencyJSON!
+  agencyName:String agencyRoster:AgencyJSON! agencyAthlete(athleteId:ID!):AgencyJSON!
+  lookupInvoice(email:String!,number:String!):AgencyJSON!
+  guestInvoice(invoiceId:ID!,proof:String):AgencyJSON!
+ }
+ extend type Mutation {
+  submitInquiry(athleteId:ID!,name:String!,email:String!,organization:String,message:String!,idempotencyKey:String!):AgencyJSON!
+  payCommissionInvoice(invoiceId:ID!,proof:String,idempotencyKey:String!):AgencyJSON!
+  confirmCommissionPayment(paymentId:ID!,proof:String):AgencyJSON!
+ }`;
 
 // features/keystone/mutations/index.ts
 var graphql = String.raw;
