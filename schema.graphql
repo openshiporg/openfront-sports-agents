@@ -313,21 +313,18 @@ input EndorsementDealRelateToManyForUpdateInput {
 input CommissionLedgerEntryRelateToManyForUpdateInput {
   disconnect: [CommissionLedgerEntryWhereUniqueInput!]
   set: [CommissionLedgerEntryWhereUniqueInput!]
-  create: [CommissionLedgerEntryCreateInput!]
   connect: [CommissionLedgerEntryWhereUniqueInput!]
 }
 
 input AgentSplitRelateToManyForUpdateInput {
   disconnect: [AgentSplitWhereUniqueInput!]
   set: [AgentSplitWhereUniqueInput!]
-  create: [AgentSplitCreateInput!]
   connect: [AgentSplitWhereUniqueInput!]
 }
 
 input DocumentRelateToManyForUpdateInput {
   disconnect: [DocumentWhereUniqueInput!]
   set: [DocumentWhereUniqueInput!]
-  create: [DocumentCreateInput!]
   connect: [DocumentWhereUniqueInput!]
 }
 
@@ -341,7 +338,6 @@ input TaskRelateToManyForUpdateInput {
 input AuditEventRelateToManyForUpdateInput {
   disconnect: [AuditEventWhereUniqueInput!]
   set: [AuditEventWhereUniqueInput!]
-  create: [AuditEventCreateInput!]
   connect: [AuditEventWhereUniqueInput!]
 }
 
@@ -408,17 +404,14 @@ input EndorsementDealRelateToManyForCreateInput {
 }
 
 input CommissionLedgerEntryRelateToManyForCreateInput {
-  create: [CommissionLedgerEntryCreateInput!]
   connect: [CommissionLedgerEntryWhereUniqueInput!]
 }
 
 input AgentSplitRelateToManyForCreateInput {
-  create: [AgentSplitCreateInput!]
   connect: [AgentSplitWhereUniqueInput!]
 }
 
 input DocumentRelateToManyForCreateInput {
-  create: [DocumentCreateInput!]
   connect: [DocumentWhereUniqueInput!]
 }
 
@@ -428,7 +421,6 @@ input TaskRelateToManyForCreateInput {
 }
 
 input AuditEventRelateToManyForCreateInput {
-  create: [AuditEventCreateInput!]
   connect: [AuditEventWhereUniqueInput!]
 }
 
@@ -1008,7 +1000,6 @@ input AgentCertificationUpdateInput {
 }
 
 input DocumentRelateToOneForUpdateInput {
-  create: DocumentCreateInput
   connect: DocumentWhereUniqueInput
   disconnect: Boolean
 }
@@ -1031,7 +1022,6 @@ input AgentCertificationCreateInput {
 }
 
 input DocumentRelateToOneForCreateInput {
-  create: DocumentCreateInput
   connect: DocumentWhereUniqueInput
 }
 
@@ -1389,14 +1379,12 @@ input ContactRelateToManyForUpdateInput {
 input ScheduledPaymentRelateToManyForUpdateInput {
   disconnect: [ScheduledPaymentWhereUniqueInput!]
   set: [ScheduledPaymentWhereUniqueInput!]
-  create: [ScheduledPaymentCreateInput!]
   connect: [ScheduledPaymentWhereUniqueInput!]
 }
 
 input CommissionInvoiceRelateToManyForUpdateInput {
   disconnect: [CommissionInvoiceWhereUniqueInput!]
   set: [CommissionInvoiceWhereUniqueInput!]
-  create: [CommissionInvoiceCreateInput!]
   connect: [CommissionInvoiceWhereUniqueInput!]
 }
 
@@ -1410,7 +1398,6 @@ input ClientTrustAccountRelateToManyForUpdateInput {
 input ClientTrustEntryRelateToManyForUpdateInput {
   disconnect: [ClientTrustEntryWhereUniqueInput!]
   set: [ClientTrustEntryWhereUniqueInput!]
-  create: [ClientTrustEntryCreateInput!]
   connect: [ClientTrustEntryWhereUniqueInput!]
 }
 
@@ -1470,12 +1457,10 @@ input ContactRelateToManyForCreateInput {
 }
 
 input ScheduledPaymentRelateToManyForCreateInput {
-  create: [ScheduledPaymentCreateInput!]
   connect: [ScheduledPaymentWhereUniqueInput!]
 }
 
 input CommissionInvoiceRelateToManyForCreateInput {
-  create: [CommissionInvoiceCreateInput!]
   connect: [CommissionInvoiceWhereUniqueInput!]
 }
 
@@ -1485,7 +1470,6 @@ input ClientTrustAccountRelateToManyForCreateInput {
 }
 
 input ClientTrustEntryRelateToManyForCreateInput {
-  create: [ClientTrustEntryCreateInput!]
   connect: [ClientTrustEntryWhereUniqueInput!]
 }
 
@@ -2747,7 +2731,6 @@ input IncentiveRelateToOneForUpdateInput {
 }
 
 input CommissionInvoiceRelateToOneForUpdateInput {
-  create: CommissionInvoiceCreateInput
   connect: CommissionInvoiceWhereUniqueInput
   disconnect: Boolean
 }
@@ -2755,54 +2738,12 @@ input CommissionInvoiceRelateToOneForUpdateInput {
 input CommissionInvoiceLineRelateToManyForUpdateInput {
   disconnect: [CommissionInvoiceLineWhereUniqueInput!]
   set: [CommissionInvoiceLineWhereUniqueInput!]
-  create: [CommissionInvoiceLineCreateInput!]
   connect: [CommissionInvoiceLineWhereUniqueInput!]
 }
 
 input ScheduledPaymentUpdateArgs {
   where: ScheduledPaymentWhereUniqueInput!
   data: ScheduledPaymentUpdateInput!
-}
-
-input ScheduledPaymentCreateInput {
-  sourceKey: String
-  contractYear: ContractYearRelateToOneForCreateInput
-  endorsementDeal: EndorsementDealRelateToOneForCreateInput
-  incentive: IncentiveRelateToOneForCreateInput
-  athlete: AthleteRelateToOneForCreateInput
-  dueAt: DateTime
-  grossCents: Int
-  commissionBps: Int
-  commissionCents: Int
-  remainder: Int
-  receivedAt: DateTime
-  status: ScheduledPaymentStatusType
-  currencyCode: String
-  invoice: CommissionInvoiceRelateToOneForCreateInput
-  commissionInvoiceLine_scheduledPayment: CommissionInvoiceLineRelateToManyForCreateInput
-  commissionLedgerEntry_scheduledPayment: CommissionLedgerEntryRelateToManyForCreateInput
-  createdAt: DateTime
-  updatedAt: DateTime
-}
-
-input ContractYearRelateToOneForCreateInput {
-  create: ContractYearCreateInput
-  connect: ContractYearWhereUniqueInput
-}
-
-input IncentiveRelateToOneForCreateInput {
-  create: IncentiveCreateInput
-  connect: IncentiveWhereUniqueInput
-}
-
-input CommissionInvoiceRelateToOneForCreateInput {
-  create: CommissionInvoiceCreateInput
-  connect: CommissionInvoiceWhereUniqueInput
-}
-
-input CommissionInvoiceLineRelateToManyForCreateInput {
-  create: [CommissionInvoiceLineCreateInput!]
-  connect: [CommissionInvoiceLineWhereUniqueInput!]
 }
 
 type CommissionInvoice {
@@ -2931,35 +2872,6 @@ input CommissionInvoiceUpdateArgs {
   data: CommissionInvoiceUpdateInput!
 }
 
-input CommissionInvoiceCreateInput {
-  payment_order: PaymentRelateToManyForCreateInput
-  athlete: AthleteRelateToOneForCreateInput
-  number: String
-  issuedAt: DateTime
-  dueAt: DateTime
-  totalCents: Int
-  paidCents: Int
-  status: CommissionInvoiceStatusType
-  paymentCollection: PaymentCollectionRelateToOneForCreateInput
-  currencyCode: String
-  scheduledPayment_invoice: ScheduledPaymentRelateToManyForCreateInput
-  commissionInvoiceLine_invoice: CommissionInvoiceLineRelateToManyForCreateInput
-  commissionLedgerEntry_invoice: CommissionLedgerEntryRelateToManyForCreateInput
-  clientTrustEntry_invoice: ClientTrustEntryRelateToManyForCreateInput
-  createdAt: DateTime
-  updatedAt: DateTime
-}
-
-input PaymentRelateToManyForCreateInput {
-  create: [PaymentCreateInput!]
-  connect: [PaymentWhereUniqueInput!]
-}
-
-input PaymentCollectionRelateToOneForCreateInput {
-  create: PaymentCollectionCreateInput
-  connect: PaymentCollectionWhereUniqueInput
-}
-
 type CommissionInvoiceLine {
   id: ID!
   invoice: CommissionInvoice
@@ -3033,7 +2945,6 @@ input CommissionInvoiceLineUpdateInput {
 }
 
 input ScheduledPaymentRelateToOneForUpdateInput {
-  create: ScheduledPaymentCreateInput
   connect: ScheduledPaymentWhereUniqueInput
   disconnect: Boolean
 }
@@ -3041,27 +2952,6 @@ input ScheduledPaymentRelateToOneForUpdateInput {
 input CommissionInvoiceLineUpdateArgs {
   where: CommissionInvoiceLineWhereUniqueInput!
   data: CommissionInvoiceLineUpdateInput!
-}
-
-input CommissionInvoiceLineCreateInput {
-  invoice: CommissionInvoiceRelateToOneForCreateInput
-  scheduledPayment: ScheduledPaymentRelateToOneForCreateInput
-  description: String
-  grossCents: Int
-  commissionBps: Int
-  commissionCents: Int
-  quantity: Int
-  unitPriceCents: Int
-  feesCents: Int
-  taxCents: Int
-  currencyCode: String
-  createdAt: DateTime
-  updatedAt: DateTime
-}
-
-input ScheduledPaymentRelateToOneForCreateInput {
-  create: ScheduledPaymentCreateInput
-  connect: ScheduledPaymentWhereUniqueInput
 }
 
 type CommissionLedgerEntry {
@@ -3179,7 +3069,6 @@ input CommissionLedgerEntryUpdateInput {
 }
 
 input CommissionLedgerEntryRelateToOneForUpdateInput {
-  create: CommissionLedgerEntryCreateInput
   connect: CommissionLedgerEntryWhereUniqueInput
   disconnect: Boolean
 }
@@ -3187,31 +3076,6 @@ input CommissionLedgerEntryRelateToOneForUpdateInput {
 input CommissionLedgerEntryUpdateArgs {
   where: CommissionLedgerEntryWhereUniqueInput!
   data: CommissionLedgerEntryUpdateInput!
-}
-
-input CommissionLedgerEntryCreateInput {
-  entryKey: String
-  athlete: AthleteRelateToOneForCreateInput
-  invoice: CommissionInvoiceRelateToOneForCreateInput
-  scheduledPayment: ScheduledPaymentRelateToOneForCreateInput
-  entryType: CommissionLedgerEntryEntryTypeType
-  amountCents: BigInt
-  payeeUser: UserRelateToOneForCreateInput
-  reverses: CommissionLedgerEntryRelateToOneForCreateInput
-  reversalKey: String
-  reason: String
-  preparedBy: UserRelateToOneForCreateInput
-  approvedBy: UserRelateToOneForCreateInput
-  occurredAt: DateTime
-  currencyCode: String
-  commissionLedgerEntry_reverses: CommissionLedgerEntryRelateToManyForCreateInput
-  createdAt: DateTime
-  updatedAt: DateTime
-}
-
-input CommissionLedgerEntryRelateToOneForCreateInput {
-  create: CommissionLedgerEntryCreateInput
-  connect: CommissionLedgerEntryWhereUniqueInput
 }
 
 type AgentSplit {
@@ -3260,15 +3124,6 @@ input AgentSplitUpdateInput {
 input AgentSplitUpdateArgs {
   where: AgentSplitWhereUniqueInput!
   data: AgentSplitUpdateInput!
-}
-
-input AgentSplitCreateInput {
-  athlete: AthleteRelateToOneForCreateInput
-  deal: EndorsementDealRelateToOneForCreateInput
-  user: UserRelateToOneForCreateInput
-  shareBps: Int
-  createdAt: DateTime
-  updatedAt: DateTime
 }
 
 type ClientTrustAccount {
@@ -3422,7 +3277,6 @@ input ClientTrustAccountRelateToOneForUpdateInput {
 }
 
 input ClientTrustEntryRelateToOneForUpdateInput {
-  create: ClientTrustEntryCreateInput
   connect: ClientTrustEntryWhereUniqueInput
   disconnect: Boolean
 }
@@ -3430,32 +3284,6 @@ input ClientTrustEntryRelateToOneForUpdateInput {
 input ClientTrustEntryUpdateArgs {
   where: ClientTrustEntryWhereUniqueInput!
   data: ClientTrustEntryUpdateInput!
-}
-
-input ClientTrustEntryCreateInput {
-  account: ClientTrustAccountRelateToOneForCreateInput
-  athlete: AthleteRelateToOneForCreateInput
-  invoice: CommissionInvoiceRelateToOneForCreateInput
-  entryType: ClientTrustEntryEntryTypeType
-  amountCents: BigInt
-  reference: String
-  occurredAt: DateTime
-  reverses: ClientTrustEntryRelateToOneForCreateInput
-  reversalKey: String
-  currencyCode: String
-  clientTrustEntry_reverses: ClientTrustEntryRelateToManyForCreateInput
-  createdAt: DateTime
-  updatedAt: DateTime
-}
-
-input ClientTrustAccountRelateToOneForCreateInput {
-  create: ClientTrustAccountCreateInput
-  connect: ClientTrustAccountWhereUniqueInput
-}
-
-input ClientTrustEntryRelateToOneForCreateInput {
-  create: ClientTrustEntryCreateInput
-  connect: ClientTrustEntryWhereUniqueInput
 }
 
 type Document {
@@ -3546,26 +3374,6 @@ input DocumentUpdateInput {
 input DocumentUpdateArgs {
   where: DocumentWhereUniqueInput!
   data: DocumentUpdateInput!
-}
-
-input DocumentCreateInput {
-  athlete: AthleteRelateToOneForCreateInput
-  contract: PlayingContractRelateToOneForCreateInput
-  deal: EndorsementDealRelateToOneForCreateInput
-  agreement: RepresentationAgreementRelateToOneForCreateInput
-  kind: String
-  version: Int
-  sha256: String
-  storageKey: String
-  uploadedBy: UserRelateToOneForCreateInput
-  verifiedAt: DateTime
-  agentCertification_document: AgentCertificationRelateToManyForCreateInput
-  representationAgreement_signedDocument: RepresentationAgreementRelateToManyForCreateInput
-  playingContract_document: PlayingContractRelateToManyForCreateInput
-  endorsementDeal_document: EndorsementDealRelateToManyForCreateInput
-  deliverable_proof: DeliverableRelateToManyForCreateInput
-  createdAt: DateTime
-  updatedAt: DateTime
 }
 
 type Task {
@@ -3737,19 +3545,6 @@ input AuditEventUpdateInput {
 input AuditEventUpdateArgs {
   where: AuditEventWhereUniqueInput!
   data: AuditEventUpdateInput!
-}
-
-input AuditEventCreateInput {
-  actor: UserRelateToOneForCreateInput
-  action: String
-  targetList: String
-  targetId: String
-  before: JSON
-  after: JSON
-  reason: String
-  requestId: String
-  createdAt: DateTime
-  updatedAt: DateTime
 }
 
 type PaymentProvider {
@@ -3968,6 +3763,15 @@ input PaymentCollectionCreateInput {
   updatedAt: DateTime
 }
 
+input PaymentRelateToManyForCreateInput {
+  create: [PaymentCreateInput!]
+  connect: [PaymentWhereUniqueInput!]
+}
+
+input CommissionInvoiceRelateToOneForCreateInput {
+  connect: CommissionInvoiceWhereUniqueInput
+}
+
 type PaymentSession {
   id: ID!
   isSelected: Boolean
@@ -4049,6 +3853,11 @@ input PaymentSessionCreateInput {
   paymentAuthorizedAt: DateTime
   createdAt: DateTime
   updatedAt: DateTime
+}
+
+input PaymentCollectionRelateToOneForCreateInput {
+  create: PaymentCollectionCreateInput
+  connect: PaymentCollectionWhereUniqueInput
 }
 
 input PaymentProviderRelateToOneForCreateInput {
@@ -4590,66 +4399,34 @@ type Mutation {
   updateDeliverables(data: [DeliverableUpdateArgs!]!): [Deliverable]
   deleteDeliverable(where: DeliverableWhereUniqueInput!): Deliverable
   deleteDeliverables(where: [DeliverableWhereUniqueInput!]!): [Deliverable]
-  createScheduledPayment(data: ScheduledPaymentCreateInput!): ScheduledPayment
-  createScheduledPayments(data: [ScheduledPaymentCreateInput!]!): [ScheduledPayment]
   updateScheduledPayment(where: ScheduledPaymentWhereUniqueInput!, data: ScheduledPaymentUpdateInput!): ScheduledPayment
   updateScheduledPayments(data: [ScheduledPaymentUpdateArgs!]!): [ScheduledPayment]
-  deleteScheduledPayment(where: ScheduledPaymentWhereUniqueInput!): ScheduledPayment
-  deleteScheduledPayments(where: [ScheduledPaymentWhereUniqueInput!]!): [ScheduledPayment]
-  createCommissionInvoice(data: CommissionInvoiceCreateInput!): CommissionInvoice
-  createCommissionInvoices(data: [CommissionInvoiceCreateInput!]!): [CommissionInvoice]
   updateCommissionInvoice(where: CommissionInvoiceWhereUniqueInput!, data: CommissionInvoiceUpdateInput!): CommissionInvoice
   updateCommissionInvoices(data: [CommissionInvoiceUpdateArgs!]!): [CommissionInvoice]
-  deleteCommissionInvoice(where: CommissionInvoiceWhereUniqueInput!): CommissionInvoice
-  deleteCommissionInvoices(where: [CommissionInvoiceWhereUniqueInput!]!): [CommissionInvoice]
-  createCommissionInvoiceLine(data: CommissionInvoiceLineCreateInput!): CommissionInvoiceLine
-  createCommissionInvoiceLines(data: [CommissionInvoiceLineCreateInput!]!): [CommissionInvoiceLine]
   updateCommissionInvoiceLine(where: CommissionInvoiceLineWhereUniqueInput!, data: CommissionInvoiceLineUpdateInput!): CommissionInvoiceLine
   updateCommissionInvoiceLines(data: [CommissionInvoiceLineUpdateArgs!]!): [CommissionInvoiceLine]
-  deleteCommissionInvoiceLine(where: CommissionInvoiceLineWhereUniqueInput!): CommissionInvoiceLine
-  deleteCommissionInvoiceLines(where: [CommissionInvoiceLineWhereUniqueInput!]!): [CommissionInvoiceLine]
-  createCommissionLedgerEntry(data: CommissionLedgerEntryCreateInput!): CommissionLedgerEntry
-  createCommissionLedgerEntries(data: [CommissionLedgerEntryCreateInput!]!): [CommissionLedgerEntry]
   updateCommissionLedgerEntry(where: CommissionLedgerEntryWhereUniqueInput!, data: CommissionLedgerEntryUpdateInput!): CommissionLedgerEntry
   updateCommissionLedgerEntries(data: [CommissionLedgerEntryUpdateArgs!]!): [CommissionLedgerEntry]
-  deleteCommissionLedgerEntry(where: CommissionLedgerEntryWhereUniqueInput!): CommissionLedgerEntry
-  deleteCommissionLedgerEntries(where: [CommissionLedgerEntryWhereUniqueInput!]!): [CommissionLedgerEntry]
-  createAgentSplit(data: AgentSplitCreateInput!): AgentSplit
-  createAgentSplits(data: [AgentSplitCreateInput!]!): [AgentSplit]
   updateAgentSplit(where: AgentSplitWhereUniqueInput!, data: AgentSplitUpdateInput!): AgentSplit
   updateAgentSplits(data: [AgentSplitUpdateArgs!]!): [AgentSplit]
-  deleteAgentSplit(where: AgentSplitWhereUniqueInput!): AgentSplit
-  deleteAgentSplits(where: [AgentSplitWhereUniqueInput!]!): [AgentSplit]
   createClientTrustAccount(data: ClientTrustAccountCreateInput!): ClientTrustAccount
   createClientTrustAccounts(data: [ClientTrustAccountCreateInput!]!): [ClientTrustAccount]
   updateClientTrustAccount(where: ClientTrustAccountWhereUniqueInput!, data: ClientTrustAccountUpdateInput!): ClientTrustAccount
   updateClientTrustAccounts(data: [ClientTrustAccountUpdateArgs!]!): [ClientTrustAccount]
   deleteClientTrustAccount(where: ClientTrustAccountWhereUniqueInput!): ClientTrustAccount
   deleteClientTrustAccounts(where: [ClientTrustAccountWhereUniqueInput!]!): [ClientTrustAccount]
-  createClientTrustEntry(data: ClientTrustEntryCreateInput!): ClientTrustEntry
-  createClientTrustEntries(data: [ClientTrustEntryCreateInput!]!): [ClientTrustEntry]
   updateClientTrustEntry(where: ClientTrustEntryWhereUniqueInput!, data: ClientTrustEntryUpdateInput!): ClientTrustEntry
   updateClientTrustEntries(data: [ClientTrustEntryUpdateArgs!]!): [ClientTrustEntry]
-  deleteClientTrustEntry(where: ClientTrustEntryWhereUniqueInput!): ClientTrustEntry
-  deleteClientTrustEntries(where: [ClientTrustEntryWhereUniqueInput!]!): [ClientTrustEntry]
-  createDocument(data: DocumentCreateInput!): Document
-  createDocuments(data: [DocumentCreateInput!]!): [Document]
   updateDocument(where: DocumentWhereUniqueInput!, data: DocumentUpdateInput!): Document
   updateDocuments(data: [DocumentUpdateArgs!]!): [Document]
-  deleteDocument(where: DocumentWhereUniqueInput!): Document
-  deleteDocuments(where: [DocumentWhereUniqueInput!]!): [Document]
   createTask(data: TaskCreateInput!): Task
   createTasks(data: [TaskCreateInput!]!): [Task]
   updateTask(where: TaskWhereUniqueInput!, data: TaskUpdateInput!): Task
   updateTasks(data: [TaskUpdateArgs!]!): [Task]
   deleteTask(where: TaskWhereUniqueInput!): Task
   deleteTasks(where: [TaskWhereUniqueInput!]!): [Task]
-  createAuditEvent(data: AuditEventCreateInput!): AuditEvent
-  createAuditEvents(data: [AuditEventCreateInput!]!): [AuditEvent]
   updateAuditEvent(where: AuditEventWhereUniqueInput!, data: AuditEventUpdateInput!): AuditEvent
   updateAuditEvents(data: [AuditEventUpdateArgs!]!): [AuditEvent]
-  deleteAuditEvent(where: AuditEventWhereUniqueInput!): AuditEvent
-  deleteAuditEvents(where: [AuditEventWhereUniqueInput!]!): [AuditEvent]
   createPaymentProvider(data: PaymentProviderCreateInput!): PaymentProvider
   createPaymentProviders(data: [PaymentProviderCreateInput!]!): [PaymentProvider]
   updatePaymentProvider(where: PaymentProviderWhereUniqueInput!, data: PaymentProviderUpdateInput!): PaymentProvider
@@ -4697,6 +4474,18 @@ type Mutation {
   createInitialUser(data: CreateInitialUserInput!): UserAuthenticationWithPasswordSuccess!
   sendUserPasswordResetLink(email: String!): Boolean!
   redeemUserPasswordResetToken(email: String!, token: String!, password: String!): RedeemUserPasswordResetTokenResult
+  signRepresentationAgreement(agreementId: ID!, idempotencyKey: String!): AgencyJSON!
+  recordContractSigned(contractId: ID!, idempotencyKey: String!): AgencyJSON!
+  generatePaymentSchedule(contractId: ID, dealId: ID, idempotencyKey: String!): AgencyJSON!
+  markPaymentReceived(scheduledPaymentId: ID!, idempotencyKey: String!): AgencyJSON!
+  draftCommissionInvoice(athleteId: ID!, scheduledPaymentIds: [ID!]!, idempotencyKey: String!): AgencyJSON!
+  sendCommissionInvoice(invoiceId: ID!, idempotencyKey: String!): AgencyJSON!
+  recordInvoicePayment(invoiceId: ID!, amountCents: Int!, reference: String!, idempotencyKey: String!): AgencyJSON!
+  reverseLedgerEntry(entryId: ID!, reason: String!, idempotencyKey: String!): AgencyJSON!
+  postTrustEntry(accountId: ID!, entryType: String!, amountCents: Int!, reference: String!, invoiceId: ID, reversesId: ID, idempotencyKey: String!): AgencyJSON!
+  moveRecruitingStage(athleteId: ID!, stage: String!, idempotencyKey: String!): AgencyJSON!
+  completeDeliverable(deliverableId: ID!, proofLink: String!, idempotencyKey: String!): AgencyJSON!
+  payCommissionInvoice(invoiceId: ID!, idempotencyKey: String!): AgencyJSON!
 }
 
 union UserAuthenticationWithPasswordResult = UserAuthenticationWithPasswordSuccess | UserAuthenticationWithPasswordFailure
@@ -4834,6 +4623,10 @@ type Query {
   authenticatedItem: AuthenticatedItem
   validateUserPasswordResetToken(email: String!, token: String!): ValidateUserPasswordResetTokenResult
   redirectToInit: Boolean
+  checkEndorsementConflicts(athleteId: ID!, category: String!, start: String!, end: String!): AgencyJSON!
+  myAthleteSummary: AgencyJSON!
+  myDeliverables: AgencyJSON!
+  myInvoices: AgencyJSON!
 }
 
 union AuthenticatedItem = User
@@ -4973,3 +4766,5 @@ enum KeystoneAdminUISortDirection {
   ASC
   DESC
 }
+
+scalar AgencyJSON

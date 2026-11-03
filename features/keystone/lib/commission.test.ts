@@ -1,0 +1,13 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {commission,allocateCommission,trustBalance,exactReversal,installmentAmounts,overlaps} from './commission';
+test('commission floors and records remainder',()=>assert.deepEqual(commission(101,300),{commissionCents:3,remainder:300}));
+test('large products use exact integer arithmetic',()=>assert.equal(commission(2000000000,9999).commissionCents,1999800000));
+test('reject invalid commission inputs',()=>{for(const n of [-1,NaN,1.5])assert.throws(()=>commission(n,300));assert.throws(()=>commission(10,10001));});
+test('largest remainder is deterministic by user id',()=>assert.deepEqual(allocateCommission(1,[{userId:'b',shareBps:5000},{userId:'a',shareBps:5000}]),[{userId:'a',amountCents:1},{userId:'b',amountCents:0}]));
+test('allocation conserves every cent across varied amounts',()=>{for(let i=0;i<1000;i++)assert.equal(allocateCommission(i,[{userId:'a',shareBps:3333},{userId:'b',shareBps:3333},{userId:'c',shareBps:3334}]).reduce((n,s)=>n+s.amountCents,0),i);});
+test('invalid and duplicate splits rejected',()=>{assert.throws(()=>allocateCommission(10,[{userId:'a',shareBps:9000}]));assert.throws(()=>allocateCommission(10,[{userId:'a',shareBps:5000},{userId:'a',shareBps:5000}]));});
+test('trust cannot go negative',()=>{assert.equal(trustBalance(BigInt(100),-BigInt(100)),BigInt(0));assert.throws(()=>trustBalance(BigInt(100),-BigInt(101)));});
+test('reversal exact and once',()=>{assert.equal(exactReversal(BigInt(123),false,false),-BigInt(123));assert.throws(()=>exactReversal(BigInt(123),true,false));assert.throws(()=>exactReversal(BigInt(123),false,true));});
+test('schedules preserve total including remainder',()=>assert.deepEqual(installmentAmounts(100,3),[34,33,33]));
+test('exclusive terms include boundary date',()=>assert.equal(overlaps(new Date('2027-01-01'),new Date('2027-02-01'),new Date('2027-02-01'),new Date('2027-03-01')),true));

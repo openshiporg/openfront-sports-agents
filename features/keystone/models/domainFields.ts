@@ -10,5 +10,5 @@ export const rel = (ref:string,many=false) => relationship({ref,many});
 export function domainList(fields:Record<string,any>, permission:Permission, scope?:string, immutable=false) {
   const manage = permissions[permission];
   const filter = (args:any): any => {const result=athleteScope(args); return typeof result==='boolean'||!scope ? result : scope==='self' ? result : scope.split('.').reverse().reduce((nested:any, key:string)=>({[key]:nested}),result);};
-  return list({access:{operation:{query:manage,create:immutable?()=>false:manage,update:immutable?()=>false:manage,delete:()=>false},...(scope?{filter:{query:filter,update:filter}}:{})},fields:{...fields,...trackingFields}});
+  return list({...(immutable?{graphql:{omit:{create:true,delete:true}}}:{}),access:{operation:{query:manage,create:immutable?()=>false:manage,update:immutable?()=>false:manage,delete:()=>false},...(scope?{filter:{query:filter,update:filter}}:{})},fields:{...fields,...trackingFields}});
 }
