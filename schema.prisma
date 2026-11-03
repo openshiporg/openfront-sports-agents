@@ -12,72 +12,62 @@ generator client {
 }
 
 model User {
-  id                      String       @id @default(cuid())
-  name                    String       @default("")
-  email                   String       @unique @default("")
-  password                String
-  role                    Role?        @relation("User_role", fields: [roleId], references: [id])
-  roleId                  String?      @map("role")
-  tasks                   Todo[]       @relation("Todo_assignedTo")
-  passwordResetToken      String?
-  passwordResetIssuedAt   DateTime?
-  passwordResetRedeemedAt DateTime?
-  from_OAuthToken_user    OAuthToken[] @relation("OAuthToken_user")
+  id                               String                    @id @default(cuid())
+  name                             String                    @default("")
+  email                            String                    @unique @default("")
+  password                         String
+  role                             Role?                     @relation("User_role", fields: [roleId], references: [id])
+  roleId                           String?                   @map("role")
+  agentCertification_user          AgentCertification[]      @relation("AgentCertification_user")
+  athlete_leadAgent                Athlete[]                 @relation("Athlete_leadAgent")
+  athlete_supportStaff             Athlete[]                 @relation("Athlete_supportStaff")
+  athlete_portalUser               Athlete[]                 @relation("Athlete_portalUser")
+  representationAgreement_agent    RepresentationAgreement[] @relation("RepresentationAgreement_agent")
+  interaction_user                 Interaction[]             @relation("Interaction_user")
+  endorsementDeal_owner            EndorsementDeal[]         @relation("EndorsementDeal_owner")
+  commissionLedgerEntry_payeeUser  CommissionLedgerEntry[]   @relation("CommissionLedgerEntry_payeeUser")
+  commissionLedgerEntry_preparedBy CommissionLedgerEntry[]   @relation("CommissionLedgerEntry_preparedBy")
+  commissionLedgerEntry_approvedBy CommissionLedgerEntry[]   @relation("CommissionLedgerEntry_approvedBy")
+  agentSplit_user                  AgentSplit[]              @relation("AgentSplit_user")
+  document_uploadedBy              Document[]                @relation("Document_uploadedBy")
+  task_assignee                    Task[]                    @relation("Task_assignee")
+  auditEvent_actor                 AuditEvent[]              @relation("AuditEvent_actor")
+  onboardingStatus                 UserOnboardingStatusType? @default(not_started)
+  createdAt                        DateTime                  @default(now())
+  updatedAt                        DateTime                  @default(now()) @updatedAt
+  passwordResetToken               String?
+  passwordResetIssuedAt            DateTime?
+  passwordResetRedeemedAt          DateTime?
+  from_OAuthToken_user             OAuthToken[]              @relation("OAuthToken_user")
+  from_Payment_processedBy         Payment[]                 @relation("Payment_processedBy")
+  from_Refund_requestedBy          Refund[]                  @relation("Refund_requestedBy")
+  from_Refund_approvedBy           Refund[]                  @relation("Refund_approvedBy")
 
   @@index([roleId])
 }
 
 model Role {
-  id                 String  @id @default(cuid())
-  name               String  @default("")
-  canCreateTodos     Boolean @default(false)
-  canManageAllTodos  Boolean @default(false)
-  canSeeOtherPeople  Boolean @default(false)
-  canEditOtherPeople Boolean @default(false)
-  canManagePeople    Boolean @default(false)
-  canManageRoles     Boolean @default(false)
-  canAccessDashboard Boolean @default(false)
-  assignedTo         User[]  @relation("User_role")
-}
-
-model Todo {
-  id                   String      @id @default(cuid())
-  label                String      @default("")
-  description          Json        @default("[{\"type\":\"paragraph\",\"children\":[{\"text\":\"\"}]}]")
-  isComplete           Boolean     @default(false)
-  status               String?     @default("todo")
-  priority             Int?        @default(1)
-  tags                 Json        @default("[]")
-  dueDate              DateTime?
-  weight               Float?      @default(1)
-  budget               Decimal?    @default("0.00") @postgresql.Decimal(10, 2)
-  isPrivate            Boolean     @default(false)
-  largeNumber          BigInt?
-  metadata             Json?
-  secretNote           String?
-  coverImage_id        String?
-  coverImage_filesize  Int?
-  coverImage_width     Int?
-  coverImage_height    Int?
-  coverImage_extension String?
-  todoImages           TodoImage[] @relation("Todo_todoImages")
-  assignedTo           User?       @relation("Todo_assignedTo", fields: [assignedToId], references: [id])
-  assignedToId         String?     @map("assignedTo")
-
-  @@index([assignedToId])
-}
-
-model TodoImage {
-  id              String  @id @default(cuid())
-  image_id        String?
-  image_filesize  Int?
-  image_width     Int?
-  image_height    Int?
-  image_extension String?
-  imagePath       String  @default("")
-  altText         String  @default("")
-  todos           Todo[]  @relation("Todo_todoImages")
-  metadata        Json?
+  id                    String   @id @default(cuid())
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @default(now()) @updatedAt
+  name                  String   @default("")
+  canSeeOtherPeople     Boolean  @default(false)
+  canEditOtherPeople    Boolean  @default(false)
+  canManagePeople       Boolean  @default(false)
+  canManageRoles        Boolean  @default(false)
+  canAccessDashboard    Boolean  @default(false)
+  canManageAthletes     Boolean  @default(false)
+  canManageContracts    Boolean  @default(false)
+  canManageEndorsements Boolean  @default(false)
+  canManageCommissions  Boolean  @default(false)
+  canManageTrust        Boolean  @default(false)
+  canViewAllClients     Boolean  @default(false)
+  canManagePayments     Boolean  @default(false)
+  canReadPayments       Boolean  @default(false)
+  canIssueRefunds       Boolean  @default(false)
+  canReadAudit          Boolean  @default(false)
+  canManageOnboarding   Boolean  @default(false)
+  assignedTo            User[]   @relation("User_role")
 }
 
 model OAuthApp {
@@ -125,4 +115,881 @@ model OAuthToken {
 
   @@index([clientId])
   @@index([userId])
+}
+
+model Agency {
+  id                              String   @id @default(cuid())
+  name                            String   @default("")
+  defaultPlayingCommissionBps     Int?     @default(300)
+  defaultEndorsementCommissionBps Int?     @default(1500)
+  currencyCode                    String   @default("USD")
+  fiscalYearStart                 Int?     @default(1)
+  refundApprovalThresholdCents    Int?     @default(0)
+  createdAt                       DateTime @default(now())
+  updatedAt                       DateTime @default(now()) @updatedAt
+}
+
+model AgentCertification {
+  id         String                        @id @default(cuid())
+  user       User?                         @relation("AgentCertification_user", fields: [userId], references: [id])
+  userId     String?                       @map("user")
+  body       AgentCertificationBodyType?   @default(NFLPA)
+  number     String                        @default("")
+  issuedAt   DateTime?
+  expiresAt  DateTime?
+  status     AgentCertificationStatusType? @default(active)
+  document   Document?                     @relation("AgentCertification_document", fields: [documentId], references: [id])
+  documentId String?                       @map("document")
+  createdAt  DateTime                      @default(now())
+  updatedAt  DateTime                      @default(now()) @updatedAt
+
+  @@index([userId])
+  @@index([documentId])
+}
+
+model Team {
+  id                   String            @id @default(cuid())
+  name                 String            @default("")
+  league               String            @default("")
+  city                 String            @default("")
+  athlete_team         Athlete[]         @relation("Athlete_team")
+  playingContract_team PlayingContract[] @relation("PlayingContract_team")
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @default(now()) @updatedAt
+}
+
+model Athlete {
+  id                              String                      @id @default(cuid())
+  fullName                        String                      @default("")
+  preferredName                   String                      @default("")
+  sport                           String                      @default("")
+  league                          AthleteLeagueType?          @default(NFL)
+  position                        String                      @default("")
+  team                            Team?                       @relation("Athlete_team", fields: [teamId], references: [id])
+  teamId                          String?                     @map("team")
+  dateOfBirth                     DateTime?                   @postgresql.Date
+  status                          AthleteStatusType?          @default(prospect)
+  leadAgent                       User?                       @relation("Athlete_leadAgent", fields: [leadAgentId], references: [id])
+  leadAgentId                     String?                     @map("leadAgent")
+  supportStaff                    User[]                      @relation("Athlete_supportStaff")
+  portalUser                      User?                       @relation("Athlete_portalUser", fields: [portalUserId], references: [id])
+  portalUserId                    String?                     @map("portalUser")
+  email                           String                      @default("")
+  phone                           String                      @default("")
+  representationStartedAt         DateTime?
+  socialHandles                   Json?
+  followerCounts                  Json?
+  marketabilityNotes              String                      @default("")
+  image                           String                      @default("")
+  eligibility                     Json?
+  isPublic                        Boolean                     @default(false)
+  recruitingStage                 AthleteRecruitingStageType? @default(identified)
+  contactAllowedFrom              DateTime?
+  representationAgreement_athlete RepresentationAgreement[]   @relation("RepresentationAgreement_athlete")
+  contact_athletes                Contact[]                   @relation("Athlete_contact_athletes")
+  interaction_athlete             Interaction[]               @relation("Interaction_athlete")
+  playingContract_athlete         PlayingContract[]           @relation("PlayingContract_athlete")
+  endorsementDeal_athlete         EndorsementDeal[]           @relation("EndorsementDeal_athlete")
+  scheduledPayment_athlete        ScheduledPayment[]          @relation("ScheduledPayment_athlete")
+  commissionInvoice_athlete       CommissionInvoice[]         @relation("CommissionInvoice_athlete")
+  commissionLedgerEntry_athlete   CommissionLedgerEntry[]     @relation("CommissionLedgerEntry_athlete")
+  agentSplit_athlete              AgentSplit[]                @relation("AgentSplit_athlete")
+  clientTrustAccount_athlete      ClientTrustAccount[]        @relation("ClientTrustAccount_athlete")
+  clientTrustEntry_athlete        ClientTrustEntry[]          @relation("ClientTrustEntry_athlete")
+  document_athlete                Document[]                  @relation("Document_athlete")
+  task_athlete                    Task[]                      @relation("Task_athlete")
+  createdAt                       DateTime                    @default(now())
+  updatedAt                       DateTime                    @default(now()) @updatedAt
+
+  @@index([teamId])
+  @@index([leadAgentId])
+  @@index([portalUserId])
+}
+
+model RepresentationAgreement {
+  id                                      String                             @id @default(cuid())
+  athlete                                 Athlete?                           @relation("RepresentationAgreement_athlete", fields: [athleteId], references: [id])
+  athleteId                               String?                            @map("athlete")
+  agent                                   User?                              @relation("RepresentationAgreement_agent", fields: [agentId], references: [id])
+  agentId                                 String?                            @map("agent")
+  scope                                   RepresentationAgreementScopeType?  @default(playing)
+  playingCommissionBps                    Int?                               @default(300)
+  marketingCommissionBps                  Int?                               @default(1500)
+  capBps                                  Int?                               @default(300)
+  effectiveAt                             DateTime?
+  expiresAt                               DateTime?
+  terminationNoticeDays                   Int?                               @default(30)
+  status                                  RepresentationAgreementStatusType? @default(draft)
+  signedDocument                          Document?                          @relation("RepresentationAgreement_signedDocument", fields: [signedDocumentId], references: [id])
+  signedDocumentId                        String?                            @map("signedDocument")
+  filedAt                                 DateTime?
+  playingContract_representationAgreement PlayingContract[]                  @relation("PlayingContract_representationAgreement")
+  document_agreement                      Document[]                         @relation("Document_agreement")
+  createdAt                               DateTime                           @default(now())
+  updatedAt                               DateTime                           @default(now()) @updatedAt
+
+  @@index([athleteId])
+  @@index([agentId])
+  @@index([signedDocumentId])
+}
+
+model Contact {
+  id                  String        @id @default(cuid())
+  name                String        @default("")
+  org                 String        @default("")
+  role                String        @default("")
+  email               String        @default("")
+  phone               String        @default("")
+  athletes            Athlete[]     @relation("Athlete_contact_athletes")
+  doNotContact        Boolean       @default(false)
+  brand_contacts      Brand[]       @relation("Brand_contacts")
+  interaction_contact Interaction[] @relation("Interaction_contact")
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @default(now()) @updatedAt
+}
+
+model Brand {
+  id                    String            @id @default(cuid())
+  name                  String            @default("")
+  category              String            @default("")
+  contacts              Contact[]         @relation("Brand_contacts")
+  website               String            @default("")
+  interaction_brand     Interaction[]     @relation("Interaction_brand")
+  endorsementDeal_brand EndorsementDeal[] @relation("EndorsementDeal_brand")
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @default(now()) @updatedAt
+}
+
+model Interaction {
+  id         String               @id @default(cuid())
+  athlete    Athlete?             @relation("Interaction_athlete", fields: [athleteId], references: [id])
+  athleteId  String?              @map("athlete")
+  contact    Contact?             @relation("Interaction_contact", fields: [contactId], references: [id])
+  contactId  String?              @map("contact")
+  brand      Brand?               @relation("Interaction_brand", fields: [brandId], references: [id])
+  brandId    String?              @map("brand")
+  user       User?                @relation("Interaction_user", fields: [userId], references: [id])
+  userId     String?              @map("user")
+  kind       InteractionKindType? @default(call)
+  occurredAt DateTime?
+  summary    String               @default("")
+  nextStepAt DateTime?
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @default(now()) @updatedAt
+
+  @@index([athleteId])
+  @@index([contactId])
+  @@index([brandId])
+  @@index([userId])
+}
+
+model PlayingContract {
+  id                        String                           @id @default(cuid())
+  athlete                   Athlete?                         @relation("PlayingContract_athlete", fields: [athleteId], references: [id])
+  athleteId                 String?                          @map("athlete")
+  team                      Team?                            @relation("PlayingContract_team", fields: [teamId], references: [id])
+  teamId                    String?                          @map("team")
+  league                    String                           @default("")
+  contractType              PlayingContractContractTypeType? @default(rookie_scale)
+  signedAt                  DateTime?
+  startSeason               String                           @default("")
+  endSeason                 String                           @default("")
+  totalValueCents           Int?                             @default(0)
+  guaranteedCents           Int?                             @default(0)
+  signingBonusCents         Int?                             @default(0)
+  status                    PlayingContractStatusType?       @default(negotiating)
+  document                  Document?                        @relation("PlayingContract_document", fields: [documentId], references: [id])
+  documentId                String?                          @map("document")
+  commissionBps             Int?                             @default(0)
+  representationAgreement   RepresentationAgreement?         @relation("PlayingContract_representationAgreement", fields: [representationAgreementId], references: [id])
+  representationAgreementId String?                          @map("representationAgreement")
+  currencyCode              String                           @default("USD")
+  contractYear_contract     ContractYear[]                   @relation("ContractYear_contract")
+  incentive_contract        Incentive[]                      @relation("Incentive_contract")
+  document_contract         Document[]                       @relation("Document_contract")
+  task_contract             Task[]                           @relation("Task_contract")
+  createdAt                 DateTime                         @default(now())
+  updatedAt                 DateTime                         @default(now()) @updatedAt
+
+  @@index([athleteId])
+  @@index([teamId])
+  @@index([documentId])
+  @@index([representationAgreementId])
+}
+
+model ContractYear {
+  id                            String                       @id @default(cuid())
+  contract                      PlayingContract?             @relation("ContractYear_contract", fields: [contractId], references: [id])
+  contractId                    String?                      @map("contract")
+  season                        String                       @default("")
+  baseSalaryCents               Int?                         @default(0)
+  guaranteedCents               Int?                         @default(0)
+  rosterBonusCents              Int?                         @default(0)
+  workoutBonusCents             Int?                         @default(0)
+  payPeriods                    Int?                         @default(17)
+  paySchedule                   ContractYearPayScheduleType? @default(game_checks)
+  currencyCode                  String                       @default("USD")
+  scheduledPayment_contractYear ScheduledPayment[]           @relation("ScheduledPayment_contractYear")
+  createdAt                     DateTime                     @default(now())
+  updatedAt                     DateTime                     @default(now()) @updatedAt
+
+  @@index([contractId])
+}
+
+model Incentive {
+  id                         String               @id @default(cuid())
+  contract                   PlayingContract?     @relation("Incentive_contract", fields: [contractId], references: [id])
+  contractId                 String?              @map("contract")
+  description                String               @default("")
+  amountCents                Int?                 @default(0)
+  likelyToBeEarned           Boolean              @default(false)
+  status                     IncentiveStatusType? @default(pending)
+  earnedAt                   DateTime?
+  evidence                   String               @default("")
+  currencyCode               String               @default("USD")
+  scheduledPayment_incentive ScheduledPayment[]   @relation("ScheduledPayment_incentive")
+  createdAt                  DateTime             @default(now())
+  updatedAt                  DateTime             @default(now()) @updatedAt
+
+  @@index([contractId])
+}
+
+model EndorsementDeal {
+  id                               String                     @id @default(cuid())
+  athlete                          Athlete?                   @relation("EndorsementDeal_athlete", fields: [athleteId], references: [id])
+  athleteId                        String?                    @map("athlete")
+  brand                            Brand?                     @relation("EndorsementDeal_brand", fields: [brandId], references: [id])
+  brandId                          String?                    @map("brand")
+  owner                            User?                      @relation("EndorsementDeal_owner", fields: [ownerId], references: [id])
+  ownerId                          String?                    @map("owner")
+  status                           EndorsementDealStatusType? @default(prospect)
+  termStart                        DateTime?
+  termEnd                          DateTime?
+  totalValueCents                  Int?                       @default(0)
+  commissionBps                    Int?                       @default(1500)
+  exclusivityCategory              String                     @default("")
+  territory                        String                     @default("")
+  document                         Document?                  @relation("EndorsementDeal_document", fields: [documentId], references: [id])
+  documentId                       String?                    @map("document")
+  paymentTerms                     String                     @default("")
+  currencyCode                     String                     @default("USD")
+  deliverable_deal                 Deliverable[]              @relation("Deliverable_deal")
+  scheduledPayment_endorsementDeal ScheduledPayment[]         @relation("ScheduledPayment_endorsementDeal")
+  agentSplit_deal                  AgentSplit[]               @relation("AgentSplit_deal")
+  document_deal                    Document[]                 @relation("Document_deal")
+  task_deal                        Task[]                     @relation("Task_deal")
+  createdAt                        DateTime                   @default(now())
+  updatedAt                        DateTime                   @default(now()) @updatedAt
+
+  @@index([athleteId])
+  @@index([brandId])
+  @@index([ownerId])
+  @@index([documentId])
+}
+
+model Deliverable {
+  id          String                 @id @default(cuid())
+  deal        EndorsementDeal?       @relation("Deliverable_deal", fields: [dealId], references: [id])
+  dealId      String?                @map("deal")
+  kind        DeliverableKindType?   @default(social_post)
+  dueAt       DateTime?
+  status      DeliverableStatusType? @default(scheduled)
+  completedAt DateTime?
+  proofLink   String                 @default("")
+  proof       Document?              @relation("Deliverable_proof", fields: [proofId], references: [id])
+  proofId     String?                @map("proof")
+  notes       String                 @default("")
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @default(now()) @updatedAt
+
+  @@index([dealId])
+  @@index([proofId])
+}
+
+model ScheduledPayment {
+  id                                     String                      @id @default(cuid())
+  sourceKey                              String                      @unique @default("")
+  contractYear                           ContractYear?               @relation("ScheduledPayment_contractYear", fields: [contractYearId], references: [id])
+  contractYearId                         String?                     @map("contractYear")
+  endorsementDeal                        EndorsementDeal?            @relation("ScheduledPayment_endorsementDeal", fields: [endorsementDealId], references: [id])
+  endorsementDealId                      String?                     @map("endorsementDeal")
+  incentive                              Incentive?                  @relation("ScheduledPayment_incentive", fields: [incentiveId], references: [id])
+  incentiveId                            String?                     @map("incentive")
+  athlete                                Athlete?                    @relation("ScheduledPayment_athlete", fields: [athleteId], references: [id])
+  athleteId                              String?                     @map("athlete")
+  dueAt                                  DateTime?
+  grossCents                             Int?                        @default(0)
+  commissionBps                          Int?                        @default(0)
+  commissionCents                        Int?                        @default(0)
+  remainder                              Int?                        @default(0)
+  receivedAt                             DateTime?
+  status                                 ScheduledPaymentStatusType? @default(scheduled)
+  currencyCode                           String                      @default("USD")
+  invoice                                CommissionInvoice?          @relation("ScheduledPayment_invoice", fields: [invoiceId], references: [id])
+  invoiceId                              String?                     @map("invoice")
+  commissionInvoiceLine_scheduledPayment CommissionInvoiceLine[]     @relation("CommissionInvoiceLine_scheduledPayment")
+  commissionLedgerEntry_scheduledPayment CommissionLedgerEntry[]     @relation("CommissionLedgerEntry_scheduledPayment")
+  createdAt                              DateTime                    @default(now())
+  updatedAt                              DateTime                    @default(now()) @updatedAt
+
+  @@index([contractYearId])
+  @@index([endorsementDealId])
+  @@index([incentiveId])
+  @@index([athleteId])
+  @@index([invoiceId])
+}
+
+model CommissionInvoice {
+  id                            String                       @id @default(cuid())
+  payment_order                 Payment[]                    @relation("Payment_order")
+  athlete                       Athlete?                     @relation("CommissionInvoice_athlete", fields: [athleteId], references: [id])
+  athleteId                     String?                      @map("athlete")
+  number                        String                       @unique @default("")
+  issuedAt                      DateTime?
+  dueAt                         DateTime?
+  totalCents                    Int?                         @default(0)
+  paidCents                     Int?                         @default(0)
+  status                        CommissionInvoiceStatusType? @default(draft)
+  paymentCollection             PaymentCollection?           @relation("CommissionInvoice_paymentCollection", fields: [paymentCollectionId], references: [id])
+  paymentCollectionId           String?                      @unique @map("paymentCollection")
+  currencyCode                  String                       @default("USD")
+  scheduledPayment_invoice      ScheduledPayment[]           @relation("ScheduledPayment_invoice")
+  commissionInvoiceLine_invoice CommissionInvoiceLine[]      @relation("CommissionInvoiceLine_invoice")
+  commissionLedgerEntry_invoice CommissionLedgerEntry[]      @relation("CommissionLedgerEntry_invoice")
+  clientTrustEntry_invoice      ClientTrustEntry[]           @relation("ClientTrustEntry_invoice")
+  createdAt                     DateTime                     @default(now())
+  updatedAt                     DateTime                     @default(now()) @updatedAt
+  from_Refund_order             Refund[]                     @relation("Refund_order")
+
+  @@index([athleteId])
+}
+
+model CommissionInvoiceLine {
+  id                 String             @id @default(cuid())
+  invoice            CommissionInvoice? @relation("CommissionInvoiceLine_invoice", fields: [invoiceId], references: [id])
+  invoiceId          String?            @map("invoice")
+  scheduledPayment   ScheduledPayment?  @relation("CommissionInvoiceLine_scheduledPayment", fields: [scheduledPaymentId], references: [id])
+  scheduledPaymentId String?            @map("scheduledPayment")
+  description        String             @default("")
+  grossCents         Int?               @default(0)
+  commissionBps      Int?               @default(0)
+  commissionCents    Int?               @default(0)
+  quantity           Int?               @default(1)
+  unitPriceCents     Int?               @default(0)
+  feesCents          Int?               @default(0)
+  taxCents           Int?               @default(0)
+  currencyCode       String             @default("USD")
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @default(now()) @updatedAt
+
+  @@index([invoiceId])
+  @@index([scheduledPaymentId])
+}
+
+model CommissionLedgerEntry {
+  id                             String                              @id @default(cuid())
+  entryKey                       String                              @unique @default("")
+  athlete                        Athlete?                            @relation("CommissionLedgerEntry_athlete", fields: [athleteId], references: [id])
+  athleteId                      String?                             @map("athlete")
+  invoice                        CommissionInvoice?                  @relation("CommissionLedgerEntry_invoice", fields: [invoiceId], references: [id])
+  invoiceId                      String?                             @map("invoice")
+  scheduledPayment               ScheduledPayment?                   @relation("CommissionLedgerEntry_scheduledPayment", fields: [scheduledPaymentId], references: [id])
+  scheduledPaymentId             String?                             @map("scheduledPayment")
+  entryType                      CommissionLedgerEntryEntryTypeType? @default(accrual)
+  amountCents                    BigInt
+  payeeUser                      User?                               @relation("CommissionLedgerEntry_payeeUser", fields: [payeeUserId], references: [id])
+  payeeUserId                    String?                             @map("payeeUser")
+  reverses                       CommissionLedgerEntry?              @relation("CommissionLedgerEntry_reverses", fields: [reversesId], references: [id])
+  reversesId                     String?                             @map("reverses")
+  reversalKey                    String?                             @unique
+  reason                         String                              @default("")
+  preparedBy                     User?                               @relation("CommissionLedgerEntry_preparedBy", fields: [preparedById], references: [id])
+  preparedById                   String?                             @map("preparedBy")
+  approvedBy                     User?                               @relation("CommissionLedgerEntry_approvedBy", fields: [approvedById], references: [id])
+  approvedById                   String?                             @map("approvedBy")
+  occurredAt                     DateTime?
+  currencyCode                   String                              @default("USD")
+  commissionLedgerEntry_reverses CommissionLedgerEntry[]             @relation("CommissionLedgerEntry_reverses")
+  createdAt                      DateTime                            @default(now())
+  updatedAt                      DateTime                            @default(now()) @updatedAt
+
+  @@index([athleteId])
+  @@index([invoiceId])
+  @@index([scheduledPaymentId])
+  @@index([payeeUserId])
+  @@index([reversesId])
+  @@index([preparedById])
+  @@index([approvedById])
+}
+
+model AgentSplit {
+  id        String           @id @default(cuid())
+  athlete   Athlete?         @relation("AgentSplit_athlete", fields: [athleteId], references: [id])
+  athleteId String?          @map("athlete")
+  deal      EndorsementDeal? @relation("AgentSplit_deal", fields: [dealId], references: [id])
+  dealId    String?          @map("deal")
+  user      User?            @relation("AgentSplit_user", fields: [userId], references: [id])
+  userId    String?          @map("user")
+  shareBps  Int?             @default(0)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @default(now()) @updatedAt
+
+  @@index([athleteId])
+  @@index([dealId])
+  @@index([userId])
+}
+
+model ClientTrustAccount {
+  id                       String             @id @default(cuid())
+  athlete                  Athlete?           @relation("ClientTrustAccount_athlete", fields: [athleteId], references: [id])
+  athleteId                String?            @map("athlete")
+  name                     String             @default("")
+  currencyCode             String             @default("USD")
+  clientTrustEntry_account ClientTrustEntry[] @relation("ClientTrustEntry_account")
+  createdAt                DateTime           @default(now())
+  updatedAt                DateTime           @default(now()) @updatedAt
+
+  @@index([athleteId])
+}
+
+model ClientTrustEntry {
+  id                        String                         @id @default(cuid())
+  account                   ClientTrustAccount?            @relation("ClientTrustEntry_account", fields: [accountId], references: [id])
+  accountId                 String?                        @map("account")
+  athlete                   Athlete?                       @relation("ClientTrustEntry_athlete", fields: [athleteId], references: [id])
+  athleteId                 String?                        @map("athlete")
+  invoice                   CommissionInvoice?             @relation("ClientTrustEntry_invoice", fields: [invoiceId], references: [id])
+  invoiceId                 String?                        @map("invoice")
+  entryType                 ClientTrustEntryEntryTypeType? @default(deposit)
+  amountCents               BigInt
+  reference                 String                         @default("")
+  occurredAt                DateTime?
+  reverses                  ClientTrustEntry?              @relation("ClientTrustEntry_reverses", fields: [reversesId], references: [id])
+  reversesId                String?                        @map("reverses")
+  reversalKey               String?                        @unique
+  currencyCode              String                         @default("USD")
+  clientTrustEntry_reverses ClientTrustEntry[]             @relation("ClientTrustEntry_reverses")
+  createdAt                 DateTime                       @default(now())
+  updatedAt                 DateTime                       @default(now()) @updatedAt
+
+  @@index([accountId])
+  @@index([athleteId])
+  @@index([invoiceId])
+  @@index([reversesId])
+}
+
+model Document {
+  id                                     String                    @id @default(cuid())
+  athlete                                Athlete?                  @relation("Document_athlete", fields: [athleteId], references: [id])
+  athleteId                              String?                   @map("athlete")
+  contract                               PlayingContract?          @relation("Document_contract", fields: [contractId], references: [id])
+  contractId                             String?                   @map("contract")
+  deal                                   EndorsementDeal?          @relation("Document_deal", fields: [dealId], references: [id])
+  dealId                                 String?                   @map("deal")
+  agreement                              RepresentationAgreement?  @relation("Document_agreement", fields: [agreementId], references: [id])
+  agreementId                            String?                   @map("agreement")
+  kind                                   String                    @default("")
+  version                                Int?                      @default(1)
+  sha256                                 String                    @default("")
+  storageKey                             String                    @default("")
+  uploadedBy                             User?                     @relation("Document_uploadedBy", fields: [uploadedById], references: [id])
+  uploadedById                           String?                   @map("uploadedBy")
+  verifiedAt                             DateTime?
+  agentCertification_document            AgentCertification[]      @relation("AgentCertification_document")
+  representationAgreement_signedDocument RepresentationAgreement[] @relation("RepresentationAgreement_signedDocument")
+  playingContract_document               PlayingContract[]         @relation("PlayingContract_document")
+  endorsementDeal_document               EndorsementDeal[]         @relation("EndorsementDeal_document")
+  deliverable_proof                      Deliverable[]             @relation("Deliverable_proof")
+  createdAt                              DateTime                  @default(now())
+  updatedAt                              DateTime                  @default(now()) @updatedAt
+
+  @@index([athleteId])
+  @@index([contractId])
+  @@index([dealId])
+  @@index([agreementId])
+  @@index([uploadedById])
+}
+
+model Task {
+  id         String            @id @default(cuid())
+  title      String            @default("")
+  athlete    Athlete?          @relation("Task_athlete", fields: [athleteId], references: [id])
+  athleteId  String?           @map("athlete")
+  deal       EndorsementDeal?  @relation("Task_deal", fields: [dealId], references: [id])
+  dealId     String?           @map("deal")
+  contract   PlayingContract?  @relation("Task_contract", fields: [contractId], references: [id])
+  contractId String?           @map("contract")
+  assignee   User?             @relation("Task_assignee", fields: [assigneeId], references: [id])
+  assigneeId String?           @map("assignee")
+  dueAt      DateTime?
+  status     TaskStatusType?   @default(open)
+  priority   TaskPriorityType? @default(normal)
+  autoKey    String?           @unique
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @default(now()) @updatedAt
+
+  @@index([athleteId])
+  @@index([dealId])
+  @@index([contractId])
+  @@index([assigneeId])
+}
+
+model AuditEvent {
+  id         String   @id @default(cuid())
+  actor      User?    @relation("AuditEvent_actor", fields: [actorId], references: [id])
+  actorId    String?  @map("actor")
+  action     String   @default("")
+  targetList String   @default("")
+  targetId   String   @default("")
+  before     Json?
+  after      Json?
+  reason     String   @default("")
+  requestId  String   @default("")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+
+  @@index([actorId])
+  @@index([requestId])
+}
+
+model PaymentProvider {
+  id                           String           @id @default(cuid())
+  name                         String           @default("")
+  code                         String           @unique @default("")
+  isInstalled                  Boolean          @default(true)
+  credentials                  Json?            @default("{}")
+  metadata                     Json?            @default("{}")
+  createPaymentFunction        String           @default("")
+  capturePaymentFunction       String           @default("")
+  refundPaymentFunction        String           @default("")
+  getPaymentStatusFunction     String           @default("")
+  generatePaymentLinkFunction  String           @default("")
+  handleWebhookFunction        String           @default("")
+  sessions                     PaymentSession[] @relation("PaymentSession_paymentProvider")
+  createdAt                    DateTime         @default(now())
+  updatedAt                    DateTime         @default(now()) @updatedAt
+  from_Payment_paymentProvider Payment[]        @relation("Payment_paymentProvider")
+}
+
+model PaymentCollection {
+  id               String                            @id @default(cuid())
+  description      PaymentCollectionDescriptionType? @default(default)
+  amount           Int
+  authorizedAmount Int?                              @default(0)
+  refundedAmount   Int?                              @default(0)
+  metadata         Json?
+  paymentSessions  PaymentSession[]                  @relation("PaymentSession_paymentCollection")
+  payments         Payment[]                         @relation("Payment_paymentCollection")
+  invoice          CommissionInvoice?                @relation("CommissionInvoice_paymentCollection")
+  createdAt        DateTime                          @default(now())
+  updatedAt        DateTime                          @default(now()) @updatedAt
+}
+
+model PaymentSession {
+  id                  String             @id @default(cuid())
+  isSelected          Boolean            @default(false)
+  isInitiated         Boolean            @default(false)
+  amount              Int
+  data                Json?              @default("{}")
+  idempotencyKey      String             @unique @default("")
+  paymentCollection   PaymentCollection? @relation("PaymentSession_paymentCollection", fields: [paymentCollectionId], references: [id])
+  paymentCollectionId String?            @map("paymentCollection")
+  paymentProvider     PaymentProvider?   @relation("PaymentSession_paymentProvider", fields: [paymentProviderId], references: [id])
+  paymentProviderId   String?            @map("paymentProvider")
+  paymentAuthorizedAt DateTime?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @default(now()) @updatedAt
+
+  @@index([paymentCollectionId])
+  @@index([paymentProviderId])
+}
+
+model Payment {
+  id                               String                @id @default(cuid())
+  idempotencyKey                   String                @unique @default("")
+  reservedAt                       DateTime?
+  refundedAmount                   Int?                  @default(0)
+  amount                           Int
+  data                             Json?
+  currencyCode                     String                @default("USD")
+  status                           String                @default("pending")
+  paymentMethod                    String?               @default("credit_card")
+  paymentProvider                  PaymentProvider?      @relation("Payment_paymentProvider", fields: [paymentProviderId], references: [id])
+  paymentProviderId                String?               @map("paymentProvider")
+  providerPaymentId                String                @default("")
+  cardLast4                        String                @default("")
+  cardBrand                        String                @default("")
+  tipAmount                        Int?                  @default(0)
+  isSplitPayment                   Boolean               @default(false)
+  splitPaymentIndex                Int?
+  splitTotal                       Int?
+  processedAt                      DateTime?
+  errorMessage                     String                @default("")
+  notes                            String                @default("")
+  order                            CommissionInvoice?    @relation("Payment_order", fields: [orderId], references: [id])
+  orderId                          String?               @map("order")
+  paymentCollection                PaymentCollection?    @relation("Payment_paymentCollection", fields: [paymentCollectionId], references: [id])
+  paymentCollectionId              String?               @map("paymentCollection")
+  processedBy                      User?                 @relation("Payment_processedBy", fields: [processedById], references: [id])
+  processedById                    String?               @map("processedBy")
+  createdAt                        DateTime              @default(now())
+  updatedAt                        DateTime              @default(now()) @updatedAt
+  from_Refund_payment              Refund[]              @relation("Refund_payment")
+  from_PaymentWebhookEvent_payment PaymentWebhookEvent[] @relation("PaymentWebhookEvent_payment")
+
+  @@index([paymentProviderId])
+  @@index([orderId])
+  @@index([paymentCollectionId])
+  @@index([processedById])
+}
+
+model Refund {
+  id               String             @id @default(cuid())
+  idempotencyKey   String             @unique @default("")
+  amount           Int
+  currencyCode     String             @default("")
+  status           String             @default("processing")
+  reason           String             @default("")
+  providerRefundId String             @default("")
+  providerData     Json?
+  processedAt      DateTime?
+  payment          Payment?           @relation("Refund_payment", fields: [paymentId], references: [id])
+  paymentId        String?            @map("payment")
+  order            CommissionInvoice? @relation("Refund_order", fields: [orderId], references: [id])
+  orderId          String?            @map("order")
+  requestedBy      User?              @relation("Refund_requestedBy", fields: [requestedById], references: [id])
+  requestedById    String?            @map("requestedBy")
+  approvedBy       User?              @relation("Refund_approvedBy", fields: [approvedById], references: [id])
+  approvedById     String?            @map("approvedBy")
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @default(now()) @updatedAt
+
+  @@index([paymentId])
+  @@index([orderId])
+  @@index([requestedById])
+  @@index([approvedById])
+}
+
+model PaymentWebhookEvent {
+  id              String    @id @default(cuid())
+  eventKey        String    @unique @default("")
+  providerCode    String    @default("")
+  providerEventId String    @default("")
+  eventType       String    @default("")
+  status          String?   @default("received")
+  payload         Json?
+  rawBody         String    @default("")
+  error           String    @default("")
+  attempts        Int?      @default(0)
+  receivedAt      DateTime? @default(now())
+  processedAt     DateTime?
+  payment         Payment?  @relation("PaymentWebhookEvent_payment", fields: [paymentId], references: [id])
+  paymentId       String?   @map("payment")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @default(now()) @updatedAt
+
+  @@index([providerCode])
+  @@index([providerEventId])
+  @@index([eventType])
+  @@index([receivedAt])
+  @@index([paymentId])
+}
+
+model IdempotencyKey {
+  id             String    @id @default(cuid())
+  idempotencyKey String    @unique @default("")
+  requestMethod  String    @default("")
+  requestParams  Json?
+  requestPath    String    @default("")
+  responseCode   Int?
+  responseBody   Json?
+  recoveryPoint  String    @default("started")
+  lockedAt       DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @default(now()) @updatedAt
+}
+
+enum UserOnboardingStatusType {
+  not_started
+  in_progress
+  completed
+  dismissed
+}
+
+enum AgentCertificationBodyType {
+  NFLPA
+  NBPA
+  MLBPA
+  NHLPA
+  MLSPA
+  FIFA
+  NCAA_NIL_STATE
+  other
+}
+
+enum AgentCertificationStatusType {
+  active
+  expired
+  suspended
+}
+
+enum AthleteLeagueType {
+  NFL
+  NBA
+  WNBA
+  MLB
+  NHL
+  MLS
+  NWSL
+  NCAA
+  Other
+}
+
+enum AthleteStatusType {
+  prospect
+  recruiting
+  client
+  former
+  lost
+}
+
+enum AthleteRecruitingStageType {
+  identified
+  contacted
+  meeting
+  pitched
+  verbal
+  signed
+  lost
+}
+
+enum RepresentationAgreementScopeType {
+  playing
+  marketing
+  both
+}
+
+enum RepresentationAgreementStatusType {
+  draft
+  sent
+  signed
+  filed_with_union
+  active
+  terminated
+  expired
+}
+
+enum InteractionKindType {
+  call
+  meeting
+  email
+  text
+  visit
+  note
+}
+
+enum PlayingContractContractTypeType {
+  rookie_scale
+  veteran
+  extension
+  two_way
+  minor_league
+  college_nil
+  other
+}
+
+enum PlayingContractStatusType {
+  negotiating
+  signed
+  active
+  completed
+  terminated
+  released
+}
+
+enum ContractYearPayScheduleType {
+  game_checks
+  semi_monthly
+  lump_sum
+}
+
+enum IncentiveStatusType {
+  pending
+  earned
+  not_earned
+}
+
+enum EndorsementDealStatusType {
+  prospect
+  negotiating
+  signed
+  active
+  completed
+  terminated
+}
+
+enum DeliverableKindType {
+  social_post
+  appearance
+  photo_shoot
+  commercial
+  autograph_session
+  other
+}
+
+enum DeliverableStatusType {
+  scheduled
+  completed
+  missed
+  waived
+}
+
+enum ScheduledPaymentStatusType {
+  scheduled
+  received
+  late
+  waived
+}
+
+enum CommissionInvoiceStatusType {
+  draft
+  sent
+  partially_paid
+  paid
+  void
+  written_off
+}
+
+enum CommissionLedgerEntryEntryTypeType {
+  accrual
+  invoice
+  receipt
+  split_to_agent
+  reversal
+  write_off
+}
+
+enum ClientTrustEntryEntryTypeType {
+  deposit
+  commission_transfer
+  disbursement_to_client
+  reversal
+}
+
+enum TaskStatusType {
+  open
+  in_progress
+  completed
+  cancelled
+}
+
+enum TaskPriorityType {
+  normal
+  high
+  urgent
+}
+
+enum PaymentCollectionDescriptionType {
+  default
+  refund
 }

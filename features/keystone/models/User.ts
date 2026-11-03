@@ -1,7 +1,9 @@
 import { list } from '@keystone-6/core'
 import { allOperations, denyAll } from '@keystone-6/core/access'
-import { checkbox, password, relationship, text } from '@keystone-6/core/fields'
+import { checkbox, password, relationship, text, select } from '@keystone-6/core/fields'
 
+import { rel } from "./domainFields";
+import { trackingFields } from "./trackingFields";
 import { isSignedIn, permissions, rules } from '../access'
 import type { Session } from '../access'
 
@@ -28,7 +30,7 @@ export const User = list({
     hideCreate: args => !permissions.canManagePeople(args),
     hideDelete: args => !permissions.canManagePeople(args),
     listView: {
-      initialColumns: ['name', 'email', 'role', 'tasks'],
+      initialColumns: ['name', 'email', 'role'],
     },
     itemView: {
       defaultFieldMode: ({ session, item }) => {
@@ -77,20 +79,21 @@ export const User = list({
         },
       },
     }),
-    tasks: relationship({
-      ref: 'Todo.assignedTo',
-      many: true,
-      access: {
-        create: permissions.canManageAllTodos,
-        update: ({ session, item }) =>
-          permissions.canManageAllTodos({ session }) || session?.itemId === item.id,
-      },
-      ui: {
-        createView: {
-          fieldMode: args => (permissions.canManageAllTodos(args) ? 'edit' : 'hidden'),
-        },
-        // itemView: { fieldMode: 'read' },
-      },
-    }),
+    agentCertification_user: rel("AgentCertification.user", true),
+    athlete_leadAgent: rel("Athlete.leadAgent", true),
+    athlete_supportStaff: rel("Athlete.supportStaff", true),
+    athlete_portalUser: rel("Athlete.portalUser", true),
+    representationAgreement_agent: rel("RepresentationAgreement.agent", true),
+    interaction_user: rel("Interaction.user", true),
+    endorsementDeal_owner: rel("EndorsementDeal.owner", true),
+    commissionLedgerEntry_payeeUser: rel("CommissionLedgerEntry.payeeUser", true),
+    commissionLedgerEntry_preparedBy: rel("CommissionLedgerEntry.preparedBy", true),
+    commissionLedgerEntry_approvedBy: rel("CommissionLedgerEntry.approvedBy", true),
+    agentSplit_user: rel("AgentSplit.user", true),
+    document_uploadedBy: rel("Document.uploadedBy", true),
+    task_assignee: rel("Task.assignee", true),
+    auditEvent_actor: rel("AuditEvent.actor", true),
+    onboardingStatus: select({type:"enum", options:["not_started","in_progress","completed","dismissed"], defaultValue:"not_started"}),
+    ...trackingFields,
   },
 });

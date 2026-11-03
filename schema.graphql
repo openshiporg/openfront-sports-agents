@@ -7,8 +7,37 @@ type User {
   email: String
   password: PasswordState
   role: Role
-  tasks(where: TodoWhereInput! = {}, orderBy: [TodoOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: TodoWhereUniqueInput): [Todo!]
-  tasksCount(where: TodoWhereInput! = {}): Int
+  agentCertification_user(where: AgentCertificationWhereInput! = {}, orderBy: [AgentCertificationOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: AgentCertificationWhereUniqueInput): [AgentCertification!]
+  agentCertification_userCount(where: AgentCertificationWhereInput! = {}): Int
+  athlete_leadAgent(where: AthleteWhereInput! = {}, orderBy: [AthleteOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: AthleteWhereUniqueInput): [Athlete!]
+  athlete_leadAgentCount(where: AthleteWhereInput! = {}): Int
+  athlete_supportStaff(where: AthleteWhereInput! = {}, orderBy: [AthleteOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: AthleteWhereUniqueInput): [Athlete!]
+  athlete_supportStaffCount(where: AthleteWhereInput! = {}): Int
+  athlete_portalUser(where: AthleteWhereInput! = {}, orderBy: [AthleteOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: AthleteWhereUniqueInput): [Athlete!]
+  athlete_portalUserCount(where: AthleteWhereInput! = {}): Int
+  representationAgreement_agent(where: RepresentationAgreementWhereInput! = {}, orderBy: [RepresentationAgreementOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: RepresentationAgreementWhereUniqueInput): [RepresentationAgreement!]
+  representationAgreement_agentCount(where: RepresentationAgreementWhereInput! = {}): Int
+  interaction_user(where: InteractionWhereInput! = {}, orderBy: [InteractionOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: InteractionWhereUniqueInput): [Interaction!]
+  interaction_userCount(where: InteractionWhereInput! = {}): Int
+  endorsementDeal_owner(where: EndorsementDealWhereInput! = {}, orderBy: [EndorsementDealOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: EndorsementDealWhereUniqueInput): [EndorsementDeal!]
+  endorsementDeal_ownerCount(where: EndorsementDealWhereInput! = {}): Int
+  commissionLedgerEntry_payeeUser(where: CommissionLedgerEntryWhereInput! = {}, orderBy: [CommissionLedgerEntryOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: CommissionLedgerEntryWhereUniqueInput): [CommissionLedgerEntry!]
+  commissionLedgerEntry_payeeUserCount(where: CommissionLedgerEntryWhereInput! = {}): Int
+  commissionLedgerEntry_preparedBy(where: CommissionLedgerEntryWhereInput! = {}, orderBy: [CommissionLedgerEntryOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: CommissionLedgerEntryWhereUniqueInput): [CommissionLedgerEntry!]
+  commissionLedgerEntry_preparedByCount(where: CommissionLedgerEntryWhereInput! = {}): Int
+  commissionLedgerEntry_approvedBy(where: CommissionLedgerEntryWhereInput! = {}, orderBy: [CommissionLedgerEntryOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: CommissionLedgerEntryWhereUniqueInput): [CommissionLedgerEntry!]
+  commissionLedgerEntry_approvedByCount(where: CommissionLedgerEntryWhereInput! = {}): Int
+  agentSplit_user(where: AgentSplitWhereInput! = {}, orderBy: [AgentSplitOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: AgentSplitWhereUniqueInput): [AgentSplit!]
+  agentSplit_userCount(where: AgentSplitWhereInput! = {}): Int
+  document_uploadedBy(where: DocumentWhereInput! = {}, orderBy: [DocumentOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: DocumentWhereUniqueInput): [Document!]
+  document_uploadedByCount(where: DocumentWhereInput! = {}): Int
+  task_assignee(where: TaskWhereInput! = {}, orderBy: [TaskOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: TaskWhereUniqueInput): [Task!]
+  task_assigneeCount(where: TaskWhereInput! = {}): Int
+  auditEvent_actor(where: AuditEventWhereInput! = {}, orderBy: [AuditEventOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: AuditEventWhereUniqueInput): [AuditEvent!]
+  auditEvent_actorCount(where: AuditEventWhereInput! = {}): Int
+  onboardingStatus: UserOnboardingStatusType
+  createdAt: DateTime
+  updatedAt: DateTime
   passwordResetToken: PasswordState
   passwordResetIssuedAt: DateTime
   passwordResetRedeemedAt: DateTime
@@ -16,6 +45,13 @@ type User {
 
 type PasswordState {
   isSet: Boolean!
+}
+
+enum UserOnboardingStatusType {
+  not_started
+  in_progress
+  completed
+  dismissed
 }
 
 scalar DateTime @specifiedBy(url: "https://datatracker.ietf.org/doc/html/rfc3339#section-5.6")
@@ -31,7 +67,23 @@ input UserWhereInput {
   id: IDFilter
   name: StringFilter
   role: RoleWhereInput
-  tasks: TodoManyRelationFilter
+  agentCertification_user: AgentCertificationManyRelationFilter
+  athlete_leadAgent: AthleteManyRelationFilter
+  athlete_supportStaff: AthleteManyRelationFilter
+  athlete_portalUser: AthleteManyRelationFilter
+  representationAgreement_agent: RepresentationAgreementManyRelationFilter
+  interaction_user: InteractionManyRelationFilter
+  endorsementDeal_owner: EndorsementDealManyRelationFilter
+  commissionLedgerEntry_payeeUser: CommissionLedgerEntryManyRelationFilter
+  commissionLedgerEntry_preparedBy: CommissionLedgerEntryManyRelationFilter
+  commissionLedgerEntry_approvedBy: CommissionLedgerEntryManyRelationFilter
+  agentSplit_user: AgentSplitManyRelationFilter
+  document_uploadedBy: DocumentManyRelationFilter
+  task_assignee: TaskManyRelationFilter
+  auditEvent_actor: AuditEventManyRelationFilter
+  onboardingStatus: UserOnboardingStatusTypeNullableFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
   passwordResetToken: PasswordFilter
   passwordResetIssuedAt: DateTimeNullableFilter
   passwordResetRedeemedAt: DateTimeNullableFilter
@@ -82,10 +134,82 @@ input NestedStringFilter {
   not: NestedStringFilter
 }
 
-input TodoManyRelationFilter {
-  every: TodoWhereInput
-  some: TodoWhereInput
-  none: TodoWhereInput
+input AgentCertificationManyRelationFilter {
+  every: AgentCertificationWhereInput
+  some: AgentCertificationWhereInput
+  none: AgentCertificationWhereInput
+}
+
+input AthleteManyRelationFilter {
+  every: AthleteWhereInput
+  some: AthleteWhereInput
+  none: AthleteWhereInput
+}
+
+input RepresentationAgreementManyRelationFilter {
+  every: RepresentationAgreementWhereInput
+  some: RepresentationAgreementWhereInput
+  none: RepresentationAgreementWhereInput
+}
+
+input InteractionManyRelationFilter {
+  every: InteractionWhereInput
+  some: InteractionWhereInput
+  none: InteractionWhereInput
+}
+
+input EndorsementDealManyRelationFilter {
+  every: EndorsementDealWhereInput
+  some: EndorsementDealWhereInput
+  none: EndorsementDealWhereInput
+}
+
+input CommissionLedgerEntryManyRelationFilter {
+  every: CommissionLedgerEntryWhereInput
+  some: CommissionLedgerEntryWhereInput
+  none: CommissionLedgerEntryWhereInput
+}
+
+input AgentSplitManyRelationFilter {
+  every: AgentSplitWhereInput
+  some: AgentSplitWhereInput
+  none: AgentSplitWhereInput
+}
+
+input DocumentManyRelationFilter {
+  every: DocumentWhereInput
+  some: DocumentWhereInput
+  none: DocumentWhereInput
+}
+
+input TaskManyRelationFilter {
+  every: TaskWhereInput
+  some: TaskWhereInput
+  none: TaskWhereInput
+}
+
+input AuditEventManyRelationFilter {
+  every: AuditEventWhereInput
+  some: AuditEventWhereInput
+  none: AuditEventWhereInput
+}
+
+input UserOnboardingStatusTypeNullableFilter {
+  equals: UserOnboardingStatusType
+  in: [UserOnboardingStatusType!]
+  notIn: [UserOnboardingStatusType!]
+  not: UserOnboardingStatusTypeNullableFilter
+}
+
+input DateTimeFilter {
+  equals: DateTime
+  in: [DateTime!]
+  notIn: [DateTime!]
+  lt: DateTime
+  lte: DateTime
+  gt: DateTime
+  gte: DateTime
+  not: DateTimeFilter
 }
 
 input PasswordFilter {
@@ -106,6 +230,9 @@ input DateTimeNullableFilter {
 input UserOrderByInput {
   id: OrderDirection
   name: OrderDirection
+  onboardingStatus: OrderDirection
+  createdAt: OrderDirection
+  updatedAt: OrderDirection
   passwordResetIssuedAt: OrderDirection
   passwordResetRedeemedAt: OrderDirection
 }
@@ -120,7 +247,23 @@ input UserUpdateInput {
   email: String
   password: String
   role: RoleRelateToOneForUpdateInput
-  tasks: TodoRelateToManyForUpdateInput
+  agentCertification_user: AgentCertificationRelateToManyForUpdateInput
+  athlete_leadAgent: AthleteRelateToManyForUpdateInput
+  athlete_supportStaff: AthleteRelateToManyForUpdateInput
+  athlete_portalUser: AthleteRelateToManyForUpdateInput
+  representationAgreement_agent: RepresentationAgreementRelateToManyForUpdateInput
+  interaction_user: InteractionRelateToManyForUpdateInput
+  endorsementDeal_owner: EndorsementDealRelateToManyForUpdateInput
+  commissionLedgerEntry_payeeUser: CommissionLedgerEntryRelateToManyForUpdateInput
+  commissionLedgerEntry_preparedBy: CommissionLedgerEntryRelateToManyForUpdateInput
+  commissionLedgerEntry_approvedBy: CommissionLedgerEntryRelateToManyForUpdateInput
+  agentSplit_user: AgentSplitRelateToManyForUpdateInput
+  document_uploadedBy: DocumentRelateToManyForUpdateInput
+  task_assignee: TaskRelateToManyForUpdateInput
+  auditEvent_actor: AuditEventRelateToManyForUpdateInput
+  onboardingStatus: UserOnboardingStatusType
+  createdAt: DateTime
+  updatedAt: DateTime
   passwordResetToken: String
   passwordResetIssuedAt: DateTime
   passwordResetRedeemedAt: DateTime
@@ -132,11 +275,74 @@ input RoleRelateToOneForUpdateInput {
   disconnect: Boolean
 }
 
-input TodoRelateToManyForUpdateInput {
-  disconnect: [TodoWhereUniqueInput!]
-  set: [TodoWhereUniqueInput!]
-  create: [TodoCreateInput!]
-  connect: [TodoWhereUniqueInput!]
+input AgentCertificationRelateToManyForUpdateInput {
+  disconnect: [AgentCertificationWhereUniqueInput!]
+  set: [AgentCertificationWhereUniqueInput!]
+  create: [AgentCertificationCreateInput!]
+  connect: [AgentCertificationWhereUniqueInput!]
+}
+
+input AthleteRelateToManyForUpdateInput {
+  disconnect: [AthleteWhereUniqueInput!]
+  set: [AthleteWhereUniqueInput!]
+  create: [AthleteCreateInput!]
+  connect: [AthleteWhereUniqueInput!]
+}
+
+input RepresentationAgreementRelateToManyForUpdateInput {
+  disconnect: [RepresentationAgreementWhereUniqueInput!]
+  set: [RepresentationAgreementWhereUniqueInput!]
+  create: [RepresentationAgreementCreateInput!]
+  connect: [RepresentationAgreementWhereUniqueInput!]
+}
+
+input InteractionRelateToManyForUpdateInput {
+  disconnect: [InteractionWhereUniqueInput!]
+  set: [InteractionWhereUniqueInput!]
+  create: [InteractionCreateInput!]
+  connect: [InteractionWhereUniqueInput!]
+}
+
+input EndorsementDealRelateToManyForUpdateInput {
+  disconnect: [EndorsementDealWhereUniqueInput!]
+  set: [EndorsementDealWhereUniqueInput!]
+  create: [EndorsementDealCreateInput!]
+  connect: [EndorsementDealWhereUniqueInput!]
+}
+
+input CommissionLedgerEntryRelateToManyForUpdateInput {
+  disconnect: [CommissionLedgerEntryWhereUniqueInput!]
+  set: [CommissionLedgerEntryWhereUniqueInput!]
+  create: [CommissionLedgerEntryCreateInput!]
+  connect: [CommissionLedgerEntryWhereUniqueInput!]
+}
+
+input AgentSplitRelateToManyForUpdateInput {
+  disconnect: [AgentSplitWhereUniqueInput!]
+  set: [AgentSplitWhereUniqueInput!]
+  create: [AgentSplitCreateInput!]
+  connect: [AgentSplitWhereUniqueInput!]
+}
+
+input DocumentRelateToManyForUpdateInput {
+  disconnect: [DocumentWhereUniqueInput!]
+  set: [DocumentWhereUniqueInput!]
+  create: [DocumentCreateInput!]
+  connect: [DocumentWhereUniqueInput!]
+}
+
+input TaskRelateToManyForUpdateInput {
+  disconnect: [TaskWhereUniqueInput!]
+  set: [TaskWhereUniqueInput!]
+  create: [TaskCreateInput!]
+  connect: [TaskWhereUniqueInput!]
+}
+
+input AuditEventRelateToManyForUpdateInput {
+  disconnect: [AuditEventWhereUniqueInput!]
+  set: [AuditEventWhereUniqueInput!]
+  create: [AuditEventCreateInput!]
+  connect: [AuditEventWhereUniqueInput!]
 }
 
 input UserUpdateArgs {
@@ -149,7 +355,23 @@ input UserCreateInput {
   email: String
   password: String
   role: RoleRelateToOneForCreateInput
-  tasks: TodoRelateToManyForCreateInput
+  agentCertification_user: AgentCertificationRelateToManyForCreateInput
+  athlete_leadAgent: AthleteRelateToManyForCreateInput
+  athlete_supportStaff: AthleteRelateToManyForCreateInput
+  athlete_portalUser: AthleteRelateToManyForCreateInput
+  representationAgreement_agent: RepresentationAgreementRelateToManyForCreateInput
+  interaction_user: InteractionRelateToManyForCreateInput
+  endorsementDeal_owner: EndorsementDealRelateToManyForCreateInput
+  commissionLedgerEntry_payeeUser: CommissionLedgerEntryRelateToManyForCreateInput
+  commissionLedgerEntry_preparedBy: CommissionLedgerEntryRelateToManyForCreateInput
+  commissionLedgerEntry_approvedBy: CommissionLedgerEntryRelateToManyForCreateInput
+  agentSplit_user: AgentSplitRelateToManyForCreateInput
+  document_uploadedBy: DocumentRelateToManyForCreateInput
+  task_assignee: TaskRelateToManyForCreateInput
+  auditEvent_actor: AuditEventRelateToManyForCreateInput
+  onboardingStatus: UserOnboardingStatusType
+  createdAt: DateTime
+  updatedAt: DateTime
   passwordResetToken: String
   passwordResetIssuedAt: DateTime
   passwordResetRedeemedAt: DateTime
@@ -160,21 +382,77 @@ input RoleRelateToOneForCreateInput {
   connect: RoleWhereUniqueInput
 }
 
-input TodoRelateToManyForCreateInput {
-  create: [TodoCreateInput!]
-  connect: [TodoWhereUniqueInput!]
+input AgentCertificationRelateToManyForCreateInput {
+  create: [AgentCertificationCreateInput!]
+  connect: [AgentCertificationWhereUniqueInput!]
+}
+
+input AthleteRelateToManyForCreateInput {
+  create: [AthleteCreateInput!]
+  connect: [AthleteWhereUniqueInput!]
+}
+
+input RepresentationAgreementRelateToManyForCreateInput {
+  create: [RepresentationAgreementCreateInput!]
+  connect: [RepresentationAgreementWhereUniqueInput!]
+}
+
+input InteractionRelateToManyForCreateInput {
+  create: [InteractionCreateInput!]
+  connect: [InteractionWhereUniqueInput!]
+}
+
+input EndorsementDealRelateToManyForCreateInput {
+  create: [EndorsementDealCreateInput!]
+  connect: [EndorsementDealWhereUniqueInput!]
+}
+
+input CommissionLedgerEntryRelateToManyForCreateInput {
+  create: [CommissionLedgerEntryCreateInput!]
+  connect: [CommissionLedgerEntryWhereUniqueInput!]
+}
+
+input AgentSplitRelateToManyForCreateInput {
+  create: [AgentSplitCreateInput!]
+  connect: [AgentSplitWhereUniqueInput!]
+}
+
+input DocumentRelateToManyForCreateInput {
+  create: [DocumentCreateInput!]
+  connect: [DocumentWhereUniqueInput!]
+}
+
+input TaskRelateToManyForCreateInput {
+  create: [TaskCreateInput!]
+  connect: [TaskWhereUniqueInput!]
+}
+
+input AuditEventRelateToManyForCreateInput {
+  create: [AuditEventCreateInput!]
+  connect: [AuditEventWhereUniqueInput!]
 }
 
 type Role {
   id: ID!
+  createdAt: DateTime
+  updatedAt: DateTime
   name: String
-  canCreateTodos: Boolean
-  canManageAllTodos: Boolean
   canSeeOtherPeople: Boolean
   canEditOtherPeople: Boolean
   canManagePeople: Boolean
   canManageRoles: Boolean
   canAccessDashboard: Boolean
+  canManageAthletes: Boolean
+  canManageContracts: Boolean
+  canManageEndorsements: Boolean
+  canManageCommissions: Boolean
+  canManageTrust: Boolean
+  canViewAllClients: Boolean
+  canManagePayments: Boolean
+  canReadPayments: Boolean
+  canIssueRefunds: Boolean
+  canReadAudit: Boolean
+  canManageOnboarding: Boolean
   assignedTo(where: UserWhereInput! = {}, orderBy: [UserOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: UserWhereUniqueInput): [User!]
   assignedToCount(where: UserWhereInput! = {}): Int
 }
@@ -188,14 +466,25 @@ input RoleWhereInput {
   OR: [RoleWhereInput!]
   NOT: [RoleWhereInput!]
   id: IDFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
   name: StringFilter
-  canCreateTodos: BooleanFilter
-  canManageAllTodos: BooleanFilter
   canSeeOtherPeople: BooleanFilter
   canEditOtherPeople: BooleanFilter
   canManagePeople: BooleanFilter
   canManageRoles: BooleanFilter
   canAccessDashboard: BooleanFilter
+  canManageAthletes: BooleanFilter
+  canManageContracts: BooleanFilter
+  canManageEndorsements: BooleanFilter
+  canManageCommissions: BooleanFilter
+  canManageTrust: BooleanFilter
+  canViewAllClients: BooleanFilter
+  canManagePayments: BooleanFilter
+  canReadPayments: BooleanFilter
+  canIssueRefunds: BooleanFilter
+  canReadAudit: BooleanFilter
+  canManageOnboarding: BooleanFilter
   assignedTo: UserManyRelationFilter
 }
 
@@ -212,25 +501,47 @@ input UserManyRelationFilter {
 
 input RoleOrderByInput {
   id: OrderDirection
+  createdAt: OrderDirection
+  updatedAt: OrderDirection
   name: OrderDirection
-  canCreateTodos: OrderDirection
-  canManageAllTodos: OrderDirection
   canSeeOtherPeople: OrderDirection
   canEditOtherPeople: OrderDirection
   canManagePeople: OrderDirection
   canManageRoles: OrderDirection
   canAccessDashboard: OrderDirection
+  canManageAthletes: OrderDirection
+  canManageContracts: OrderDirection
+  canManageEndorsements: OrderDirection
+  canManageCommissions: OrderDirection
+  canManageTrust: OrderDirection
+  canViewAllClients: OrderDirection
+  canManagePayments: OrderDirection
+  canReadPayments: OrderDirection
+  canIssueRefunds: OrderDirection
+  canReadAudit: OrderDirection
+  canManageOnboarding: OrderDirection
 }
 
 input RoleUpdateInput {
+  createdAt: DateTime
+  updatedAt: DateTime
   name: String
-  canCreateTodos: Boolean
-  canManageAllTodos: Boolean
   canSeeOtherPeople: Boolean
   canEditOtherPeople: Boolean
   canManagePeople: Boolean
   canManageRoles: Boolean
   canAccessDashboard: Boolean
+  canManageAthletes: Boolean
+  canManageContracts: Boolean
+  canManageEndorsements: Boolean
+  canManageCommissions: Boolean
+  canManageTrust: Boolean
+  canViewAllClients: Boolean
+  canManagePayments: Boolean
+  canReadPayments: Boolean
+  canIssueRefunds: Boolean
+  canReadAudit: Boolean
+  canManageOnboarding: Boolean
   assignedTo: UserRelateToManyForUpdateInput
 }
 
@@ -247,290 +558,31 @@ input RoleUpdateArgs {
 }
 
 input RoleCreateInput {
+  createdAt: DateTime
+  updatedAt: DateTime
   name: String
-  canCreateTodos: Boolean
-  canManageAllTodos: Boolean
   canSeeOtherPeople: Boolean
   canEditOtherPeople: Boolean
   canManagePeople: Boolean
   canManageRoles: Boolean
   canAccessDashboard: Boolean
+  canManageAthletes: Boolean
+  canManageContracts: Boolean
+  canManageEndorsements: Boolean
+  canManageCommissions: Boolean
+  canManageTrust: Boolean
+  canViewAllClients: Boolean
+  canManagePayments: Boolean
+  canReadPayments: Boolean
+  canIssueRefunds: Boolean
+  canReadAudit: Boolean
+  canManageOnboarding: Boolean
   assignedTo: UserRelateToManyForCreateInput
 }
 
 input UserRelateToManyForCreateInput {
   create: [UserCreateInput!]
   connect: [UserWhereUniqueInput!]
-}
-
-type Todo {
-  id: ID!
-  label: String
-  description: Todo_description_Document
-  isComplete: Boolean
-  status: String
-  priority: Int
-  tags: [String!]
-  dueDate: DateTime
-  weight: Float
-  budget: Decimal
-  isPrivate: Boolean
-  largeNumber: BigInt
-  metadata: JSON
-  secretNote: PasswordState
-  coverImage: ImageFieldOutput
-  todoImages(where: TodoImageWhereInput! = {}, orderBy: [TodoImageOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: TodoImageWhereUniqueInput): [TodoImage!]
-  todoImagesCount(where: TodoImageWhereInput! = {}): Int
-  assignedTo: User
-}
-
-type Todo_description_Document {
-  document(hydrateRelationships: Boolean! = false): JSON!
-}
-
-scalar Decimal
-
-scalar BigInt
-
-type ImageFieldOutput {
-  id: ID!
-  filesize: Int!
-  width: Int!
-  height: Int!
-  extension: ImageExtension!
-  url: String!
-}
-
-enum ImageExtension {
-  jpg
-  png
-  webp
-  gif
-}
-
-input TodoWhereUniqueInput {
-  id: ID
-}
-
-input TodoWhereInput {
-  AND: [TodoWhereInput!]
-  OR: [TodoWhereInput!]
-  NOT: [TodoWhereInput!]
-  id: IDFilter
-  label: StringFilter
-  isComplete: BooleanFilter
-  status: StringNullableFilter
-  priority: IntNullableFilter
-  dueDate: DateTimeNullableFilter
-  weight: FloatNullableFilter
-  budget: DecimalNullableFilter
-  isPrivate: BooleanFilter
-  largeNumber: BigIntNullableFilter
-  secretNote: PasswordFilter
-  todoImages: TodoImageManyRelationFilter
-  assignedTo: UserWhereInput
-}
-
-input StringNullableFilter {
-  equals: String
-  in: [String!]
-  notIn: [String!]
-  lt: String
-  lte: String
-  gt: String
-  gte: String
-  contains: String
-  startsWith: String
-  endsWith: String
-  mode: QueryMode
-  not: StringNullableFilter
-}
-
-input IntNullableFilter {
-  equals: Int
-  in: [Int!]
-  notIn: [Int!]
-  lt: Int
-  lte: Int
-  gt: Int
-  gte: Int
-  not: IntNullableFilter
-}
-
-input FloatNullableFilter {
-  equals: Float
-  in: [Float!]
-  notIn: [Float!]
-  lt: Float
-  lte: Float
-  gt: Float
-  gte: Float
-  not: FloatNullableFilter
-}
-
-input DecimalNullableFilter {
-  equals: Decimal
-  in: [Decimal!]
-  notIn: [Decimal!]
-  lt: Decimal
-  lte: Decimal
-  gt: Decimal
-  gte: Decimal
-  not: DecimalNullableFilter
-}
-
-input BigIntNullableFilter {
-  equals: BigInt
-  in: [BigInt!]
-  notIn: [BigInt!]
-  lt: BigInt
-  lte: BigInt
-  gt: BigInt
-  gte: BigInt
-  not: BigIntNullableFilter
-}
-
-input TodoImageManyRelationFilter {
-  every: TodoImageWhereInput
-  some: TodoImageWhereInput
-  none: TodoImageWhereInput
-}
-
-input TodoOrderByInput {
-  id: OrderDirection
-  label: OrderDirection
-  isComplete: OrderDirection
-  status: OrderDirection
-  priority: OrderDirection
-  dueDate: OrderDirection
-  weight: OrderDirection
-  budget: OrderDirection
-  isPrivate: OrderDirection
-  largeNumber: OrderDirection
-}
-
-input TodoUpdateInput {
-  label: String
-  description: JSON
-  isComplete: Boolean
-  status: String
-  priority: Int
-  tags: [String!]
-  dueDate: DateTime
-  weight: Float
-  budget: Decimal
-  isPrivate: Boolean
-  largeNumber: BigInt
-  metadata: JSON
-  secretNote: String
-  coverImage: ImageFieldInput
-  todoImages: TodoImageRelateToManyForUpdateInput
-  assignedTo: UserRelateToOneForUpdateInput
-}
-
-input ImageFieldInput {
-  upload: Upload!
-}
-
-"""The `Upload` scalar type represents a file upload."""
-scalar Upload
-
-input TodoImageRelateToManyForUpdateInput {
-  disconnect: [TodoImageWhereUniqueInput!]
-  set: [TodoImageWhereUniqueInput!]
-  create: [TodoImageCreateInput!]
-  connect: [TodoImageWhereUniqueInput!]
-}
-
-input UserRelateToOneForUpdateInput {
-  create: UserCreateInput
-  connect: UserWhereUniqueInput
-  disconnect: Boolean
-}
-
-input TodoUpdateArgs {
-  where: TodoWhereUniqueInput!
-  data: TodoUpdateInput!
-}
-
-input TodoCreateInput {
-  label: String
-  description: JSON
-  isComplete: Boolean
-  status: String
-  priority: Int
-  tags: [String!]
-  dueDate: DateTime
-  weight: Float
-  budget: Decimal
-  isPrivate: Boolean
-  largeNumber: BigInt
-  metadata: JSON
-  secretNote: String
-  coverImage: ImageFieldInput
-  todoImages: TodoImageRelateToManyForCreateInput
-  assignedTo: UserRelateToOneForCreateInput
-}
-
-input TodoImageRelateToManyForCreateInput {
-  create: [TodoImageCreateInput!]
-  connect: [TodoImageWhereUniqueInput!]
-}
-
-input UserRelateToOneForCreateInput {
-  create: UserCreateInput
-  connect: UserWhereUniqueInput
-}
-
-type TodoImage {
-  id: ID!
-  image: ImageFieldOutput
-  imagePath: String
-  altText: String
-  todos(where: TodoWhereInput! = {}, orderBy: [TodoOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: TodoWhereUniqueInput): [Todo!]
-  todosCount(where: TodoWhereInput! = {}): Int
-  metadata: JSON
-}
-
-input TodoImageWhereUniqueInput {
-  id: ID
-}
-
-input TodoImageWhereInput {
-  AND: [TodoImageWhereInput!]
-  OR: [TodoImageWhereInput!]
-  NOT: [TodoImageWhereInput!]
-  id: IDFilter
-  imagePath: StringFilter
-  altText: StringFilter
-  todos: TodoManyRelationFilter
-}
-
-input TodoImageOrderByInput {
-  id: OrderDirection
-  imagePath: OrderDirection
-  altText: OrderDirection
-}
-
-input TodoImageUpdateInput {
-  image: ImageFieldInput
-  imagePath: String
-  altText: String
-  todos: TodoRelateToManyForUpdateInput
-  metadata: JSON
-}
-
-input TodoImageUpdateArgs {
-  where: TodoImageWhereUniqueInput!
-  data: TodoImageUpdateInput!
-}
-
-input TodoImageCreateInput {
-  image: ImageFieldInput
-  imagePath: String
-  altText: String
-  todos: TodoRelateToManyForCreateInput
-  metadata: JSON
 }
 
 type OAuthApp {
@@ -582,15 +634,19 @@ input OAuthAppWhereInput {
   updatedAt: DateTimeFilter
 }
 
-input DateTimeFilter {
-  equals: DateTime
-  in: [DateTime!]
-  notIn: [DateTime!]
-  lt: DateTime
-  lte: DateTime
-  gt: DateTime
-  gte: DateTime
-  not: DateTimeFilter
+input StringNullableFilter {
+  equals: String
+  in: [String!]
+  notIn: [String!]
+  lt: String
+  lte: String
+  gt: String
+  gte: String
+  contains: String
+  startsWith: String
+  endsWith: String
+  mode: QueryMode
+  not: StringNullableFilter
 }
 
 input OAuthAppOrderByInput {
@@ -747,6 +803,12 @@ input OAuthTokenUpdateInput {
   updatedAt: DateTime
 }
 
+input UserRelateToOneForUpdateInput {
+  create: UserCreateInput
+  connect: UserWhereUniqueInput
+  disconnect: Boolean
+}
+
 input OAuthTokenUpdateArgs {
   where: OAuthTokenWhereUniqueInput!
   data: OAuthTokenUpdateInput!
@@ -772,6 +834,3654 @@ input OAuthTokenCreateInput {
   updatedAt: DateTime
 }
 
+input UserRelateToOneForCreateInput {
+  create: UserCreateInput
+  connect: UserWhereUniqueInput
+}
+
+type Agency {
+  id: ID!
+  name: String
+  defaultPlayingCommissionBps: Int
+  defaultEndorsementCommissionBps: Int
+  currencyCode: String
+  fiscalYearStart: Int
+  refundApprovalThresholdCents: Int
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input AgencyWhereUniqueInput {
+  id: ID
+}
+
+input AgencyWhereInput {
+  AND: [AgencyWhereInput!]
+  OR: [AgencyWhereInput!]
+  NOT: [AgencyWhereInput!]
+  id: IDFilter
+  name: StringFilter
+  defaultPlayingCommissionBps: IntNullableFilter
+  defaultEndorsementCommissionBps: IntNullableFilter
+  currencyCode: StringFilter
+  fiscalYearStart: IntNullableFilter
+  refundApprovalThresholdCents: IntNullableFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+}
+
+input IntNullableFilter {
+  equals: Int
+  in: [Int!]
+  notIn: [Int!]
+  lt: Int
+  lte: Int
+  gt: Int
+  gte: Int
+  not: IntNullableFilter
+}
+
+input AgencyOrderByInput {
+  id: OrderDirection
+  name: OrderDirection
+  defaultPlayingCommissionBps: OrderDirection
+  defaultEndorsementCommissionBps: OrderDirection
+  currencyCode: OrderDirection
+  fiscalYearStart: OrderDirection
+  refundApprovalThresholdCents: OrderDirection
+  createdAt: OrderDirection
+  updatedAt: OrderDirection
+}
+
+input AgencyUpdateInput {
+  name: String
+  defaultPlayingCommissionBps: Int
+  defaultEndorsementCommissionBps: Int
+  currencyCode: String
+  fiscalYearStart: Int
+  refundApprovalThresholdCents: Int
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input AgencyUpdateArgs {
+  where: AgencyWhereUniqueInput!
+  data: AgencyUpdateInput!
+}
+
+input AgencyCreateInput {
+  name: String
+  defaultPlayingCommissionBps: Int
+  defaultEndorsementCommissionBps: Int
+  currencyCode: String
+  fiscalYearStart: Int
+  refundApprovalThresholdCents: Int
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+type AgentCertification {
+  id: ID!
+  user: User
+  body: AgentCertificationBodyType
+  number: String
+  issuedAt: DateTime
+  expiresAt: DateTime
+  status: AgentCertificationStatusType
+  document: Document
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+enum AgentCertificationBodyType {
+  NFLPA
+  NBPA
+  MLBPA
+  NHLPA
+  MLSPA
+  FIFA
+  NCAA_NIL_STATE
+  other
+}
+
+enum AgentCertificationStatusType {
+  active
+  expired
+  suspended
+}
+
+input AgentCertificationWhereUniqueInput {
+  id: ID
+}
+
+input AgentCertificationWhereInput {
+  AND: [AgentCertificationWhereInput!]
+  OR: [AgentCertificationWhereInput!]
+  NOT: [AgentCertificationWhereInput!]
+  id: IDFilter
+  user: UserWhereInput
+  body: AgentCertificationBodyTypeNullableFilter
+  number: StringFilter
+  issuedAt: DateTimeNullableFilter
+  expiresAt: DateTimeNullableFilter
+  status: AgentCertificationStatusTypeNullableFilter
+  document: DocumentWhereInput
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+}
+
+input AgentCertificationBodyTypeNullableFilter {
+  equals: AgentCertificationBodyType
+  in: [AgentCertificationBodyType!]
+  notIn: [AgentCertificationBodyType!]
+  not: AgentCertificationBodyTypeNullableFilter
+}
+
+input AgentCertificationStatusTypeNullableFilter {
+  equals: AgentCertificationStatusType
+  in: [AgentCertificationStatusType!]
+  notIn: [AgentCertificationStatusType!]
+  not: AgentCertificationStatusTypeNullableFilter
+}
+
+input AgentCertificationOrderByInput {
+  id: OrderDirection
+  body: OrderDirection
+  number: OrderDirection
+  issuedAt: OrderDirection
+  expiresAt: OrderDirection
+  status: OrderDirection
+  createdAt: OrderDirection
+  updatedAt: OrderDirection
+}
+
+input AgentCertificationUpdateInput {
+  user: UserRelateToOneForUpdateInput
+  body: AgentCertificationBodyType
+  number: String
+  issuedAt: DateTime
+  expiresAt: DateTime
+  status: AgentCertificationStatusType
+  document: DocumentRelateToOneForUpdateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input DocumentRelateToOneForUpdateInput {
+  create: DocumentCreateInput
+  connect: DocumentWhereUniqueInput
+  disconnect: Boolean
+}
+
+input AgentCertificationUpdateArgs {
+  where: AgentCertificationWhereUniqueInput!
+  data: AgentCertificationUpdateInput!
+}
+
+input AgentCertificationCreateInput {
+  user: UserRelateToOneForCreateInput
+  body: AgentCertificationBodyType
+  number: String
+  issuedAt: DateTime
+  expiresAt: DateTime
+  status: AgentCertificationStatusType
+  document: DocumentRelateToOneForCreateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input DocumentRelateToOneForCreateInput {
+  create: DocumentCreateInput
+  connect: DocumentWhereUniqueInput
+}
+
+type Team {
+  id: ID!
+  name: String
+  league: String
+  city: String
+  athlete_team(where: AthleteWhereInput! = {}, orderBy: [AthleteOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: AthleteWhereUniqueInput): [Athlete!]
+  athlete_teamCount(where: AthleteWhereInput! = {}): Int
+  playingContract_team(where: PlayingContractWhereInput! = {}, orderBy: [PlayingContractOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: PlayingContractWhereUniqueInput): [PlayingContract!]
+  playingContract_teamCount(where: PlayingContractWhereInput! = {}): Int
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input TeamWhereUniqueInput {
+  id: ID
+}
+
+input TeamWhereInput {
+  AND: [TeamWhereInput!]
+  OR: [TeamWhereInput!]
+  NOT: [TeamWhereInput!]
+  id: IDFilter
+  name: StringFilter
+  league: StringFilter
+  city: StringFilter
+  athlete_team: AthleteManyRelationFilter
+  playingContract_team: PlayingContractManyRelationFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+}
+
+input PlayingContractManyRelationFilter {
+  every: PlayingContractWhereInput
+  some: PlayingContractWhereInput
+  none: PlayingContractWhereInput
+}
+
+input TeamOrderByInput {
+  id: OrderDirection
+  name: OrderDirection
+  league: OrderDirection
+  city: OrderDirection
+  createdAt: OrderDirection
+  updatedAt: OrderDirection
+}
+
+input TeamUpdateInput {
+  name: String
+  league: String
+  city: String
+  athlete_team: AthleteRelateToManyForUpdateInput
+  playingContract_team: PlayingContractRelateToManyForUpdateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input PlayingContractRelateToManyForUpdateInput {
+  disconnect: [PlayingContractWhereUniqueInput!]
+  set: [PlayingContractWhereUniqueInput!]
+  create: [PlayingContractCreateInput!]
+  connect: [PlayingContractWhereUniqueInput!]
+}
+
+input TeamUpdateArgs {
+  where: TeamWhereUniqueInput!
+  data: TeamUpdateInput!
+}
+
+input TeamCreateInput {
+  name: String
+  league: String
+  city: String
+  athlete_team: AthleteRelateToManyForCreateInput
+  playingContract_team: PlayingContractRelateToManyForCreateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input PlayingContractRelateToManyForCreateInput {
+  create: [PlayingContractCreateInput!]
+  connect: [PlayingContractWhereUniqueInput!]
+}
+
+type Athlete {
+  id: ID!
+  fullName: String
+  preferredName: String
+  sport: String
+  league: AthleteLeagueType
+  position: String
+  team: Team
+  dateOfBirth: CalendarDay
+  status: AthleteStatusType
+  leadAgent: User
+  supportStaff(where: UserWhereInput! = {}, orderBy: [UserOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: UserWhereUniqueInput): [User!]
+  supportStaffCount(where: UserWhereInput! = {}): Int
+  portalUser: User
+  email: String
+  phone: String
+  representationStartedAt: DateTime
+  socialHandles: JSON
+  followerCounts: JSON
+  marketabilityNotes: String
+  image: String
+  eligibility: JSON
+  isPublic: Boolean
+  recruitingStage: AthleteRecruitingStageType
+  contactAllowedFrom: DateTime
+  representationAgreement_athlete(where: RepresentationAgreementWhereInput! = {}, orderBy: [RepresentationAgreementOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: RepresentationAgreementWhereUniqueInput): [RepresentationAgreement!]
+  representationAgreement_athleteCount(where: RepresentationAgreementWhereInput! = {}): Int
+  contact_athletes(where: ContactWhereInput! = {}, orderBy: [ContactOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: ContactWhereUniqueInput): [Contact!]
+  contact_athletesCount(where: ContactWhereInput! = {}): Int
+  interaction_athlete(where: InteractionWhereInput! = {}, orderBy: [InteractionOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: InteractionWhereUniqueInput): [Interaction!]
+  interaction_athleteCount(where: InteractionWhereInput! = {}): Int
+  playingContract_athlete(where: PlayingContractWhereInput! = {}, orderBy: [PlayingContractOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: PlayingContractWhereUniqueInput): [PlayingContract!]
+  playingContract_athleteCount(where: PlayingContractWhereInput! = {}): Int
+  endorsementDeal_athlete(where: EndorsementDealWhereInput! = {}, orderBy: [EndorsementDealOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: EndorsementDealWhereUniqueInput): [EndorsementDeal!]
+  endorsementDeal_athleteCount(where: EndorsementDealWhereInput! = {}): Int
+  scheduledPayment_athlete(where: ScheduledPaymentWhereInput! = {}, orderBy: [ScheduledPaymentOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: ScheduledPaymentWhereUniqueInput): [ScheduledPayment!]
+  scheduledPayment_athleteCount(where: ScheduledPaymentWhereInput! = {}): Int
+  commissionInvoice_athlete(where: CommissionInvoiceWhereInput! = {}, orderBy: [CommissionInvoiceOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: CommissionInvoiceWhereUniqueInput): [CommissionInvoice!]
+  commissionInvoice_athleteCount(where: CommissionInvoiceWhereInput! = {}): Int
+  commissionLedgerEntry_athlete(where: CommissionLedgerEntryWhereInput! = {}, orderBy: [CommissionLedgerEntryOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: CommissionLedgerEntryWhereUniqueInput): [CommissionLedgerEntry!]
+  commissionLedgerEntry_athleteCount(where: CommissionLedgerEntryWhereInput! = {}): Int
+  agentSplit_athlete(where: AgentSplitWhereInput! = {}, orderBy: [AgentSplitOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: AgentSplitWhereUniqueInput): [AgentSplit!]
+  agentSplit_athleteCount(where: AgentSplitWhereInput! = {}): Int
+  clientTrustAccount_athlete(where: ClientTrustAccountWhereInput! = {}, orderBy: [ClientTrustAccountOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: ClientTrustAccountWhereUniqueInput): [ClientTrustAccount!]
+  clientTrustAccount_athleteCount(where: ClientTrustAccountWhereInput! = {}): Int
+  clientTrustEntry_athlete(where: ClientTrustEntryWhereInput! = {}, orderBy: [ClientTrustEntryOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: ClientTrustEntryWhereUniqueInput): [ClientTrustEntry!]
+  clientTrustEntry_athleteCount(where: ClientTrustEntryWhereInput! = {}): Int
+  document_athlete(where: DocumentWhereInput! = {}, orderBy: [DocumentOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: DocumentWhereUniqueInput): [Document!]
+  document_athleteCount(where: DocumentWhereInput! = {}): Int
+  task_athlete(where: TaskWhereInput! = {}, orderBy: [TaskOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: TaskWhereUniqueInput): [Task!]
+  task_athleteCount(where: TaskWhereInput! = {}): Int
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+enum AthleteLeagueType {
+  NFL
+  NBA
+  WNBA
+  MLB
+  NHL
+  MLS
+  NWSL
+  NCAA
+  Other
+}
+
+scalar CalendarDay @specifiedBy(url: "https://datatracker.ietf.org/doc/html/rfc3339#section-5.6")
+
+enum AthleteStatusType {
+  prospect
+  recruiting
+  client
+  former
+  lost
+}
+
+enum AthleteRecruitingStageType {
+  identified
+  contacted
+  meeting
+  pitched
+  verbal
+  signed
+  lost
+}
+
+input AthleteWhereUniqueInput {
+  id: ID
+}
+
+input AthleteWhereInput {
+  AND: [AthleteWhereInput!]
+  OR: [AthleteWhereInput!]
+  NOT: [AthleteWhereInput!]
+  id: IDFilter
+  fullName: StringFilter
+  preferredName: StringFilter
+  sport: StringFilter
+  league: AthleteLeagueTypeNullableFilter
+  position: StringFilter
+  team: TeamWhereInput
+  dateOfBirth: CalendarDayNullableFilter
+  status: AthleteStatusTypeNullableFilter
+  leadAgent: UserWhereInput
+  supportStaff: UserManyRelationFilter
+  portalUser: UserWhereInput
+  email: StringFilter
+  phone: StringFilter
+  representationStartedAt: DateTimeNullableFilter
+  marketabilityNotes: StringFilter
+  image: StringFilter
+  isPublic: BooleanFilter
+  recruitingStage: AthleteRecruitingStageTypeNullableFilter
+  contactAllowedFrom: DateTimeNullableFilter
+  representationAgreement_athlete: RepresentationAgreementManyRelationFilter
+  contact_athletes: ContactManyRelationFilter
+  interaction_athlete: InteractionManyRelationFilter
+  playingContract_athlete: PlayingContractManyRelationFilter
+  endorsementDeal_athlete: EndorsementDealManyRelationFilter
+  scheduledPayment_athlete: ScheduledPaymentManyRelationFilter
+  commissionInvoice_athlete: CommissionInvoiceManyRelationFilter
+  commissionLedgerEntry_athlete: CommissionLedgerEntryManyRelationFilter
+  agentSplit_athlete: AgentSplitManyRelationFilter
+  clientTrustAccount_athlete: ClientTrustAccountManyRelationFilter
+  clientTrustEntry_athlete: ClientTrustEntryManyRelationFilter
+  document_athlete: DocumentManyRelationFilter
+  task_athlete: TaskManyRelationFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+}
+
+input AthleteLeagueTypeNullableFilter {
+  equals: AthleteLeagueType
+  in: [AthleteLeagueType!]
+  notIn: [AthleteLeagueType!]
+  not: AthleteLeagueTypeNullableFilter
+}
+
+input CalendarDayNullableFilter {
+  equals: CalendarDay
+  in: [CalendarDay!]
+  notIn: [CalendarDay!]
+  lt: CalendarDay
+  lte: CalendarDay
+  gt: CalendarDay
+  gte: CalendarDay
+  not: CalendarDayNullableFilter
+}
+
+input AthleteStatusTypeNullableFilter {
+  equals: AthleteStatusType
+  in: [AthleteStatusType!]
+  notIn: [AthleteStatusType!]
+  not: AthleteStatusTypeNullableFilter
+}
+
+input AthleteRecruitingStageTypeNullableFilter {
+  equals: AthleteRecruitingStageType
+  in: [AthleteRecruitingStageType!]
+  notIn: [AthleteRecruitingStageType!]
+  not: AthleteRecruitingStageTypeNullableFilter
+}
+
+input ContactManyRelationFilter {
+  every: ContactWhereInput
+  some: ContactWhereInput
+  none: ContactWhereInput
+}
+
+input ScheduledPaymentManyRelationFilter {
+  every: ScheduledPaymentWhereInput
+  some: ScheduledPaymentWhereInput
+  none: ScheduledPaymentWhereInput
+}
+
+input CommissionInvoiceManyRelationFilter {
+  every: CommissionInvoiceWhereInput
+  some: CommissionInvoiceWhereInput
+  none: CommissionInvoiceWhereInput
+}
+
+input ClientTrustAccountManyRelationFilter {
+  every: ClientTrustAccountWhereInput
+  some: ClientTrustAccountWhereInput
+  none: ClientTrustAccountWhereInput
+}
+
+input ClientTrustEntryManyRelationFilter {
+  every: ClientTrustEntryWhereInput
+  some: ClientTrustEntryWhereInput
+  none: ClientTrustEntryWhereInput
+}
+
+input AthleteOrderByInput {
+  id: OrderDirection
+  fullName: OrderDirection
+  preferredName: OrderDirection
+  sport: OrderDirection
+  league: OrderDirection
+  position: OrderDirection
+  dateOfBirth: OrderDirection
+  status: OrderDirection
+  email: OrderDirection
+  phone: OrderDirection
+  representationStartedAt: OrderDirection
+  marketabilityNotes: OrderDirection
+  image: OrderDirection
+  isPublic: OrderDirection
+  recruitingStage: OrderDirection
+  contactAllowedFrom: OrderDirection
+  createdAt: OrderDirection
+  updatedAt: OrderDirection
+}
+
+input AthleteUpdateInput {
+  fullName: String
+  preferredName: String
+  sport: String
+  league: AthleteLeagueType
+  position: String
+  team: TeamRelateToOneForUpdateInput
+  dateOfBirth: CalendarDay
+  status: AthleteStatusType
+  leadAgent: UserRelateToOneForUpdateInput
+  supportStaff: UserRelateToManyForUpdateInput
+  portalUser: UserRelateToOneForUpdateInput
+  email: String
+  phone: String
+  representationStartedAt: DateTime
+  socialHandles: JSON
+  followerCounts: JSON
+  marketabilityNotes: String
+  image: String
+  eligibility: JSON
+  isPublic: Boolean
+  recruitingStage: AthleteRecruitingStageType
+  contactAllowedFrom: DateTime
+  representationAgreement_athlete: RepresentationAgreementRelateToManyForUpdateInput
+  contact_athletes: ContactRelateToManyForUpdateInput
+  interaction_athlete: InteractionRelateToManyForUpdateInput
+  playingContract_athlete: PlayingContractRelateToManyForUpdateInput
+  endorsementDeal_athlete: EndorsementDealRelateToManyForUpdateInput
+  scheduledPayment_athlete: ScheduledPaymentRelateToManyForUpdateInput
+  commissionInvoice_athlete: CommissionInvoiceRelateToManyForUpdateInput
+  commissionLedgerEntry_athlete: CommissionLedgerEntryRelateToManyForUpdateInput
+  agentSplit_athlete: AgentSplitRelateToManyForUpdateInput
+  clientTrustAccount_athlete: ClientTrustAccountRelateToManyForUpdateInput
+  clientTrustEntry_athlete: ClientTrustEntryRelateToManyForUpdateInput
+  document_athlete: DocumentRelateToManyForUpdateInput
+  task_athlete: TaskRelateToManyForUpdateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input TeamRelateToOneForUpdateInput {
+  create: TeamCreateInput
+  connect: TeamWhereUniqueInput
+  disconnect: Boolean
+}
+
+input ContactRelateToManyForUpdateInput {
+  disconnect: [ContactWhereUniqueInput!]
+  set: [ContactWhereUniqueInput!]
+  create: [ContactCreateInput!]
+  connect: [ContactWhereUniqueInput!]
+}
+
+input ScheduledPaymentRelateToManyForUpdateInput {
+  disconnect: [ScheduledPaymentWhereUniqueInput!]
+  set: [ScheduledPaymentWhereUniqueInput!]
+  create: [ScheduledPaymentCreateInput!]
+  connect: [ScheduledPaymentWhereUniqueInput!]
+}
+
+input CommissionInvoiceRelateToManyForUpdateInput {
+  disconnect: [CommissionInvoiceWhereUniqueInput!]
+  set: [CommissionInvoiceWhereUniqueInput!]
+  create: [CommissionInvoiceCreateInput!]
+  connect: [CommissionInvoiceWhereUniqueInput!]
+}
+
+input ClientTrustAccountRelateToManyForUpdateInput {
+  disconnect: [ClientTrustAccountWhereUniqueInput!]
+  set: [ClientTrustAccountWhereUniqueInput!]
+  create: [ClientTrustAccountCreateInput!]
+  connect: [ClientTrustAccountWhereUniqueInput!]
+}
+
+input ClientTrustEntryRelateToManyForUpdateInput {
+  disconnect: [ClientTrustEntryWhereUniqueInput!]
+  set: [ClientTrustEntryWhereUniqueInput!]
+  create: [ClientTrustEntryCreateInput!]
+  connect: [ClientTrustEntryWhereUniqueInput!]
+}
+
+input AthleteUpdateArgs {
+  where: AthleteWhereUniqueInput!
+  data: AthleteUpdateInput!
+}
+
+input AthleteCreateInput {
+  fullName: String
+  preferredName: String
+  sport: String
+  league: AthleteLeagueType
+  position: String
+  team: TeamRelateToOneForCreateInput
+  dateOfBirth: CalendarDay
+  status: AthleteStatusType
+  leadAgent: UserRelateToOneForCreateInput
+  supportStaff: UserRelateToManyForCreateInput
+  portalUser: UserRelateToOneForCreateInput
+  email: String
+  phone: String
+  representationStartedAt: DateTime
+  socialHandles: JSON
+  followerCounts: JSON
+  marketabilityNotes: String
+  image: String
+  eligibility: JSON
+  isPublic: Boolean
+  recruitingStage: AthleteRecruitingStageType
+  contactAllowedFrom: DateTime
+  representationAgreement_athlete: RepresentationAgreementRelateToManyForCreateInput
+  contact_athletes: ContactRelateToManyForCreateInput
+  interaction_athlete: InteractionRelateToManyForCreateInput
+  playingContract_athlete: PlayingContractRelateToManyForCreateInput
+  endorsementDeal_athlete: EndorsementDealRelateToManyForCreateInput
+  scheduledPayment_athlete: ScheduledPaymentRelateToManyForCreateInput
+  commissionInvoice_athlete: CommissionInvoiceRelateToManyForCreateInput
+  commissionLedgerEntry_athlete: CommissionLedgerEntryRelateToManyForCreateInput
+  agentSplit_athlete: AgentSplitRelateToManyForCreateInput
+  clientTrustAccount_athlete: ClientTrustAccountRelateToManyForCreateInput
+  clientTrustEntry_athlete: ClientTrustEntryRelateToManyForCreateInput
+  document_athlete: DocumentRelateToManyForCreateInput
+  task_athlete: TaskRelateToManyForCreateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input TeamRelateToOneForCreateInput {
+  create: TeamCreateInput
+  connect: TeamWhereUniqueInput
+}
+
+input ContactRelateToManyForCreateInput {
+  create: [ContactCreateInput!]
+  connect: [ContactWhereUniqueInput!]
+}
+
+input ScheduledPaymentRelateToManyForCreateInput {
+  create: [ScheduledPaymentCreateInput!]
+  connect: [ScheduledPaymentWhereUniqueInput!]
+}
+
+input CommissionInvoiceRelateToManyForCreateInput {
+  create: [CommissionInvoiceCreateInput!]
+  connect: [CommissionInvoiceWhereUniqueInput!]
+}
+
+input ClientTrustAccountRelateToManyForCreateInput {
+  create: [ClientTrustAccountCreateInput!]
+  connect: [ClientTrustAccountWhereUniqueInput!]
+}
+
+input ClientTrustEntryRelateToManyForCreateInput {
+  create: [ClientTrustEntryCreateInput!]
+  connect: [ClientTrustEntryWhereUniqueInput!]
+}
+
+type RepresentationAgreement {
+  id: ID!
+  athlete: Athlete
+  agent: User
+  scope: RepresentationAgreementScopeType
+  playingCommissionBps: Int
+  marketingCommissionBps: Int
+  capBps: Int
+  effectiveAt: DateTime
+  expiresAt: DateTime
+  terminationNoticeDays: Int
+  status: RepresentationAgreementStatusType
+  signedDocument: Document
+  filedAt: DateTime
+  playingContract_representationAgreement(where: PlayingContractWhereInput! = {}, orderBy: [PlayingContractOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: PlayingContractWhereUniqueInput): [PlayingContract!]
+  playingContract_representationAgreementCount(where: PlayingContractWhereInput! = {}): Int
+  document_agreement(where: DocumentWhereInput! = {}, orderBy: [DocumentOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: DocumentWhereUniqueInput): [Document!]
+  document_agreementCount(where: DocumentWhereInput! = {}): Int
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+enum RepresentationAgreementScopeType {
+  playing
+  marketing
+  both
+}
+
+enum RepresentationAgreementStatusType {
+  draft
+  sent
+  signed
+  filed_with_union
+  active
+  terminated
+  expired
+}
+
+input RepresentationAgreementWhereUniqueInput {
+  id: ID
+}
+
+input RepresentationAgreementWhereInput {
+  AND: [RepresentationAgreementWhereInput!]
+  OR: [RepresentationAgreementWhereInput!]
+  NOT: [RepresentationAgreementWhereInput!]
+  id: IDFilter
+  athlete: AthleteWhereInput
+  agent: UserWhereInput
+  scope: RepresentationAgreementScopeTypeNullableFilter
+  playingCommissionBps: IntNullableFilter
+  marketingCommissionBps: IntNullableFilter
+  capBps: IntNullableFilter
+  effectiveAt: DateTimeNullableFilter
+  expiresAt: DateTimeNullableFilter
+  terminationNoticeDays: IntNullableFilter
+  status: RepresentationAgreementStatusTypeNullableFilter
+  signedDocument: DocumentWhereInput
+  filedAt: DateTimeNullableFilter
+  playingContract_representationAgreement: PlayingContractManyRelationFilter
+  document_agreement: DocumentManyRelationFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+}
+
+input RepresentationAgreementScopeTypeNullableFilter {
+  equals: RepresentationAgreementScopeType
+  in: [RepresentationAgreementScopeType!]
+  notIn: [RepresentationAgreementScopeType!]
+  not: RepresentationAgreementScopeTypeNullableFilter
+}
+
+input RepresentationAgreementStatusTypeNullableFilter {
+  equals: RepresentationAgreementStatusType
+  in: [RepresentationAgreementStatusType!]
+  notIn: [RepresentationAgreementStatusType!]
+  not: RepresentationAgreementStatusTypeNullableFilter
+}
+
+input RepresentationAgreementOrderByInput {
+  id: OrderDirection
+  scope: OrderDirection
+  playingCommissionBps: OrderDirection
+  marketingCommissionBps: OrderDirection
+  capBps: OrderDirection
+  effectiveAt: OrderDirection
+  expiresAt: OrderDirection
+  terminationNoticeDays: OrderDirection
+  status: OrderDirection
+  filedAt: OrderDirection
+  createdAt: OrderDirection
+  updatedAt: OrderDirection
+}
+
+input RepresentationAgreementUpdateInput {
+  athlete: AthleteRelateToOneForUpdateInput
+  agent: UserRelateToOneForUpdateInput
+  scope: RepresentationAgreementScopeType
+  playingCommissionBps: Int
+  marketingCommissionBps: Int
+  capBps: Int
+  effectiveAt: DateTime
+  expiresAt: DateTime
+  terminationNoticeDays: Int
+  status: RepresentationAgreementStatusType
+  signedDocument: DocumentRelateToOneForUpdateInput
+  filedAt: DateTime
+  playingContract_representationAgreement: PlayingContractRelateToManyForUpdateInput
+  document_agreement: DocumentRelateToManyForUpdateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input AthleteRelateToOneForUpdateInput {
+  create: AthleteCreateInput
+  connect: AthleteWhereUniqueInput
+  disconnect: Boolean
+}
+
+input RepresentationAgreementUpdateArgs {
+  where: RepresentationAgreementWhereUniqueInput!
+  data: RepresentationAgreementUpdateInput!
+}
+
+input RepresentationAgreementCreateInput {
+  athlete: AthleteRelateToOneForCreateInput
+  agent: UserRelateToOneForCreateInput
+  scope: RepresentationAgreementScopeType
+  playingCommissionBps: Int
+  marketingCommissionBps: Int
+  capBps: Int
+  effectiveAt: DateTime
+  expiresAt: DateTime
+  terminationNoticeDays: Int
+  status: RepresentationAgreementStatusType
+  signedDocument: DocumentRelateToOneForCreateInput
+  filedAt: DateTime
+  playingContract_representationAgreement: PlayingContractRelateToManyForCreateInput
+  document_agreement: DocumentRelateToManyForCreateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input AthleteRelateToOneForCreateInput {
+  create: AthleteCreateInput
+  connect: AthleteWhereUniqueInput
+}
+
+type Contact {
+  id: ID!
+  name: String
+  org: String
+  role: String
+  email: String
+  phone: String
+  athletes(where: AthleteWhereInput! = {}, orderBy: [AthleteOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: AthleteWhereUniqueInput): [Athlete!]
+  athletesCount(where: AthleteWhereInput! = {}): Int
+  doNotContact: Boolean
+  brand_contacts(where: BrandWhereInput! = {}, orderBy: [BrandOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: BrandWhereUniqueInput): [Brand!]
+  brand_contactsCount(where: BrandWhereInput! = {}): Int
+  interaction_contact(where: InteractionWhereInput! = {}, orderBy: [InteractionOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: InteractionWhereUniqueInput): [Interaction!]
+  interaction_contactCount(where: InteractionWhereInput! = {}): Int
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input ContactWhereUniqueInput {
+  id: ID
+}
+
+input ContactWhereInput {
+  AND: [ContactWhereInput!]
+  OR: [ContactWhereInput!]
+  NOT: [ContactWhereInput!]
+  id: IDFilter
+  name: StringFilter
+  org: StringFilter
+  role: StringFilter
+  email: StringFilter
+  phone: StringFilter
+  athletes: AthleteManyRelationFilter
+  doNotContact: BooleanFilter
+  brand_contacts: BrandManyRelationFilter
+  interaction_contact: InteractionManyRelationFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+}
+
+input BrandManyRelationFilter {
+  every: BrandWhereInput
+  some: BrandWhereInput
+  none: BrandWhereInput
+}
+
+input ContactOrderByInput {
+  id: OrderDirection
+  name: OrderDirection
+  org: OrderDirection
+  role: OrderDirection
+  email: OrderDirection
+  phone: OrderDirection
+  doNotContact: OrderDirection
+  createdAt: OrderDirection
+  updatedAt: OrderDirection
+}
+
+input ContactUpdateInput {
+  name: String
+  org: String
+  role: String
+  email: String
+  phone: String
+  athletes: AthleteRelateToManyForUpdateInput
+  doNotContact: Boolean
+  brand_contacts: BrandRelateToManyForUpdateInput
+  interaction_contact: InteractionRelateToManyForUpdateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input BrandRelateToManyForUpdateInput {
+  disconnect: [BrandWhereUniqueInput!]
+  set: [BrandWhereUniqueInput!]
+  create: [BrandCreateInput!]
+  connect: [BrandWhereUniqueInput!]
+}
+
+input ContactUpdateArgs {
+  where: ContactWhereUniqueInput!
+  data: ContactUpdateInput!
+}
+
+input ContactCreateInput {
+  name: String
+  org: String
+  role: String
+  email: String
+  phone: String
+  athletes: AthleteRelateToManyForCreateInput
+  doNotContact: Boolean
+  brand_contacts: BrandRelateToManyForCreateInput
+  interaction_contact: InteractionRelateToManyForCreateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input BrandRelateToManyForCreateInput {
+  create: [BrandCreateInput!]
+  connect: [BrandWhereUniqueInput!]
+}
+
+type Brand {
+  id: ID!
+  name: String
+  category: String
+  contacts(where: ContactWhereInput! = {}, orderBy: [ContactOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: ContactWhereUniqueInput): [Contact!]
+  contactsCount(where: ContactWhereInput! = {}): Int
+  website: String
+  interaction_brand(where: InteractionWhereInput! = {}, orderBy: [InteractionOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: InteractionWhereUniqueInput): [Interaction!]
+  interaction_brandCount(where: InteractionWhereInput! = {}): Int
+  endorsementDeal_brand(where: EndorsementDealWhereInput! = {}, orderBy: [EndorsementDealOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: EndorsementDealWhereUniqueInput): [EndorsementDeal!]
+  endorsementDeal_brandCount(where: EndorsementDealWhereInput! = {}): Int
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input BrandWhereUniqueInput {
+  id: ID
+}
+
+input BrandWhereInput {
+  AND: [BrandWhereInput!]
+  OR: [BrandWhereInput!]
+  NOT: [BrandWhereInput!]
+  id: IDFilter
+  name: StringFilter
+  category: StringFilter
+  contacts: ContactManyRelationFilter
+  website: StringFilter
+  interaction_brand: InteractionManyRelationFilter
+  endorsementDeal_brand: EndorsementDealManyRelationFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+}
+
+input BrandOrderByInput {
+  id: OrderDirection
+  name: OrderDirection
+  category: OrderDirection
+  website: OrderDirection
+  createdAt: OrderDirection
+  updatedAt: OrderDirection
+}
+
+input BrandUpdateInput {
+  name: String
+  category: String
+  contacts: ContactRelateToManyForUpdateInput
+  website: String
+  interaction_brand: InteractionRelateToManyForUpdateInput
+  endorsementDeal_brand: EndorsementDealRelateToManyForUpdateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input BrandUpdateArgs {
+  where: BrandWhereUniqueInput!
+  data: BrandUpdateInput!
+}
+
+input BrandCreateInput {
+  name: String
+  category: String
+  contacts: ContactRelateToManyForCreateInput
+  website: String
+  interaction_brand: InteractionRelateToManyForCreateInput
+  endorsementDeal_brand: EndorsementDealRelateToManyForCreateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+type Interaction {
+  id: ID!
+  athlete: Athlete
+  contact: Contact
+  brand: Brand
+  user: User
+  kind: InteractionKindType
+  occurredAt: DateTime
+  summary: String
+  nextStepAt: DateTime
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+enum InteractionKindType {
+  call
+  meeting
+  email
+  text
+  visit
+  note
+}
+
+input InteractionWhereUniqueInput {
+  id: ID
+}
+
+input InteractionWhereInput {
+  AND: [InteractionWhereInput!]
+  OR: [InteractionWhereInput!]
+  NOT: [InteractionWhereInput!]
+  id: IDFilter
+  athlete: AthleteWhereInput
+  contact: ContactWhereInput
+  brand: BrandWhereInput
+  user: UserWhereInput
+  kind: InteractionKindTypeNullableFilter
+  occurredAt: DateTimeNullableFilter
+  summary: StringFilter
+  nextStepAt: DateTimeNullableFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+}
+
+input InteractionKindTypeNullableFilter {
+  equals: InteractionKindType
+  in: [InteractionKindType!]
+  notIn: [InteractionKindType!]
+  not: InteractionKindTypeNullableFilter
+}
+
+input InteractionOrderByInput {
+  id: OrderDirection
+  kind: OrderDirection
+  occurredAt: OrderDirection
+  summary: OrderDirection
+  nextStepAt: OrderDirection
+  createdAt: OrderDirection
+  updatedAt: OrderDirection
+}
+
+input InteractionUpdateInput {
+  athlete: AthleteRelateToOneForUpdateInput
+  contact: ContactRelateToOneForUpdateInput
+  brand: BrandRelateToOneForUpdateInput
+  user: UserRelateToOneForUpdateInput
+  kind: InteractionKindType
+  occurredAt: DateTime
+  summary: String
+  nextStepAt: DateTime
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input ContactRelateToOneForUpdateInput {
+  create: ContactCreateInput
+  connect: ContactWhereUniqueInput
+  disconnect: Boolean
+}
+
+input BrandRelateToOneForUpdateInput {
+  create: BrandCreateInput
+  connect: BrandWhereUniqueInput
+  disconnect: Boolean
+}
+
+input InteractionUpdateArgs {
+  where: InteractionWhereUniqueInput!
+  data: InteractionUpdateInput!
+}
+
+input InteractionCreateInput {
+  athlete: AthleteRelateToOneForCreateInput
+  contact: ContactRelateToOneForCreateInput
+  brand: BrandRelateToOneForCreateInput
+  user: UserRelateToOneForCreateInput
+  kind: InteractionKindType
+  occurredAt: DateTime
+  summary: String
+  nextStepAt: DateTime
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input ContactRelateToOneForCreateInput {
+  create: ContactCreateInput
+  connect: ContactWhereUniqueInput
+}
+
+input BrandRelateToOneForCreateInput {
+  create: BrandCreateInput
+  connect: BrandWhereUniqueInput
+}
+
+type PlayingContract {
+  id: ID!
+  athlete: Athlete
+  team: Team
+  league: String
+  contractType: PlayingContractContractTypeType
+  signedAt: DateTime
+  startSeason: String
+  endSeason: String
+  totalValueCents: Int
+  guaranteedCents: Int
+  signingBonusCents: Int
+  status: PlayingContractStatusType
+  document: Document
+  commissionBps: Int
+  representationAgreement: RepresentationAgreement
+  currencyCode: String
+  contractYear_contract(where: ContractYearWhereInput! = {}, orderBy: [ContractYearOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: ContractYearWhereUniqueInput): [ContractYear!]
+  contractYear_contractCount(where: ContractYearWhereInput! = {}): Int
+  incentive_contract(where: IncentiveWhereInput! = {}, orderBy: [IncentiveOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: IncentiveWhereUniqueInput): [Incentive!]
+  incentive_contractCount(where: IncentiveWhereInput! = {}): Int
+  document_contract(where: DocumentWhereInput! = {}, orderBy: [DocumentOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: DocumentWhereUniqueInput): [Document!]
+  document_contractCount(where: DocumentWhereInput! = {}): Int
+  task_contract(where: TaskWhereInput! = {}, orderBy: [TaskOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: TaskWhereUniqueInput): [Task!]
+  task_contractCount(where: TaskWhereInput! = {}): Int
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+enum PlayingContractContractTypeType {
+  rookie_scale
+  veteran
+  extension
+  two_way
+  minor_league
+  college_nil
+  other
+}
+
+enum PlayingContractStatusType {
+  negotiating
+  signed
+  active
+  completed
+  terminated
+  released
+}
+
+input PlayingContractWhereUniqueInput {
+  id: ID
+}
+
+input PlayingContractWhereInput {
+  AND: [PlayingContractWhereInput!]
+  OR: [PlayingContractWhereInput!]
+  NOT: [PlayingContractWhereInput!]
+  id: IDFilter
+  athlete: AthleteWhereInput
+  team: TeamWhereInput
+  league: StringFilter
+  contractType: PlayingContractContractTypeTypeNullableFilter
+  signedAt: DateTimeNullableFilter
+  startSeason: StringFilter
+  endSeason: StringFilter
+  totalValueCents: IntNullableFilter
+  guaranteedCents: IntNullableFilter
+  signingBonusCents: IntNullableFilter
+  status: PlayingContractStatusTypeNullableFilter
+  document: DocumentWhereInput
+  commissionBps: IntNullableFilter
+  representationAgreement: RepresentationAgreementWhereInput
+  currencyCode: StringFilter
+  contractYear_contract: ContractYearManyRelationFilter
+  incentive_contract: IncentiveManyRelationFilter
+  document_contract: DocumentManyRelationFilter
+  task_contract: TaskManyRelationFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+}
+
+input PlayingContractContractTypeTypeNullableFilter {
+  equals: PlayingContractContractTypeType
+  in: [PlayingContractContractTypeType!]
+  notIn: [PlayingContractContractTypeType!]
+  not: PlayingContractContractTypeTypeNullableFilter
+}
+
+input PlayingContractStatusTypeNullableFilter {
+  equals: PlayingContractStatusType
+  in: [PlayingContractStatusType!]
+  notIn: [PlayingContractStatusType!]
+  not: PlayingContractStatusTypeNullableFilter
+}
+
+input ContractYearManyRelationFilter {
+  every: ContractYearWhereInput
+  some: ContractYearWhereInput
+  none: ContractYearWhereInput
+}
+
+input IncentiveManyRelationFilter {
+  every: IncentiveWhereInput
+  some: IncentiveWhereInput
+  none: IncentiveWhereInput
+}
+
+input PlayingContractOrderByInput {
+  id: OrderDirection
+  league: OrderDirection
+  contractType: OrderDirection
+  signedAt: OrderDirection
+  startSeason: OrderDirection
+  endSeason: OrderDirection
+  totalValueCents: OrderDirection
+  guaranteedCents: OrderDirection
+  signingBonusCents: OrderDirection
+  status: OrderDirection
+  commissionBps: OrderDirection
+  currencyCode: OrderDirection
+  createdAt: OrderDirection
+  updatedAt: OrderDirection
+}
+
+input PlayingContractUpdateInput {
+  athlete: AthleteRelateToOneForUpdateInput
+  team: TeamRelateToOneForUpdateInput
+  league: String
+  contractType: PlayingContractContractTypeType
+  signedAt: DateTime
+  startSeason: String
+  endSeason: String
+  totalValueCents: Int
+  guaranteedCents: Int
+  signingBonusCents: Int
+  status: PlayingContractStatusType
+  document: DocumentRelateToOneForUpdateInput
+  commissionBps: Int
+  representationAgreement: RepresentationAgreementRelateToOneForUpdateInput
+  currencyCode: String
+  contractYear_contract: ContractYearRelateToManyForUpdateInput
+  incentive_contract: IncentiveRelateToManyForUpdateInput
+  document_contract: DocumentRelateToManyForUpdateInput
+  task_contract: TaskRelateToManyForUpdateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input RepresentationAgreementRelateToOneForUpdateInput {
+  create: RepresentationAgreementCreateInput
+  connect: RepresentationAgreementWhereUniqueInput
+  disconnect: Boolean
+}
+
+input ContractYearRelateToManyForUpdateInput {
+  disconnect: [ContractYearWhereUniqueInput!]
+  set: [ContractYearWhereUniqueInput!]
+  create: [ContractYearCreateInput!]
+  connect: [ContractYearWhereUniqueInput!]
+}
+
+input IncentiveRelateToManyForUpdateInput {
+  disconnect: [IncentiveWhereUniqueInput!]
+  set: [IncentiveWhereUniqueInput!]
+  create: [IncentiveCreateInput!]
+  connect: [IncentiveWhereUniqueInput!]
+}
+
+input PlayingContractUpdateArgs {
+  where: PlayingContractWhereUniqueInput!
+  data: PlayingContractUpdateInput!
+}
+
+input PlayingContractCreateInput {
+  athlete: AthleteRelateToOneForCreateInput
+  team: TeamRelateToOneForCreateInput
+  league: String
+  contractType: PlayingContractContractTypeType
+  signedAt: DateTime
+  startSeason: String
+  endSeason: String
+  totalValueCents: Int
+  guaranteedCents: Int
+  signingBonusCents: Int
+  status: PlayingContractStatusType
+  document: DocumentRelateToOneForCreateInput
+  commissionBps: Int
+  representationAgreement: RepresentationAgreementRelateToOneForCreateInput
+  currencyCode: String
+  contractYear_contract: ContractYearRelateToManyForCreateInput
+  incentive_contract: IncentiveRelateToManyForCreateInput
+  document_contract: DocumentRelateToManyForCreateInput
+  task_contract: TaskRelateToManyForCreateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input RepresentationAgreementRelateToOneForCreateInput {
+  create: RepresentationAgreementCreateInput
+  connect: RepresentationAgreementWhereUniqueInput
+}
+
+input ContractYearRelateToManyForCreateInput {
+  create: [ContractYearCreateInput!]
+  connect: [ContractYearWhereUniqueInput!]
+}
+
+input IncentiveRelateToManyForCreateInput {
+  create: [IncentiveCreateInput!]
+  connect: [IncentiveWhereUniqueInput!]
+}
+
+type ContractYear {
+  id: ID!
+  contract: PlayingContract
+  season: String
+  baseSalaryCents: Int
+  guaranteedCents: Int
+  rosterBonusCents: Int
+  workoutBonusCents: Int
+  payPeriods: Int
+  paySchedule: ContractYearPayScheduleType
+  currencyCode: String
+  scheduledPayment_contractYear(where: ScheduledPaymentWhereInput! = {}, orderBy: [ScheduledPaymentOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: ScheduledPaymentWhereUniqueInput): [ScheduledPayment!]
+  scheduledPayment_contractYearCount(where: ScheduledPaymentWhereInput! = {}): Int
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+enum ContractYearPayScheduleType {
+  game_checks
+  semi_monthly
+  lump_sum
+}
+
+input ContractYearWhereUniqueInput {
+  id: ID
+}
+
+input ContractYearWhereInput {
+  AND: [ContractYearWhereInput!]
+  OR: [ContractYearWhereInput!]
+  NOT: [ContractYearWhereInput!]
+  id: IDFilter
+  contract: PlayingContractWhereInput
+  season: StringFilter
+  baseSalaryCents: IntNullableFilter
+  guaranteedCents: IntNullableFilter
+  rosterBonusCents: IntNullableFilter
+  workoutBonusCents: IntNullableFilter
+  payPeriods: IntNullableFilter
+  paySchedule: ContractYearPayScheduleTypeNullableFilter
+  currencyCode: StringFilter
+  scheduledPayment_contractYear: ScheduledPaymentManyRelationFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+}
+
+input ContractYearPayScheduleTypeNullableFilter {
+  equals: ContractYearPayScheduleType
+  in: [ContractYearPayScheduleType!]
+  notIn: [ContractYearPayScheduleType!]
+  not: ContractYearPayScheduleTypeNullableFilter
+}
+
+input ContractYearOrderByInput {
+  id: OrderDirection
+  season: OrderDirection
+  baseSalaryCents: OrderDirection
+  guaranteedCents: OrderDirection
+  rosterBonusCents: OrderDirection
+  workoutBonusCents: OrderDirection
+  payPeriods: OrderDirection
+  paySchedule: OrderDirection
+  currencyCode: OrderDirection
+  createdAt: OrderDirection
+  updatedAt: OrderDirection
+}
+
+input ContractYearUpdateInput {
+  contract: PlayingContractRelateToOneForUpdateInput
+  season: String
+  baseSalaryCents: Int
+  guaranteedCents: Int
+  rosterBonusCents: Int
+  workoutBonusCents: Int
+  payPeriods: Int
+  paySchedule: ContractYearPayScheduleType
+  currencyCode: String
+  scheduledPayment_contractYear: ScheduledPaymentRelateToManyForUpdateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input PlayingContractRelateToOneForUpdateInput {
+  create: PlayingContractCreateInput
+  connect: PlayingContractWhereUniqueInput
+  disconnect: Boolean
+}
+
+input ContractYearUpdateArgs {
+  where: ContractYearWhereUniqueInput!
+  data: ContractYearUpdateInput!
+}
+
+input ContractYearCreateInput {
+  contract: PlayingContractRelateToOneForCreateInput
+  season: String
+  baseSalaryCents: Int
+  guaranteedCents: Int
+  rosterBonusCents: Int
+  workoutBonusCents: Int
+  payPeriods: Int
+  paySchedule: ContractYearPayScheduleType
+  currencyCode: String
+  scheduledPayment_contractYear: ScheduledPaymentRelateToManyForCreateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input PlayingContractRelateToOneForCreateInput {
+  create: PlayingContractCreateInput
+  connect: PlayingContractWhereUniqueInput
+}
+
+type Incentive {
+  id: ID!
+  contract: PlayingContract
+  description: String
+  amountCents: Int
+  likelyToBeEarned: Boolean
+  status: IncentiveStatusType
+  earnedAt: DateTime
+  evidence: String
+  currencyCode: String
+  scheduledPayment_incentive(where: ScheduledPaymentWhereInput! = {}, orderBy: [ScheduledPaymentOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: ScheduledPaymentWhereUniqueInput): [ScheduledPayment!]
+  scheduledPayment_incentiveCount(where: ScheduledPaymentWhereInput! = {}): Int
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+enum IncentiveStatusType {
+  pending
+  earned
+  not_earned
+}
+
+input IncentiveWhereUniqueInput {
+  id: ID
+}
+
+input IncentiveWhereInput {
+  AND: [IncentiveWhereInput!]
+  OR: [IncentiveWhereInput!]
+  NOT: [IncentiveWhereInput!]
+  id: IDFilter
+  contract: PlayingContractWhereInput
+  description: StringFilter
+  amountCents: IntNullableFilter
+  likelyToBeEarned: BooleanFilter
+  status: IncentiveStatusTypeNullableFilter
+  earnedAt: DateTimeNullableFilter
+  evidence: StringFilter
+  currencyCode: StringFilter
+  scheduledPayment_incentive: ScheduledPaymentManyRelationFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+}
+
+input IncentiveStatusTypeNullableFilter {
+  equals: IncentiveStatusType
+  in: [IncentiveStatusType!]
+  notIn: [IncentiveStatusType!]
+  not: IncentiveStatusTypeNullableFilter
+}
+
+input IncentiveOrderByInput {
+  id: OrderDirection
+  description: OrderDirection
+  amountCents: OrderDirection
+  likelyToBeEarned: OrderDirection
+  status: OrderDirection
+  earnedAt: OrderDirection
+  evidence: OrderDirection
+  currencyCode: OrderDirection
+  createdAt: OrderDirection
+  updatedAt: OrderDirection
+}
+
+input IncentiveUpdateInput {
+  contract: PlayingContractRelateToOneForUpdateInput
+  description: String
+  amountCents: Int
+  likelyToBeEarned: Boolean
+  status: IncentiveStatusType
+  earnedAt: DateTime
+  evidence: String
+  currencyCode: String
+  scheduledPayment_incentive: ScheduledPaymentRelateToManyForUpdateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input IncentiveUpdateArgs {
+  where: IncentiveWhereUniqueInput!
+  data: IncentiveUpdateInput!
+}
+
+input IncentiveCreateInput {
+  contract: PlayingContractRelateToOneForCreateInput
+  description: String
+  amountCents: Int
+  likelyToBeEarned: Boolean
+  status: IncentiveStatusType
+  earnedAt: DateTime
+  evidence: String
+  currencyCode: String
+  scheduledPayment_incentive: ScheduledPaymentRelateToManyForCreateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+type EndorsementDeal {
+  id: ID!
+  athlete: Athlete
+  brand: Brand
+  owner: User
+  status: EndorsementDealStatusType
+  termStart: DateTime
+  termEnd: DateTime
+  totalValueCents: Int
+  commissionBps: Int
+  exclusivityCategory: String
+  territory: String
+  document: Document
+  paymentTerms: String
+  currencyCode: String
+  deliverable_deal(where: DeliverableWhereInput! = {}, orderBy: [DeliverableOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: DeliverableWhereUniqueInput): [Deliverable!]
+  deliverable_dealCount(where: DeliverableWhereInput! = {}): Int
+  scheduledPayment_endorsementDeal(where: ScheduledPaymentWhereInput! = {}, orderBy: [ScheduledPaymentOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: ScheduledPaymentWhereUniqueInput): [ScheduledPayment!]
+  scheduledPayment_endorsementDealCount(where: ScheduledPaymentWhereInput! = {}): Int
+  agentSplit_deal(where: AgentSplitWhereInput! = {}, orderBy: [AgentSplitOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: AgentSplitWhereUniqueInput): [AgentSplit!]
+  agentSplit_dealCount(where: AgentSplitWhereInput! = {}): Int
+  document_deal(where: DocumentWhereInput! = {}, orderBy: [DocumentOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: DocumentWhereUniqueInput): [Document!]
+  document_dealCount(where: DocumentWhereInput! = {}): Int
+  task_deal(where: TaskWhereInput! = {}, orderBy: [TaskOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: TaskWhereUniqueInput): [Task!]
+  task_dealCount(where: TaskWhereInput! = {}): Int
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+enum EndorsementDealStatusType {
+  prospect
+  negotiating
+  signed
+  active
+  completed
+  terminated
+}
+
+input EndorsementDealWhereUniqueInput {
+  id: ID
+}
+
+input EndorsementDealWhereInput {
+  AND: [EndorsementDealWhereInput!]
+  OR: [EndorsementDealWhereInput!]
+  NOT: [EndorsementDealWhereInput!]
+  id: IDFilter
+  athlete: AthleteWhereInput
+  brand: BrandWhereInput
+  owner: UserWhereInput
+  status: EndorsementDealStatusTypeNullableFilter
+  termStart: DateTimeNullableFilter
+  termEnd: DateTimeNullableFilter
+  totalValueCents: IntNullableFilter
+  commissionBps: IntNullableFilter
+  exclusivityCategory: StringFilter
+  territory: StringFilter
+  document: DocumentWhereInput
+  paymentTerms: StringFilter
+  currencyCode: StringFilter
+  deliverable_deal: DeliverableManyRelationFilter
+  scheduledPayment_endorsementDeal: ScheduledPaymentManyRelationFilter
+  agentSplit_deal: AgentSplitManyRelationFilter
+  document_deal: DocumentManyRelationFilter
+  task_deal: TaskManyRelationFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+}
+
+input EndorsementDealStatusTypeNullableFilter {
+  equals: EndorsementDealStatusType
+  in: [EndorsementDealStatusType!]
+  notIn: [EndorsementDealStatusType!]
+  not: EndorsementDealStatusTypeNullableFilter
+}
+
+input DeliverableManyRelationFilter {
+  every: DeliverableWhereInput
+  some: DeliverableWhereInput
+  none: DeliverableWhereInput
+}
+
+input EndorsementDealOrderByInput {
+  id: OrderDirection
+  status: OrderDirection
+  termStart: OrderDirection
+  termEnd: OrderDirection
+  totalValueCents: OrderDirection
+  commissionBps: OrderDirection
+  exclusivityCategory: OrderDirection
+  territory: OrderDirection
+  paymentTerms: OrderDirection
+  currencyCode: OrderDirection
+  createdAt: OrderDirection
+  updatedAt: OrderDirection
+}
+
+input EndorsementDealUpdateInput {
+  athlete: AthleteRelateToOneForUpdateInput
+  brand: BrandRelateToOneForUpdateInput
+  owner: UserRelateToOneForUpdateInput
+  status: EndorsementDealStatusType
+  termStart: DateTime
+  termEnd: DateTime
+  totalValueCents: Int
+  commissionBps: Int
+  exclusivityCategory: String
+  territory: String
+  document: DocumentRelateToOneForUpdateInput
+  paymentTerms: String
+  currencyCode: String
+  deliverable_deal: DeliverableRelateToManyForUpdateInput
+  scheduledPayment_endorsementDeal: ScheduledPaymentRelateToManyForUpdateInput
+  agentSplit_deal: AgentSplitRelateToManyForUpdateInput
+  document_deal: DocumentRelateToManyForUpdateInput
+  task_deal: TaskRelateToManyForUpdateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input DeliverableRelateToManyForUpdateInput {
+  disconnect: [DeliverableWhereUniqueInput!]
+  set: [DeliverableWhereUniqueInput!]
+  create: [DeliverableCreateInput!]
+  connect: [DeliverableWhereUniqueInput!]
+}
+
+input EndorsementDealUpdateArgs {
+  where: EndorsementDealWhereUniqueInput!
+  data: EndorsementDealUpdateInput!
+}
+
+input EndorsementDealCreateInput {
+  athlete: AthleteRelateToOneForCreateInput
+  brand: BrandRelateToOneForCreateInput
+  owner: UserRelateToOneForCreateInput
+  status: EndorsementDealStatusType
+  termStart: DateTime
+  termEnd: DateTime
+  totalValueCents: Int
+  commissionBps: Int
+  exclusivityCategory: String
+  territory: String
+  document: DocumentRelateToOneForCreateInput
+  paymentTerms: String
+  currencyCode: String
+  deliverable_deal: DeliverableRelateToManyForCreateInput
+  scheduledPayment_endorsementDeal: ScheduledPaymentRelateToManyForCreateInput
+  agentSplit_deal: AgentSplitRelateToManyForCreateInput
+  document_deal: DocumentRelateToManyForCreateInput
+  task_deal: TaskRelateToManyForCreateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input DeliverableRelateToManyForCreateInput {
+  create: [DeliverableCreateInput!]
+  connect: [DeliverableWhereUniqueInput!]
+}
+
+type Deliverable {
+  id: ID!
+  deal: EndorsementDeal
+  kind: DeliverableKindType
+  dueAt: DateTime
+  status: DeliverableStatusType
+  completedAt: DateTime
+  proofLink: String
+  proof: Document
+  notes: String
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+enum DeliverableKindType {
+  social_post
+  appearance
+  photo_shoot
+  commercial
+  autograph_session
+  other
+}
+
+enum DeliverableStatusType {
+  scheduled
+  completed
+  missed
+  waived
+}
+
+input DeliverableWhereUniqueInput {
+  id: ID
+}
+
+input DeliverableWhereInput {
+  AND: [DeliverableWhereInput!]
+  OR: [DeliverableWhereInput!]
+  NOT: [DeliverableWhereInput!]
+  id: IDFilter
+  deal: EndorsementDealWhereInput
+  kind: DeliverableKindTypeNullableFilter
+  dueAt: DateTimeNullableFilter
+  status: DeliverableStatusTypeNullableFilter
+  completedAt: DateTimeNullableFilter
+  proofLink: StringFilter
+  proof: DocumentWhereInput
+  notes: StringFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+}
+
+input DeliverableKindTypeNullableFilter {
+  equals: DeliverableKindType
+  in: [DeliverableKindType!]
+  notIn: [DeliverableKindType!]
+  not: DeliverableKindTypeNullableFilter
+}
+
+input DeliverableStatusTypeNullableFilter {
+  equals: DeliverableStatusType
+  in: [DeliverableStatusType!]
+  notIn: [DeliverableStatusType!]
+  not: DeliverableStatusTypeNullableFilter
+}
+
+input DeliverableOrderByInput {
+  id: OrderDirection
+  kind: OrderDirection
+  dueAt: OrderDirection
+  status: OrderDirection
+  completedAt: OrderDirection
+  proofLink: OrderDirection
+  notes: OrderDirection
+  createdAt: OrderDirection
+  updatedAt: OrderDirection
+}
+
+input DeliverableUpdateInput {
+  deal: EndorsementDealRelateToOneForUpdateInput
+  kind: DeliverableKindType
+  dueAt: DateTime
+  status: DeliverableStatusType
+  completedAt: DateTime
+  proofLink: String
+  proof: DocumentRelateToOneForUpdateInput
+  notes: String
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input EndorsementDealRelateToOneForUpdateInput {
+  create: EndorsementDealCreateInput
+  connect: EndorsementDealWhereUniqueInput
+  disconnect: Boolean
+}
+
+input DeliverableUpdateArgs {
+  where: DeliverableWhereUniqueInput!
+  data: DeliverableUpdateInput!
+}
+
+input DeliverableCreateInput {
+  deal: EndorsementDealRelateToOneForCreateInput
+  kind: DeliverableKindType
+  dueAt: DateTime
+  status: DeliverableStatusType
+  completedAt: DateTime
+  proofLink: String
+  proof: DocumentRelateToOneForCreateInput
+  notes: String
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input EndorsementDealRelateToOneForCreateInput {
+  create: EndorsementDealCreateInput
+  connect: EndorsementDealWhereUniqueInput
+}
+
+type ScheduledPayment {
+  id: ID!
+  sourceKey: String
+  contractYear: ContractYear
+  endorsementDeal: EndorsementDeal
+  incentive: Incentive
+  athlete: Athlete
+  dueAt: DateTime
+  grossCents: Int
+  commissionBps: Int
+  commissionCents: Int
+  remainder: Int
+  receivedAt: DateTime
+  status: ScheduledPaymentStatusType
+  currencyCode: String
+  invoice: CommissionInvoice
+  commissionInvoiceLine_scheduledPayment(where: CommissionInvoiceLineWhereInput! = {}, orderBy: [CommissionInvoiceLineOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: CommissionInvoiceLineWhereUniqueInput): [CommissionInvoiceLine!]
+  commissionInvoiceLine_scheduledPaymentCount(where: CommissionInvoiceLineWhereInput! = {}): Int
+  commissionLedgerEntry_scheduledPayment(where: CommissionLedgerEntryWhereInput! = {}, orderBy: [CommissionLedgerEntryOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: CommissionLedgerEntryWhereUniqueInput): [CommissionLedgerEntry!]
+  commissionLedgerEntry_scheduledPaymentCount(where: CommissionLedgerEntryWhereInput! = {}): Int
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+enum ScheduledPaymentStatusType {
+  scheduled
+  received
+  late
+  waived
+}
+
+input ScheduledPaymentWhereUniqueInput {
+  id: ID
+  sourceKey: String
+}
+
+input ScheduledPaymentWhereInput {
+  AND: [ScheduledPaymentWhereInput!]
+  OR: [ScheduledPaymentWhereInput!]
+  NOT: [ScheduledPaymentWhereInput!]
+  id: IDFilter
+  sourceKey: StringFilter
+  contractYear: ContractYearWhereInput
+  endorsementDeal: EndorsementDealWhereInput
+  incentive: IncentiveWhereInput
+  athlete: AthleteWhereInput
+  dueAt: DateTimeNullableFilter
+  grossCents: IntNullableFilter
+  commissionBps: IntNullableFilter
+  commissionCents: IntNullableFilter
+  remainder: IntNullableFilter
+  receivedAt: DateTimeNullableFilter
+  status: ScheduledPaymentStatusTypeNullableFilter
+  currencyCode: StringFilter
+  invoice: CommissionInvoiceWhereInput
+  commissionInvoiceLine_scheduledPayment: CommissionInvoiceLineManyRelationFilter
+  commissionLedgerEntry_scheduledPayment: CommissionLedgerEntryManyRelationFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+}
+
+input ScheduledPaymentStatusTypeNullableFilter {
+  equals: ScheduledPaymentStatusType
+  in: [ScheduledPaymentStatusType!]
+  notIn: [ScheduledPaymentStatusType!]
+  not: ScheduledPaymentStatusTypeNullableFilter
+}
+
+input CommissionInvoiceLineManyRelationFilter {
+  every: CommissionInvoiceLineWhereInput
+  some: CommissionInvoiceLineWhereInput
+  none: CommissionInvoiceLineWhereInput
+}
+
+input ScheduledPaymentOrderByInput {
+  id: OrderDirection
+  sourceKey: OrderDirection
+  dueAt: OrderDirection
+  grossCents: OrderDirection
+  commissionBps: OrderDirection
+  commissionCents: OrderDirection
+  remainder: OrderDirection
+  receivedAt: OrderDirection
+  status: OrderDirection
+  currencyCode: OrderDirection
+  createdAt: OrderDirection
+  updatedAt: OrderDirection
+}
+
+input ScheduledPaymentUpdateInput {
+  sourceKey: String
+  contractYear: ContractYearRelateToOneForUpdateInput
+  endorsementDeal: EndorsementDealRelateToOneForUpdateInput
+  incentive: IncentiveRelateToOneForUpdateInput
+  athlete: AthleteRelateToOneForUpdateInput
+  dueAt: DateTime
+  grossCents: Int
+  commissionBps: Int
+  commissionCents: Int
+  remainder: Int
+  receivedAt: DateTime
+  status: ScheduledPaymentStatusType
+  currencyCode: String
+  invoice: CommissionInvoiceRelateToOneForUpdateInput
+  commissionInvoiceLine_scheduledPayment: CommissionInvoiceLineRelateToManyForUpdateInput
+  commissionLedgerEntry_scheduledPayment: CommissionLedgerEntryRelateToManyForUpdateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input ContractYearRelateToOneForUpdateInput {
+  create: ContractYearCreateInput
+  connect: ContractYearWhereUniqueInput
+  disconnect: Boolean
+}
+
+input IncentiveRelateToOneForUpdateInput {
+  create: IncentiveCreateInput
+  connect: IncentiveWhereUniqueInput
+  disconnect: Boolean
+}
+
+input CommissionInvoiceRelateToOneForUpdateInput {
+  create: CommissionInvoiceCreateInput
+  connect: CommissionInvoiceWhereUniqueInput
+  disconnect: Boolean
+}
+
+input CommissionInvoiceLineRelateToManyForUpdateInput {
+  disconnect: [CommissionInvoiceLineWhereUniqueInput!]
+  set: [CommissionInvoiceLineWhereUniqueInput!]
+  create: [CommissionInvoiceLineCreateInput!]
+  connect: [CommissionInvoiceLineWhereUniqueInput!]
+}
+
+input ScheduledPaymentUpdateArgs {
+  where: ScheduledPaymentWhereUniqueInput!
+  data: ScheduledPaymentUpdateInput!
+}
+
+input ScheduledPaymentCreateInput {
+  sourceKey: String
+  contractYear: ContractYearRelateToOneForCreateInput
+  endorsementDeal: EndorsementDealRelateToOneForCreateInput
+  incentive: IncentiveRelateToOneForCreateInput
+  athlete: AthleteRelateToOneForCreateInput
+  dueAt: DateTime
+  grossCents: Int
+  commissionBps: Int
+  commissionCents: Int
+  remainder: Int
+  receivedAt: DateTime
+  status: ScheduledPaymentStatusType
+  currencyCode: String
+  invoice: CommissionInvoiceRelateToOneForCreateInput
+  commissionInvoiceLine_scheduledPayment: CommissionInvoiceLineRelateToManyForCreateInput
+  commissionLedgerEntry_scheduledPayment: CommissionLedgerEntryRelateToManyForCreateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input ContractYearRelateToOneForCreateInput {
+  create: ContractYearCreateInput
+  connect: ContractYearWhereUniqueInput
+}
+
+input IncentiveRelateToOneForCreateInput {
+  create: IncentiveCreateInput
+  connect: IncentiveWhereUniqueInput
+}
+
+input CommissionInvoiceRelateToOneForCreateInput {
+  create: CommissionInvoiceCreateInput
+  connect: CommissionInvoiceWhereUniqueInput
+}
+
+input CommissionInvoiceLineRelateToManyForCreateInput {
+  create: [CommissionInvoiceLineCreateInput!]
+  connect: [CommissionInvoiceLineWhereUniqueInput!]
+}
+
+type CommissionInvoice {
+  id: ID!
+  payment_order(where: PaymentWhereInput! = {}, orderBy: [PaymentOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: PaymentWhereUniqueInput): [Payment!]
+  payment_orderCount(where: PaymentWhereInput! = {}): Int
+  athlete: Athlete
+  number: String
+  issuedAt: DateTime
+  dueAt: DateTime
+  totalCents: Int
+  paidCents: Int
+  status: CommissionInvoiceStatusType
+  paymentCollection: PaymentCollection
+  currencyCode: String
+  scheduledPayment_invoice(where: ScheduledPaymentWhereInput! = {}, orderBy: [ScheduledPaymentOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: ScheduledPaymentWhereUniqueInput): [ScheduledPayment!]
+  scheduledPayment_invoiceCount(where: ScheduledPaymentWhereInput! = {}): Int
+  commissionInvoiceLine_invoice(where: CommissionInvoiceLineWhereInput! = {}, orderBy: [CommissionInvoiceLineOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: CommissionInvoiceLineWhereUniqueInput): [CommissionInvoiceLine!]
+  commissionInvoiceLine_invoiceCount(where: CommissionInvoiceLineWhereInput! = {}): Int
+  commissionLedgerEntry_invoice(where: CommissionLedgerEntryWhereInput! = {}, orderBy: [CommissionLedgerEntryOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: CommissionLedgerEntryWhereUniqueInput): [CommissionLedgerEntry!]
+  commissionLedgerEntry_invoiceCount(where: CommissionLedgerEntryWhereInput! = {}): Int
+  clientTrustEntry_invoice(where: ClientTrustEntryWhereInput! = {}, orderBy: [ClientTrustEntryOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: ClientTrustEntryWhereUniqueInput): [ClientTrustEntry!]
+  clientTrustEntry_invoiceCount(where: ClientTrustEntryWhereInput! = {}): Int
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+enum CommissionInvoiceStatusType {
+  draft
+  sent
+  partially_paid
+  paid
+  void
+  written_off
+}
+
+input CommissionInvoiceWhereUniqueInput {
+  id: ID
+  number: String
+  paymentCollection: PaymentCollectionWhereUniqueInput
+}
+
+input CommissionInvoiceWhereInput {
+  AND: [CommissionInvoiceWhereInput!]
+  OR: [CommissionInvoiceWhereInput!]
+  NOT: [CommissionInvoiceWhereInput!]
+  id: IDFilter
+  payment_order: PaymentManyRelationFilter
+  athlete: AthleteWhereInput
+  number: StringFilter
+  issuedAt: DateTimeNullableFilter
+  dueAt: DateTimeNullableFilter
+  totalCents: IntNullableFilter
+  paidCents: IntNullableFilter
+  status: CommissionInvoiceStatusTypeNullableFilter
+  paymentCollection: PaymentCollectionWhereInput
+  currencyCode: StringFilter
+  scheduledPayment_invoice: ScheduledPaymentManyRelationFilter
+  commissionInvoiceLine_invoice: CommissionInvoiceLineManyRelationFilter
+  commissionLedgerEntry_invoice: CommissionLedgerEntryManyRelationFilter
+  clientTrustEntry_invoice: ClientTrustEntryManyRelationFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+}
+
+input PaymentManyRelationFilter {
+  every: PaymentWhereInput
+  some: PaymentWhereInput
+  none: PaymentWhereInput
+}
+
+input CommissionInvoiceStatusTypeNullableFilter {
+  equals: CommissionInvoiceStatusType
+  in: [CommissionInvoiceStatusType!]
+  notIn: [CommissionInvoiceStatusType!]
+  not: CommissionInvoiceStatusTypeNullableFilter
+}
+
+input CommissionInvoiceOrderByInput {
+  id: OrderDirection
+  number: OrderDirection
+  issuedAt: OrderDirection
+  dueAt: OrderDirection
+  totalCents: OrderDirection
+  paidCents: OrderDirection
+  status: OrderDirection
+  currencyCode: OrderDirection
+  createdAt: OrderDirection
+  updatedAt: OrderDirection
+}
+
+input CommissionInvoiceUpdateInput {
+  payment_order: PaymentRelateToManyForUpdateInput
+  athlete: AthleteRelateToOneForUpdateInput
+  number: String
+  issuedAt: DateTime
+  dueAt: DateTime
+  totalCents: Int
+  paidCents: Int
+  status: CommissionInvoiceStatusType
+  paymentCollection: PaymentCollectionRelateToOneForUpdateInput
+  currencyCode: String
+  scheduledPayment_invoice: ScheduledPaymentRelateToManyForUpdateInput
+  commissionInvoiceLine_invoice: CommissionInvoiceLineRelateToManyForUpdateInput
+  commissionLedgerEntry_invoice: CommissionLedgerEntryRelateToManyForUpdateInput
+  clientTrustEntry_invoice: ClientTrustEntryRelateToManyForUpdateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input PaymentRelateToManyForUpdateInput {
+  disconnect: [PaymentWhereUniqueInput!]
+  set: [PaymentWhereUniqueInput!]
+  create: [PaymentCreateInput!]
+  connect: [PaymentWhereUniqueInput!]
+}
+
+input PaymentCollectionRelateToOneForUpdateInput {
+  create: PaymentCollectionCreateInput
+  connect: PaymentCollectionWhereUniqueInput
+  disconnect: Boolean
+}
+
+input CommissionInvoiceUpdateArgs {
+  where: CommissionInvoiceWhereUniqueInput!
+  data: CommissionInvoiceUpdateInput!
+}
+
+input CommissionInvoiceCreateInput {
+  payment_order: PaymentRelateToManyForCreateInput
+  athlete: AthleteRelateToOneForCreateInput
+  number: String
+  issuedAt: DateTime
+  dueAt: DateTime
+  totalCents: Int
+  paidCents: Int
+  status: CommissionInvoiceStatusType
+  paymentCollection: PaymentCollectionRelateToOneForCreateInput
+  currencyCode: String
+  scheduledPayment_invoice: ScheduledPaymentRelateToManyForCreateInput
+  commissionInvoiceLine_invoice: CommissionInvoiceLineRelateToManyForCreateInput
+  commissionLedgerEntry_invoice: CommissionLedgerEntryRelateToManyForCreateInput
+  clientTrustEntry_invoice: ClientTrustEntryRelateToManyForCreateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input PaymentRelateToManyForCreateInput {
+  create: [PaymentCreateInput!]
+  connect: [PaymentWhereUniqueInput!]
+}
+
+input PaymentCollectionRelateToOneForCreateInput {
+  create: PaymentCollectionCreateInput
+  connect: PaymentCollectionWhereUniqueInput
+}
+
+type CommissionInvoiceLine {
+  id: ID!
+  invoice: CommissionInvoice
+  scheduledPayment: ScheduledPayment
+  description: String
+  grossCents: Int
+  commissionBps: Int
+  commissionCents: Int
+  quantity: Int
+  unitPriceCents: Int
+  feesCents: Int
+  taxCents: Int
+  currencyCode: String
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input CommissionInvoiceLineWhereUniqueInput {
+  id: ID
+}
+
+input CommissionInvoiceLineWhereInput {
+  AND: [CommissionInvoiceLineWhereInput!]
+  OR: [CommissionInvoiceLineWhereInput!]
+  NOT: [CommissionInvoiceLineWhereInput!]
+  id: IDFilter
+  invoice: CommissionInvoiceWhereInput
+  scheduledPayment: ScheduledPaymentWhereInput
+  description: StringFilter
+  grossCents: IntNullableFilter
+  commissionBps: IntNullableFilter
+  commissionCents: IntNullableFilter
+  quantity: IntNullableFilter
+  unitPriceCents: IntNullableFilter
+  feesCents: IntNullableFilter
+  taxCents: IntNullableFilter
+  currencyCode: StringFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+}
+
+input CommissionInvoiceLineOrderByInput {
+  id: OrderDirection
+  description: OrderDirection
+  grossCents: OrderDirection
+  commissionBps: OrderDirection
+  commissionCents: OrderDirection
+  quantity: OrderDirection
+  unitPriceCents: OrderDirection
+  feesCents: OrderDirection
+  taxCents: OrderDirection
+  currencyCode: OrderDirection
+  createdAt: OrderDirection
+  updatedAt: OrderDirection
+}
+
+input CommissionInvoiceLineUpdateInput {
+  invoice: CommissionInvoiceRelateToOneForUpdateInput
+  scheduledPayment: ScheduledPaymentRelateToOneForUpdateInput
+  description: String
+  grossCents: Int
+  commissionBps: Int
+  commissionCents: Int
+  quantity: Int
+  unitPriceCents: Int
+  feesCents: Int
+  taxCents: Int
+  currencyCode: String
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input ScheduledPaymentRelateToOneForUpdateInput {
+  create: ScheduledPaymentCreateInput
+  connect: ScheduledPaymentWhereUniqueInput
+  disconnect: Boolean
+}
+
+input CommissionInvoiceLineUpdateArgs {
+  where: CommissionInvoiceLineWhereUniqueInput!
+  data: CommissionInvoiceLineUpdateInput!
+}
+
+input CommissionInvoiceLineCreateInput {
+  invoice: CommissionInvoiceRelateToOneForCreateInput
+  scheduledPayment: ScheduledPaymentRelateToOneForCreateInput
+  description: String
+  grossCents: Int
+  commissionBps: Int
+  commissionCents: Int
+  quantity: Int
+  unitPriceCents: Int
+  feesCents: Int
+  taxCents: Int
+  currencyCode: String
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input ScheduledPaymentRelateToOneForCreateInput {
+  create: ScheduledPaymentCreateInput
+  connect: ScheduledPaymentWhereUniqueInput
+}
+
+type CommissionLedgerEntry {
+  id: ID!
+  entryKey: String
+  athlete: Athlete
+  invoice: CommissionInvoice
+  scheduledPayment: ScheduledPayment
+  entryType: CommissionLedgerEntryEntryTypeType
+  amountCents: BigInt
+  payeeUser: User
+  reverses: CommissionLedgerEntry
+  reversalKey: String
+  reason: String
+  preparedBy: User
+  approvedBy: User
+  occurredAt: DateTime
+  currencyCode: String
+  commissionLedgerEntry_reverses(where: CommissionLedgerEntryWhereInput! = {}, orderBy: [CommissionLedgerEntryOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: CommissionLedgerEntryWhereUniqueInput): [CommissionLedgerEntry!]
+  commissionLedgerEntry_reversesCount(where: CommissionLedgerEntryWhereInput! = {}): Int
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+enum CommissionLedgerEntryEntryTypeType {
+  accrual
+  invoice
+  receipt
+  split_to_agent
+  reversal
+  write_off
+}
+
+scalar BigInt
+
+input CommissionLedgerEntryWhereUniqueInput {
+  id: ID
+  entryKey: String
+  reversalKey: String
+}
+
+input CommissionLedgerEntryWhereInput {
+  AND: [CommissionLedgerEntryWhereInput!]
+  OR: [CommissionLedgerEntryWhereInput!]
+  NOT: [CommissionLedgerEntryWhereInput!]
+  id: IDFilter
+  entryKey: StringFilter
+  athlete: AthleteWhereInput
+  invoice: CommissionInvoiceWhereInput
+  scheduledPayment: ScheduledPaymentWhereInput
+  entryType: CommissionLedgerEntryEntryTypeTypeNullableFilter
+  amountCents: BigIntFilter
+  payeeUser: UserWhereInput
+  reverses: CommissionLedgerEntryWhereInput
+  reversalKey: StringNullableFilter
+  reason: StringFilter
+  preparedBy: UserWhereInput
+  approvedBy: UserWhereInput
+  occurredAt: DateTimeNullableFilter
+  currencyCode: StringFilter
+  commissionLedgerEntry_reverses: CommissionLedgerEntryManyRelationFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+}
+
+input CommissionLedgerEntryEntryTypeTypeNullableFilter {
+  equals: CommissionLedgerEntryEntryTypeType
+  in: [CommissionLedgerEntryEntryTypeType!]
+  notIn: [CommissionLedgerEntryEntryTypeType!]
+  not: CommissionLedgerEntryEntryTypeTypeNullableFilter
+}
+
+input BigIntFilter {
+  equals: BigInt
+  in: [BigInt!]
+  notIn: [BigInt!]
+  lt: BigInt
+  lte: BigInt
+  gt: BigInt
+  gte: BigInt
+  not: BigIntFilter
+}
+
+input CommissionLedgerEntryOrderByInput {
+  id: OrderDirection
+  entryKey: OrderDirection
+  entryType: OrderDirection
+  amountCents: OrderDirection
+  reversalKey: OrderDirection
+  reason: OrderDirection
+  occurredAt: OrderDirection
+  currencyCode: OrderDirection
+  createdAt: OrderDirection
+  updatedAt: OrderDirection
+}
+
+input CommissionLedgerEntryUpdateInput {
+  entryKey: String
+  athlete: AthleteRelateToOneForUpdateInput
+  invoice: CommissionInvoiceRelateToOneForUpdateInput
+  scheduledPayment: ScheduledPaymentRelateToOneForUpdateInput
+  entryType: CommissionLedgerEntryEntryTypeType
+  amountCents: BigInt
+  payeeUser: UserRelateToOneForUpdateInput
+  reverses: CommissionLedgerEntryRelateToOneForUpdateInput
+  reversalKey: String
+  reason: String
+  preparedBy: UserRelateToOneForUpdateInput
+  approvedBy: UserRelateToOneForUpdateInput
+  occurredAt: DateTime
+  currencyCode: String
+  commissionLedgerEntry_reverses: CommissionLedgerEntryRelateToManyForUpdateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input CommissionLedgerEntryRelateToOneForUpdateInput {
+  create: CommissionLedgerEntryCreateInput
+  connect: CommissionLedgerEntryWhereUniqueInput
+  disconnect: Boolean
+}
+
+input CommissionLedgerEntryUpdateArgs {
+  where: CommissionLedgerEntryWhereUniqueInput!
+  data: CommissionLedgerEntryUpdateInput!
+}
+
+input CommissionLedgerEntryCreateInput {
+  entryKey: String
+  athlete: AthleteRelateToOneForCreateInput
+  invoice: CommissionInvoiceRelateToOneForCreateInput
+  scheduledPayment: ScheduledPaymentRelateToOneForCreateInput
+  entryType: CommissionLedgerEntryEntryTypeType
+  amountCents: BigInt
+  payeeUser: UserRelateToOneForCreateInput
+  reverses: CommissionLedgerEntryRelateToOneForCreateInput
+  reversalKey: String
+  reason: String
+  preparedBy: UserRelateToOneForCreateInput
+  approvedBy: UserRelateToOneForCreateInput
+  occurredAt: DateTime
+  currencyCode: String
+  commissionLedgerEntry_reverses: CommissionLedgerEntryRelateToManyForCreateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input CommissionLedgerEntryRelateToOneForCreateInput {
+  create: CommissionLedgerEntryCreateInput
+  connect: CommissionLedgerEntryWhereUniqueInput
+}
+
+type AgentSplit {
+  id: ID!
+  athlete: Athlete
+  deal: EndorsementDeal
+  user: User
+  shareBps: Int
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input AgentSplitWhereUniqueInput {
+  id: ID
+}
+
+input AgentSplitWhereInput {
+  AND: [AgentSplitWhereInput!]
+  OR: [AgentSplitWhereInput!]
+  NOT: [AgentSplitWhereInput!]
+  id: IDFilter
+  athlete: AthleteWhereInput
+  deal: EndorsementDealWhereInput
+  user: UserWhereInput
+  shareBps: IntNullableFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+}
+
+input AgentSplitOrderByInput {
+  id: OrderDirection
+  shareBps: OrderDirection
+  createdAt: OrderDirection
+  updatedAt: OrderDirection
+}
+
+input AgentSplitUpdateInput {
+  athlete: AthleteRelateToOneForUpdateInput
+  deal: EndorsementDealRelateToOneForUpdateInput
+  user: UserRelateToOneForUpdateInput
+  shareBps: Int
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input AgentSplitUpdateArgs {
+  where: AgentSplitWhereUniqueInput!
+  data: AgentSplitUpdateInput!
+}
+
+input AgentSplitCreateInput {
+  athlete: AthleteRelateToOneForCreateInput
+  deal: EndorsementDealRelateToOneForCreateInput
+  user: UserRelateToOneForCreateInput
+  shareBps: Int
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+type ClientTrustAccount {
+  id: ID!
+  athlete: Athlete
+  name: String
+  currencyCode: String
+  clientTrustEntry_account(where: ClientTrustEntryWhereInput! = {}, orderBy: [ClientTrustEntryOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: ClientTrustEntryWhereUniqueInput): [ClientTrustEntry!]
+  clientTrustEntry_accountCount(where: ClientTrustEntryWhereInput! = {}): Int
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input ClientTrustAccountWhereUniqueInput {
+  id: ID
+}
+
+input ClientTrustAccountWhereInput {
+  AND: [ClientTrustAccountWhereInput!]
+  OR: [ClientTrustAccountWhereInput!]
+  NOT: [ClientTrustAccountWhereInput!]
+  id: IDFilter
+  athlete: AthleteWhereInput
+  name: StringFilter
+  currencyCode: StringFilter
+  clientTrustEntry_account: ClientTrustEntryManyRelationFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+}
+
+input ClientTrustAccountOrderByInput {
+  id: OrderDirection
+  name: OrderDirection
+  currencyCode: OrderDirection
+  createdAt: OrderDirection
+  updatedAt: OrderDirection
+}
+
+input ClientTrustAccountUpdateInput {
+  athlete: AthleteRelateToOneForUpdateInput
+  name: String
+  currencyCode: String
+  clientTrustEntry_account: ClientTrustEntryRelateToManyForUpdateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input ClientTrustAccountUpdateArgs {
+  where: ClientTrustAccountWhereUniqueInput!
+  data: ClientTrustAccountUpdateInput!
+}
+
+input ClientTrustAccountCreateInput {
+  athlete: AthleteRelateToOneForCreateInput
+  name: String
+  currencyCode: String
+  clientTrustEntry_account: ClientTrustEntryRelateToManyForCreateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+type ClientTrustEntry {
+  id: ID!
+  account: ClientTrustAccount
+  athlete: Athlete
+  invoice: CommissionInvoice
+  entryType: ClientTrustEntryEntryTypeType
+  amountCents: BigInt
+  reference: String
+  occurredAt: DateTime
+  reverses: ClientTrustEntry
+  reversalKey: String
+  currencyCode: String
+  clientTrustEntry_reverses(where: ClientTrustEntryWhereInput! = {}, orderBy: [ClientTrustEntryOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: ClientTrustEntryWhereUniqueInput): [ClientTrustEntry!]
+  clientTrustEntry_reversesCount(where: ClientTrustEntryWhereInput! = {}): Int
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+enum ClientTrustEntryEntryTypeType {
+  deposit
+  commission_transfer
+  disbursement_to_client
+  reversal
+}
+
+input ClientTrustEntryWhereUniqueInput {
+  id: ID
+  reversalKey: String
+}
+
+input ClientTrustEntryWhereInput {
+  AND: [ClientTrustEntryWhereInput!]
+  OR: [ClientTrustEntryWhereInput!]
+  NOT: [ClientTrustEntryWhereInput!]
+  id: IDFilter
+  account: ClientTrustAccountWhereInput
+  athlete: AthleteWhereInput
+  invoice: CommissionInvoiceWhereInput
+  entryType: ClientTrustEntryEntryTypeTypeNullableFilter
+  amountCents: BigIntFilter
+  reference: StringFilter
+  occurredAt: DateTimeNullableFilter
+  reverses: ClientTrustEntryWhereInput
+  reversalKey: StringNullableFilter
+  currencyCode: StringFilter
+  clientTrustEntry_reverses: ClientTrustEntryManyRelationFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+}
+
+input ClientTrustEntryEntryTypeTypeNullableFilter {
+  equals: ClientTrustEntryEntryTypeType
+  in: [ClientTrustEntryEntryTypeType!]
+  notIn: [ClientTrustEntryEntryTypeType!]
+  not: ClientTrustEntryEntryTypeTypeNullableFilter
+}
+
+input ClientTrustEntryOrderByInput {
+  id: OrderDirection
+  entryType: OrderDirection
+  amountCents: OrderDirection
+  reference: OrderDirection
+  occurredAt: OrderDirection
+  reversalKey: OrderDirection
+  currencyCode: OrderDirection
+  createdAt: OrderDirection
+  updatedAt: OrderDirection
+}
+
+input ClientTrustEntryUpdateInput {
+  account: ClientTrustAccountRelateToOneForUpdateInput
+  athlete: AthleteRelateToOneForUpdateInput
+  invoice: CommissionInvoiceRelateToOneForUpdateInput
+  entryType: ClientTrustEntryEntryTypeType
+  amountCents: BigInt
+  reference: String
+  occurredAt: DateTime
+  reverses: ClientTrustEntryRelateToOneForUpdateInput
+  reversalKey: String
+  currencyCode: String
+  clientTrustEntry_reverses: ClientTrustEntryRelateToManyForUpdateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input ClientTrustAccountRelateToOneForUpdateInput {
+  create: ClientTrustAccountCreateInput
+  connect: ClientTrustAccountWhereUniqueInput
+  disconnect: Boolean
+}
+
+input ClientTrustEntryRelateToOneForUpdateInput {
+  create: ClientTrustEntryCreateInput
+  connect: ClientTrustEntryWhereUniqueInput
+  disconnect: Boolean
+}
+
+input ClientTrustEntryUpdateArgs {
+  where: ClientTrustEntryWhereUniqueInput!
+  data: ClientTrustEntryUpdateInput!
+}
+
+input ClientTrustEntryCreateInput {
+  account: ClientTrustAccountRelateToOneForCreateInput
+  athlete: AthleteRelateToOneForCreateInput
+  invoice: CommissionInvoiceRelateToOneForCreateInput
+  entryType: ClientTrustEntryEntryTypeType
+  amountCents: BigInt
+  reference: String
+  occurredAt: DateTime
+  reverses: ClientTrustEntryRelateToOneForCreateInput
+  reversalKey: String
+  currencyCode: String
+  clientTrustEntry_reverses: ClientTrustEntryRelateToManyForCreateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input ClientTrustAccountRelateToOneForCreateInput {
+  create: ClientTrustAccountCreateInput
+  connect: ClientTrustAccountWhereUniqueInput
+}
+
+input ClientTrustEntryRelateToOneForCreateInput {
+  create: ClientTrustEntryCreateInput
+  connect: ClientTrustEntryWhereUniqueInput
+}
+
+type Document {
+  id: ID!
+  athlete: Athlete
+  contract: PlayingContract
+  deal: EndorsementDeal
+  agreement: RepresentationAgreement
+  kind: String
+  version: Int
+  sha256: String
+  storageKey: String
+  uploadedBy: User
+  verifiedAt: DateTime
+  agentCertification_document(where: AgentCertificationWhereInput! = {}, orderBy: [AgentCertificationOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: AgentCertificationWhereUniqueInput): [AgentCertification!]
+  agentCertification_documentCount(where: AgentCertificationWhereInput! = {}): Int
+  representationAgreement_signedDocument(where: RepresentationAgreementWhereInput! = {}, orderBy: [RepresentationAgreementOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: RepresentationAgreementWhereUniqueInput): [RepresentationAgreement!]
+  representationAgreement_signedDocumentCount(where: RepresentationAgreementWhereInput! = {}): Int
+  playingContract_document(where: PlayingContractWhereInput! = {}, orderBy: [PlayingContractOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: PlayingContractWhereUniqueInput): [PlayingContract!]
+  playingContract_documentCount(where: PlayingContractWhereInput! = {}): Int
+  endorsementDeal_document(where: EndorsementDealWhereInput! = {}, orderBy: [EndorsementDealOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: EndorsementDealWhereUniqueInput): [EndorsementDeal!]
+  endorsementDeal_documentCount(where: EndorsementDealWhereInput! = {}): Int
+  deliverable_proof(where: DeliverableWhereInput! = {}, orderBy: [DeliverableOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: DeliverableWhereUniqueInput): [Deliverable!]
+  deliverable_proofCount(where: DeliverableWhereInput! = {}): Int
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input DocumentWhereUniqueInput {
+  id: ID
+}
+
+input DocumentWhereInput {
+  AND: [DocumentWhereInput!]
+  OR: [DocumentWhereInput!]
+  NOT: [DocumentWhereInput!]
+  id: IDFilter
+  athlete: AthleteWhereInput
+  contract: PlayingContractWhereInput
+  deal: EndorsementDealWhereInput
+  agreement: RepresentationAgreementWhereInput
+  kind: StringFilter
+  version: IntNullableFilter
+  sha256: StringFilter
+  storageKey: StringFilter
+  uploadedBy: UserWhereInput
+  verifiedAt: DateTimeNullableFilter
+  agentCertification_document: AgentCertificationManyRelationFilter
+  representationAgreement_signedDocument: RepresentationAgreementManyRelationFilter
+  playingContract_document: PlayingContractManyRelationFilter
+  endorsementDeal_document: EndorsementDealManyRelationFilter
+  deliverable_proof: DeliverableManyRelationFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+}
+
+input DocumentOrderByInput {
+  id: OrderDirection
+  kind: OrderDirection
+  version: OrderDirection
+  sha256: OrderDirection
+  storageKey: OrderDirection
+  verifiedAt: OrderDirection
+  createdAt: OrderDirection
+  updatedAt: OrderDirection
+}
+
+input DocumentUpdateInput {
+  athlete: AthleteRelateToOneForUpdateInput
+  contract: PlayingContractRelateToOneForUpdateInput
+  deal: EndorsementDealRelateToOneForUpdateInput
+  agreement: RepresentationAgreementRelateToOneForUpdateInput
+  kind: String
+  version: Int
+  sha256: String
+  storageKey: String
+  uploadedBy: UserRelateToOneForUpdateInput
+  verifiedAt: DateTime
+  agentCertification_document: AgentCertificationRelateToManyForUpdateInput
+  representationAgreement_signedDocument: RepresentationAgreementRelateToManyForUpdateInput
+  playingContract_document: PlayingContractRelateToManyForUpdateInput
+  endorsementDeal_document: EndorsementDealRelateToManyForUpdateInput
+  deliverable_proof: DeliverableRelateToManyForUpdateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input DocumentUpdateArgs {
+  where: DocumentWhereUniqueInput!
+  data: DocumentUpdateInput!
+}
+
+input DocumentCreateInput {
+  athlete: AthleteRelateToOneForCreateInput
+  contract: PlayingContractRelateToOneForCreateInput
+  deal: EndorsementDealRelateToOneForCreateInput
+  agreement: RepresentationAgreementRelateToOneForCreateInput
+  kind: String
+  version: Int
+  sha256: String
+  storageKey: String
+  uploadedBy: UserRelateToOneForCreateInput
+  verifiedAt: DateTime
+  agentCertification_document: AgentCertificationRelateToManyForCreateInput
+  representationAgreement_signedDocument: RepresentationAgreementRelateToManyForCreateInput
+  playingContract_document: PlayingContractRelateToManyForCreateInput
+  endorsementDeal_document: EndorsementDealRelateToManyForCreateInput
+  deliverable_proof: DeliverableRelateToManyForCreateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+type Task {
+  id: ID!
+  title: String
+  athlete: Athlete
+  deal: EndorsementDeal
+  contract: PlayingContract
+  assignee: User
+  dueAt: DateTime
+  status: TaskStatusType
+  priority: TaskPriorityType
+  autoKey: String
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+enum TaskStatusType {
+  open
+  in_progress
+  completed
+  cancelled
+}
+
+enum TaskPriorityType {
+  normal
+  high
+  urgent
+}
+
+input TaskWhereUniqueInput {
+  id: ID
+  autoKey: String
+}
+
+input TaskWhereInput {
+  AND: [TaskWhereInput!]
+  OR: [TaskWhereInput!]
+  NOT: [TaskWhereInput!]
+  id: IDFilter
+  title: StringFilter
+  athlete: AthleteWhereInput
+  deal: EndorsementDealWhereInput
+  contract: PlayingContractWhereInput
+  assignee: UserWhereInput
+  dueAt: DateTimeNullableFilter
+  status: TaskStatusTypeNullableFilter
+  priority: TaskPriorityTypeNullableFilter
+  autoKey: StringNullableFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+}
+
+input TaskStatusTypeNullableFilter {
+  equals: TaskStatusType
+  in: [TaskStatusType!]
+  notIn: [TaskStatusType!]
+  not: TaskStatusTypeNullableFilter
+}
+
+input TaskPriorityTypeNullableFilter {
+  equals: TaskPriorityType
+  in: [TaskPriorityType!]
+  notIn: [TaskPriorityType!]
+  not: TaskPriorityTypeNullableFilter
+}
+
+input TaskOrderByInput {
+  id: OrderDirection
+  title: OrderDirection
+  dueAt: OrderDirection
+  status: OrderDirection
+  priority: OrderDirection
+  autoKey: OrderDirection
+  createdAt: OrderDirection
+  updatedAt: OrderDirection
+}
+
+input TaskUpdateInput {
+  title: String
+  athlete: AthleteRelateToOneForUpdateInput
+  deal: EndorsementDealRelateToOneForUpdateInput
+  contract: PlayingContractRelateToOneForUpdateInput
+  assignee: UserRelateToOneForUpdateInput
+  dueAt: DateTime
+  status: TaskStatusType
+  priority: TaskPriorityType
+  autoKey: String
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input TaskUpdateArgs {
+  where: TaskWhereUniqueInput!
+  data: TaskUpdateInput!
+}
+
+input TaskCreateInput {
+  title: String
+  athlete: AthleteRelateToOneForCreateInput
+  deal: EndorsementDealRelateToOneForCreateInput
+  contract: PlayingContractRelateToOneForCreateInput
+  assignee: UserRelateToOneForCreateInput
+  dueAt: DateTime
+  status: TaskStatusType
+  priority: TaskPriorityType
+  autoKey: String
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+type AuditEvent {
+  id: ID!
+  actor: User
+  action: String
+  targetList: String
+  targetId: String
+  before: JSON
+  after: JSON
+  reason: String
+  requestId: String
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input AuditEventWhereUniqueInput {
+  id: ID
+}
+
+input AuditEventWhereInput {
+  AND: [AuditEventWhereInput!]
+  OR: [AuditEventWhereInput!]
+  NOT: [AuditEventWhereInput!]
+  id: IDFilter
+  actor: UserWhereInput
+  action: StringFilter
+  targetList: StringFilter
+  targetId: StringFilter
+  reason: StringFilter
+  requestId: StringFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+}
+
+input AuditEventOrderByInput {
+  id: OrderDirection
+  action: OrderDirection
+  targetList: OrderDirection
+  targetId: OrderDirection
+  reason: OrderDirection
+  requestId: OrderDirection
+  createdAt: OrderDirection
+  updatedAt: OrderDirection
+}
+
+input AuditEventUpdateInput {
+  actor: UserRelateToOneForUpdateInput
+  action: String
+  targetList: String
+  targetId: String
+  before: JSON
+  after: JSON
+  reason: String
+  requestId: String
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input AuditEventUpdateArgs {
+  where: AuditEventWhereUniqueInput!
+  data: AuditEventUpdateInput!
+}
+
+input AuditEventCreateInput {
+  actor: UserRelateToOneForCreateInput
+  action: String
+  targetList: String
+  targetId: String
+  before: JSON
+  after: JSON
+  reason: String
+  requestId: String
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+type PaymentProvider {
+  id: ID!
+  name: String
+  code: String
+  isInstalled: Boolean
+  credentials: JSON
+  metadata: JSON
+  createPaymentFunction: String
+  capturePaymentFunction: String
+  refundPaymentFunction: String
+  getPaymentStatusFunction: String
+  generatePaymentLinkFunction: String
+  handleWebhookFunction: String
+  sessions(where: PaymentSessionWhereInput! = {}, orderBy: [PaymentSessionOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: PaymentSessionWhereUniqueInput): [PaymentSession!]
+  sessionsCount(where: PaymentSessionWhereInput! = {}): Int
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input PaymentProviderWhereUniqueInput {
+  id: ID
+  code: String
+}
+
+input PaymentProviderWhereInput {
+  AND: [PaymentProviderWhereInput!]
+  OR: [PaymentProviderWhereInput!]
+  NOT: [PaymentProviderWhereInput!]
+  id: IDFilter
+  name: StringFilter
+  code: StringFilter
+  isInstalled: BooleanFilter
+  createPaymentFunction: StringFilter
+  capturePaymentFunction: StringFilter
+  refundPaymentFunction: StringFilter
+  getPaymentStatusFunction: StringFilter
+  generatePaymentLinkFunction: StringFilter
+  handleWebhookFunction: StringFilter
+  sessions: PaymentSessionManyRelationFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+}
+
+input PaymentSessionManyRelationFilter {
+  every: PaymentSessionWhereInput
+  some: PaymentSessionWhereInput
+  none: PaymentSessionWhereInput
+}
+
+input PaymentProviderOrderByInput {
+  id: OrderDirection
+  name: OrderDirection
+  code: OrderDirection
+  isInstalled: OrderDirection
+  createPaymentFunction: OrderDirection
+  capturePaymentFunction: OrderDirection
+  refundPaymentFunction: OrderDirection
+  getPaymentStatusFunction: OrderDirection
+  generatePaymentLinkFunction: OrderDirection
+  handleWebhookFunction: OrderDirection
+  createdAt: OrderDirection
+  updatedAt: OrderDirection
+}
+
+input PaymentProviderUpdateInput {
+  name: String
+  code: String
+  isInstalled: Boolean
+  credentials: JSON
+  metadata: JSON
+  createPaymentFunction: String
+  capturePaymentFunction: String
+  refundPaymentFunction: String
+  getPaymentStatusFunction: String
+  generatePaymentLinkFunction: String
+  handleWebhookFunction: String
+  sessions: PaymentSessionRelateToManyForUpdateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input PaymentSessionRelateToManyForUpdateInput {
+  disconnect: [PaymentSessionWhereUniqueInput!]
+  set: [PaymentSessionWhereUniqueInput!]
+  create: [PaymentSessionCreateInput!]
+  connect: [PaymentSessionWhereUniqueInput!]
+}
+
+input PaymentProviderUpdateArgs {
+  where: PaymentProviderWhereUniqueInput!
+  data: PaymentProviderUpdateInput!
+}
+
+input PaymentProviderCreateInput {
+  name: String
+  code: String
+  isInstalled: Boolean
+  credentials: JSON
+  metadata: JSON
+  createPaymentFunction: String
+  capturePaymentFunction: String
+  refundPaymentFunction: String
+  getPaymentStatusFunction: String
+  generatePaymentLinkFunction: String
+  handleWebhookFunction: String
+  sessions: PaymentSessionRelateToManyForCreateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input PaymentSessionRelateToManyForCreateInput {
+  create: [PaymentSessionCreateInput!]
+  connect: [PaymentSessionWhereUniqueInput!]
+}
+
+type PaymentCollection {
+  id: ID!
+  description: PaymentCollectionDescriptionType
+  amount: Int
+  authorizedAmount: Int
+  refundedAmount: Int
+  metadata: JSON
+  paymentSessions(where: PaymentSessionWhereInput! = {}, orderBy: [PaymentSessionOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: PaymentSessionWhereUniqueInput): [PaymentSession!]
+  paymentSessionsCount(where: PaymentSessionWhereInput! = {}): Int
+  payments(where: PaymentWhereInput! = {}, orderBy: [PaymentOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: PaymentWhereUniqueInput): [Payment!]
+  paymentsCount(where: PaymentWhereInput! = {}): Int
+  invoice: CommissionInvoice
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+enum PaymentCollectionDescriptionType {
+  default
+  refund
+}
+
+input PaymentCollectionWhereUniqueInput {
+  id: ID
+  invoice: CommissionInvoiceWhereUniqueInput
+}
+
+input PaymentCollectionWhereInput {
+  AND: [PaymentCollectionWhereInput!]
+  OR: [PaymentCollectionWhereInput!]
+  NOT: [PaymentCollectionWhereInput!]
+  id: IDFilter
+  description: PaymentCollectionDescriptionTypeNullableFilter
+  amount: IntFilter
+  authorizedAmount: IntNullableFilter
+  refundedAmount: IntNullableFilter
+  paymentSessions: PaymentSessionManyRelationFilter
+  payments: PaymentManyRelationFilter
+  invoice: CommissionInvoiceWhereInput
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+}
+
+input PaymentCollectionDescriptionTypeNullableFilter {
+  equals: PaymentCollectionDescriptionType
+  in: [PaymentCollectionDescriptionType!]
+  notIn: [PaymentCollectionDescriptionType!]
+  not: PaymentCollectionDescriptionTypeNullableFilter
+}
+
+input IntFilter {
+  equals: Int
+  in: [Int!]
+  notIn: [Int!]
+  lt: Int
+  lte: Int
+  gt: Int
+  gte: Int
+  not: IntFilter
+}
+
+input PaymentCollectionOrderByInput {
+  id: OrderDirection
+  description: OrderDirection
+  amount: OrderDirection
+  authorizedAmount: OrderDirection
+  refundedAmount: OrderDirection
+  createdAt: OrderDirection
+  updatedAt: OrderDirection
+}
+
+input PaymentCollectionUpdateInput {
+  description: PaymentCollectionDescriptionType
+  amount: Int
+  authorizedAmount: Int
+  refundedAmount: Int
+  metadata: JSON
+  paymentSessions: PaymentSessionRelateToManyForUpdateInput
+  payments: PaymentRelateToManyForUpdateInput
+  invoice: CommissionInvoiceRelateToOneForUpdateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input PaymentCollectionUpdateArgs {
+  where: PaymentCollectionWhereUniqueInput!
+  data: PaymentCollectionUpdateInput!
+}
+
+input PaymentCollectionCreateInput {
+  description: PaymentCollectionDescriptionType
+  amount: Int
+  authorizedAmount: Int
+  refundedAmount: Int
+  metadata: JSON
+  paymentSessions: PaymentSessionRelateToManyForCreateInput
+  payments: PaymentRelateToManyForCreateInput
+  invoice: CommissionInvoiceRelateToOneForCreateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+type PaymentSession {
+  id: ID!
+  isSelected: Boolean
+  isInitiated: Boolean
+  amount: Int
+  data: JSON
+  idempotencyKey: String
+  paymentCollection: PaymentCollection
+  paymentProvider: PaymentProvider
+  paymentAuthorizedAt: DateTime
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input PaymentSessionWhereUniqueInput {
+  id: ID
+  idempotencyKey: String
+}
+
+input PaymentSessionWhereInput {
+  AND: [PaymentSessionWhereInput!]
+  OR: [PaymentSessionWhereInput!]
+  NOT: [PaymentSessionWhereInput!]
+  id: IDFilter
+  isSelected: BooleanFilter
+  isInitiated: BooleanFilter
+  amount: IntFilter
+  idempotencyKey: StringFilter
+  paymentCollection: PaymentCollectionWhereInput
+  paymentProvider: PaymentProviderWhereInput
+  paymentAuthorizedAt: DateTimeNullableFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+}
+
+input PaymentSessionOrderByInput {
+  id: OrderDirection
+  isSelected: OrderDirection
+  isInitiated: OrderDirection
+  amount: OrderDirection
+  idempotencyKey: OrderDirection
+  paymentAuthorizedAt: OrderDirection
+  createdAt: OrderDirection
+  updatedAt: OrderDirection
+}
+
+input PaymentSessionUpdateInput {
+  isSelected: Boolean
+  isInitiated: Boolean
+  amount: Int
+  data: JSON
+  idempotencyKey: String
+  paymentCollection: PaymentCollectionRelateToOneForUpdateInput
+  paymentProvider: PaymentProviderRelateToOneForUpdateInput
+  paymentAuthorizedAt: DateTime
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input PaymentProviderRelateToOneForUpdateInput {
+  create: PaymentProviderCreateInput
+  connect: PaymentProviderWhereUniqueInput
+  disconnect: Boolean
+}
+
+input PaymentSessionUpdateArgs {
+  where: PaymentSessionWhereUniqueInput!
+  data: PaymentSessionUpdateInput!
+}
+
+input PaymentSessionCreateInput {
+  isSelected: Boolean
+  isInitiated: Boolean
+  amount: Int
+  data: JSON
+  idempotencyKey: String
+  paymentCollection: PaymentCollectionRelateToOneForCreateInput
+  paymentProvider: PaymentProviderRelateToOneForCreateInput
+  paymentAuthorizedAt: DateTime
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input PaymentProviderRelateToOneForCreateInput {
+  create: PaymentProviderCreateInput
+  connect: PaymentProviderWhereUniqueInput
+}
+
+type Payment {
+  id: ID!
+  idempotencyKey: String
+  reservedAt: DateTime
+  refundedAmount: Int
+  amount: Int
+  data: JSON
+  currencyCode: String
+  status: String
+  paymentMethod: String
+  paymentProvider: PaymentProvider
+  providerPaymentId: String
+  cardLast4: String
+  cardBrand: String
+  tipAmount: Int
+  isSplitPayment: Boolean
+  splitPaymentIndex: Int
+  splitTotal: Int
+  processedAt: DateTime
+  errorMessage: String
+  notes: String
+  order: CommissionInvoice
+  paymentCollection: PaymentCollection
+  processedBy: User
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input PaymentWhereUniqueInput {
+  id: ID
+  idempotencyKey: String
+}
+
+input PaymentWhereInput {
+  AND: [PaymentWhereInput!]
+  OR: [PaymentWhereInput!]
+  NOT: [PaymentWhereInput!]
+  id: IDFilter
+  idempotencyKey: StringFilter
+  reservedAt: DateTimeNullableFilter
+  refundedAmount: IntNullableFilter
+  amount: IntFilter
+  currencyCode: StringFilter
+  status: StringFilter
+  paymentMethod: StringNullableFilter
+  paymentProvider: PaymentProviderWhereInput
+  providerPaymentId: StringFilter
+  cardLast4: StringFilter
+  cardBrand: StringFilter
+  tipAmount: IntNullableFilter
+  isSplitPayment: BooleanFilter
+  splitPaymentIndex: IntNullableFilter
+  splitTotal: IntNullableFilter
+  processedAt: DateTimeNullableFilter
+  errorMessage: StringFilter
+  notes: StringFilter
+  order: CommissionInvoiceWhereInput
+  paymentCollection: PaymentCollectionWhereInput
+  processedBy: UserWhereInput
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+}
+
+input PaymentOrderByInput {
+  id: OrderDirection
+  idempotencyKey: OrderDirection
+  reservedAt: OrderDirection
+  refundedAmount: OrderDirection
+  amount: OrderDirection
+  currencyCode: OrderDirection
+  status: OrderDirection
+  paymentMethod: OrderDirection
+  providerPaymentId: OrderDirection
+  cardLast4: OrderDirection
+  cardBrand: OrderDirection
+  tipAmount: OrderDirection
+  isSplitPayment: OrderDirection
+  splitPaymentIndex: OrderDirection
+  splitTotal: OrderDirection
+  processedAt: OrderDirection
+  errorMessage: OrderDirection
+  notes: OrderDirection
+  createdAt: OrderDirection
+  updatedAt: OrderDirection
+}
+
+input PaymentUpdateInput {
+  idempotencyKey: String
+  reservedAt: DateTime
+  refundedAmount: Int
+  amount: Int
+  data: JSON
+  currencyCode: String
+  status: String
+  paymentMethod: String
+  paymentProvider: PaymentProviderRelateToOneForUpdateInput
+  providerPaymentId: String
+  cardLast4: String
+  cardBrand: String
+  tipAmount: Int
+  isSplitPayment: Boolean
+  splitPaymentIndex: Int
+  splitTotal: Int
+  processedAt: DateTime
+  errorMessage: String
+  notes: String
+  order: CommissionInvoiceRelateToOneForUpdateInput
+  paymentCollection: PaymentCollectionRelateToOneForUpdateInput
+  processedBy: UserRelateToOneForUpdateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input PaymentUpdateArgs {
+  where: PaymentWhereUniqueInput!
+  data: PaymentUpdateInput!
+}
+
+input PaymentCreateInput {
+  idempotencyKey: String
+  reservedAt: DateTime
+  refundedAmount: Int
+  amount: Int
+  data: JSON
+  currencyCode: String
+  status: String
+  paymentMethod: String
+  paymentProvider: PaymentProviderRelateToOneForCreateInput
+  providerPaymentId: String
+  cardLast4: String
+  cardBrand: String
+  tipAmount: Int
+  isSplitPayment: Boolean
+  splitPaymentIndex: Int
+  splitTotal: Int
+  processedAt: DateTime
+  errorMessage: String
+  notes: String
+  order: CommissionInvoiceRelateToOneForCreateInput
+  paymentCollection: PaymentCollectionRelateToOneForCreateInput
+  processedBy: UserRelateToOneForCreateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+type Refund {
+  id: ID!
+  idempotencyKey: String
+  amount: Int
+  currencyCode: String
+  status: String
+  reason: String
+  providerRefundId: String
+  providerData: JSON
+  processedAt: DateTime
+  payment: Payment
+  order: CommissionInvoice
+  requestedBy: User
+  approvedBy: User
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input RefundWhereUniqueInput {
+  id: ID
+  idempotencyKey: String
+}
+
+input RefundWhereInput {
+  AND: [RefundWhereInput!]
+  OR: [RefundWhereInput!]
+  NOT: [RefundWhereInput!]
+  id: IDFilter
+  idempotencyKey: StringFilter
+  amount: IntFilter
+  currencyCode: StringFilter
+  status: StringFilter
+  reason: StringFilter
+  providerRefundId: StringFilter
+  processedAt: DateTimeNullableFilter
+  payment: PaymentWhereInput
+  order: CommissionInvoiceWhereInput
+  requestedBy: UserWhereInput
+  approvedBy: UserWhereInput
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+}
+
+input RefundOrderByInput {
+  id: OrderDirection
+  idempotencyKey: OrderDirection
+  amount: OrderDirection
+  currencyCode: OrderDirection
+  status: OrderDirection
+  reason: OrderDirection
+  providerRefundId: OrderDirection
+  processedAt: OrderDirection
+  createdAt: OrderDirection
+  updatedAt: OrderDirection
+}
+
+input RefundUpdateInput {
+  idempotencyKey: String
+  amount: Int
+  currencyCode: String
+  status: String
+  reason: String
+  providerRefundId: String
+  providerData: JSON
+  processedAt: DateTime
+  payment: PaymentRelateToOneForUpdateInput
+  order: CommissionInvoiceRelateToOneForUpdateInput
+  requestedBy: UserRelateToOneForUpdateInput
+  approvedBy: UserRelateToOneForUpdateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input PaymentRelateToOneForUpdateInput {
+  create: PaymentCreateInput
+  connect: PaymentWhereUniqueInput
+  disconnect: Boolean
+}
+
+input RefundUpdateArgs {
+  where: RefundWhereUniqueInput!
+  data: RefundUpdateInput!
+}
+
+input RefundCreateInput {
+  idempotencyKey: String
+  amount: Int
+  currencyCode: String
+  status: String
+  reason: String
+  providerRefundId: String
+  providerData: JSON
+  processedAt: DateTime
+  payment: PaymentRelateToOneForCreateInput
+  order: CommissionInvoiceRelateToOneForCreateInput
+  requestedBy: UserRelateToOneForCreateInput
+  approvedBy: UserRelateToOneForCreateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input PaymentRelateToOneForCreateInput {
+  create: PaymentCreateInput
+  connect: PaymentWhereUniqueInput
+}
+
+type PaymentWebhookEvent {
+  id: ID!
+  eventKey: String
+  providerCode: String
+  providerEventId: String
+  eventType: String
+  status: String
+  payload: JSON
+  rawBody: String
+  error: String
+  attempts: Int
+  receivedAt: DateTime
+  processedAt: DateTime
+  payment: Payment
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input PaymentWebhookEventWhereUniqueInput {
+  id: ID
+  eventKey: String
+}
+
+input PaymentWebhookEventWhereInput {
+  AND: [PaymentWebhookEventWhereInput!]
+  OR: [PaymentWebhookEventWhereInput!]
+  NOT: [PaymentWebhookEventWhereInput!]
+  id: IDFilter
+  eventKey: StringFilter
+  providerCode: StringFilter
+  providerEventId: StringFilter
+  eventType: StringFilter
+  status: StringNullableFilter
+  rawBody: StringFilter
+  error: StringFilter
+  attempts: IntNullableFilter
+  receivedAt: DateTimeNullableFilter
+  processedAt: DateTimeNullableFilter
+  payment: PaymentWhereInput
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+}
+
+input PaymentWebhookEventOrderByInput {
+  id: OrderDirection
+  eventKey: OrderDirection
+  providerCode: OrderDirection
+  providerEventId: OrderDirection
+  eventType: OrderDirection
+  status: OrderDirection
+  rawBody: OrderDirection
+  error: OrderDirection
+  attempts: OrderDirection
+  receivedAt: OrderDirection
+  processedAt: OrderDirection
+  createdAt: OrderDirection
+  updatedAt: OrderDirection
+}
+
+input PaymentWebhookEventUpdateInput {
+  eventKey: String
+  providerCode: String
+  providerEventId: String
+  eventType: String
+  status: String
+  payload: JSON
+  rawBody: String
+  error: String
+  attempts: Int
+  receivedAt: DateTime
+  processedAt: DateTime
+  payment: PaymentRelateToOneForUpdateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input PaymentWebhookEventUpdateArgs {
+  where: PaymentWebhookEventWhereUniqueInput!
+  data: PaymentWebhookEventUpdateInput!
+}
+
+input PaymentWebhookEventCreateInput {
+  eventKey: String
+  providerCode: String
+  providerEventId: String
+  eventType: String
+  status: String
+  payload: JSON
+  rawBody: String
+  error: String
+  attempts: Int
+  receivedAt: DateTime
+  processedAt: DateTime
+  payment: PaymentRelateToOneForCreateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+type IdempotencyKey {
+  id: ID!
+  idempotencyKey: String
+  requestMethod: String
+  requestParams: JSON
+  requestPath: String
+  responseCode: Int
+  responseBody: JSON
+  recoveryPoint: String
+  lockedAt: DateTime
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input IdempotencyKeyWhereUniqueInput {
+  id: ID
+  idempotencyKey: String
+}
+
+input IdempotencyKeyWhereInput {
+  AND: [IdempotencyKeyWhereInput!]
+  OR: [IdempotencyKeyWhereInput!]
+  NOT: [IdempotencyKeyWhereInput!]
+  id: IDFilter
+  idempotencyKey: StringFilter
+  requestMethod: StringFilter
+  requestPath: StringFilter
+  responseCode: IntNullableFilter
+  recoveryPoint: StringFilter
+  lockedAt: DateTimeNullableFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+}
+
+input IdempotencyKeyOrderByInput {
+  id: OrderDirection
+  idempotencyKey: OrderDirection
+  requestMethod: OrderDirection
+  requestPath: OrderDirection
+  responseCode: OrderDirection
+  recoveryPoint: OrderDirection
+  lockedAt: OrderDirection
+  createdAt: OrderDirection
+  updatedAt: OrderDirection
+}
+
+input IdempotencyKeyUpdateInput {
+  idempotencyKey: String
+  requestMethod: String
+  requestParams: JSON
+  requestPath: String
+  responseCode: Int
+  responseBody: JSON
+  recoveryPoint: String
+  lockedAt: DateTime
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input IdempotencyKeyUpdateArgs {
+  where: IdempotencyKeyWhereUniqueInput!
+  data: IdempotencyKeyUpdateInput!
+}
+
+input IdempotencyKeyCreateInput {
+  idempotencyKey: String
+  requestMethod: String
+  requestParams: JSON
+  requestPath: String
+  responseCode: Int
+  responseBody: JSON
+  recoveryPoint: String
+  lockedAt: DateTime
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
 """
 The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
 """
@@ -790,18 +4500,6 @@ type Mutation {
   updateRoles(data: [RoleUpdateArgs!]!): [Role]
   deleteRole(where: RoleWhereUniqueInput!): Role
   deleteRoles(where: [RoleWhereUniqueInput!]!): [Role]
-  createTodo(data: TodoCreateInput!): Todo
-  createTodos(data: [TodoCreateInput!]!): [Todo]
-  updateTodo(where: TodoWhereUniqueInput!, data: TodoUpdateInput!): Todo
-  updateTodos(data: [TodoUpdateArgs!]!): [Todo]
-  deleteTodo(where: TodoWhereUniqueInput!): Todo
-  deleteTodos(where: [TodoWhereUniqueInput!]!): [Todo]
-  createTodoImage(data: TodoImageCreateInput!): TodoImage
-  createTodoImages(data: [TodoImageCreateInput!]!): [TodoImage]
-  updateTodoImage(where: TodoImageWhereUniqueInput!, data: TodoImageUpdateInput!): TodoImage
-  updateTodoImages(data: [TodoImageUpdateArgs!]!): [TodoImage]
-  deleteTodoImage(where: TodoImageWhereUniqueInput!): TodoImage
-  deleteTodoImages(where: [TodoImageWhereUniqueInput!]!): [TodoImage]
   createOAuthApp(data: OAuthAppCreateInput!): OAuthApp
   createOAuthApps(data: [OAuthAppCreateInput!]!): [OAuthApp]
   updateOAuthApp(where: OAuthAppWhereUniqueInput!, data: OAuthAppUpdateInput!): OAuthApp
@@ -814,6 +4512,186 @@ type Mutation {
   updateOAuthTokens(data: [OAuthTokenUpdateArgs!]!): [OAuthToken]
   deleteOAuthToken(where: OAuthTokenWhereUniqueInput!): OAuthToken
   deleteOAuthTokens(where: [OAuthTokenWhereUniqueInput!]!): [OAuthToken]
+  createAgency(data: AgencyCreateInput!): Agency
+  createAgencies(data: [AgencyCreateInput!]!): [Agency]
+  updateAgency(where: AgencyWhereUniqueInput!, data: AgencyUpdateInput!): Agency
+  updateAgencies(data: [AgencyUpdateArgs!]!): [Agency]
+  deleteAgency(where: AgencyWhereUniqueInput!): Agency
+  deleteAgencies(where: [AgencyWhereUniqueInput!]!): [Agency]
+  createAgentCertification(data: AgentCertificationCreateInput!): AgentCertification
+  createAgentCertifications(data: [AgentCertificationCreateInput!]!): [AgentCertification]
+  updateAgentCertification(where: AgentCertificationWhereUniqueInput!, data: AgentCertificationUpdateInput!): AgentCertification
+  updateAgentCertifications(data: [AgentCertificationUpdateArgs!]!): [AgentCertification]
+  deleteAgentCertification(where: AgentCertificationWhereUniqueInput!): AgentCertification
+  deleteAgentCertifications(where: [AgentCertificationWhereUniqueInput!]!): [AgentCertification]
+  createTeam(data: TeamCreateInput!): Team
+  createTeams(data: [TeamCreateInput!]!): [Team]
+  updateTeam(where: TeamWhereUniqueInput!, data: TeamUpdateInput!): Team
+  updateTeams(data: [TeamUpdateArgs!]!): [Team]
+  deleteTeam(where: TeamWhereUniqueInput!): Team
+  deleteTeams(where: [TeamWhereUniqueInput!]!): [Team]
+  createAthlete(data: AthleteCreateInput!): Athlete
+  createAthletes(data: [AthleteCreateInput!]!): [Athlete]
+  updateAthlete(where: AthleteWhereUniqueInput!, data: AthleteUpdateInput!): Athlete
+  updateAthletes(data: [AthleteUpdateArgs!]!): [Athlete]
+  deleteAthlete(where: AthleteWhereUniqueInput!): Athlete
+  deleteAthletes(where: [AthleteWhereUniqueInput!]!): [Athlete]
+  createRepresentationAgreement(data: RepresentationAgreementCreateInput!): RepresentationAgreement
+  createRepresentationAgreements(data: [RepresentationAgreementCreateInput!]!): [RepresentationAgreement]
+  updateRepresentationAgreement(where: RepresentationAgreementWhereUniqueInput!, data: RepresentationAgreementUpdateInput!): RepresentationAgreement
+  updateRepresentationAgreements(data: [RepresentationAgreementUpdateArgs!]!): [RepresentationAgreement]
+  deleteRepresentationAgreement(where: RepresentationAgreementWhereUniqueInput!): RepresentationAgreement
+  deleteRepresentationAgreements(where: [RepresentationAgreementWhereUniqueInput!]!): [RepresentationAgreement]
+  createContact(data: ContactCreateInput!): Contact
+  createContacts(data: [ContactCreateInput!]!): [Contact]
+  updateContact(where: ContactWhereUniqueInput!, data: ContactUpdateInput!): Contact
+  updateContacts(data: [ContactUpdateArgs!]!): [Contact]
+  deleteContact(where: ContactWhereUniqueInput!): Contact
+  deleteContacts(where: [ContactWhereUniqueInput!]!): [Contact]
+  createBrand(data: BrandCreateInput!): Brand
+  createBrands(data: [BrandCreateInput!]!): [Brand]
+  updateBrand(where: BrandWhereUniqueInput!, data: BrandUpdateInput!): Brand
+  updateBrands(data: [BrandUpdateArgs!]!): [Brand]
+  deleteBrand(where: BrandWhereUniqueInput!): Brand
+  deleteBrands(where: [BrandWhereUniqueInput!]!): [Brand]
+  createInteraction(data: InteractionCreateInput!): Interaction
+  createInteractions(data: [InteractionCreateInput!]!): [Interaction]
+  updateInteraction(where: InteractionWhereUniqueInput!, data: InteractionUpdateInput!): Interaction
+  updateInteractions(data: [InteractionUpdateArgs!]!): [Interaction]
+  deleteInteraction(where: InteractionWhereUniqueInput!): Interaction
+  deleteInteractions(where: [InteractionWhereUniqueInput!]!): [Interaction]
+  createPlayingContract(data: PlayingContractCreateInput!): PlayingContract
+  createPlayingContracts(data: [PlayingContractCreateInput!]!): [PlayingContract]
+  updatePlayingContract(where: PlayingContractWhereUniqueInput!, data: PlayingContractUpdateInput!): PlayingContract
+  updatePlayingContracts(data: [PlayingContractUpdateArgs!]!): [PlayingContract]
+  deletePlayingContract(where: PlayingContractWhereUniqueInput!): PlayingContract
+  deletePlayingContracts(where: [PlayingContractWhereUniqueInput!]!): [PlayingContract]
+  createContractYear(data: ContractYearCreateInput!): ContractYear
+  createContractYears(data: [ContractYearCreateInput!]!): [ContractYear]
+  updateContractYear(where: ContractYearWhereUniqueInput!, data: ContractYearUpdateInput!): ContractYear
+  updateContractYears(data: [ContractYearUpdateArgs!]!): [ContractYear]
+  deleteContractYear(where: ContractYearWhereUniqueInput!): ContractYear
+  deleteContractYears(where: [ContractYearWhereUniqueInput!]!): [ContractYear]
+  createIncentive(data: IncentiveCreateInput!): Incentive
+  createIncentives(data: [IncentiveCreateInput!]!): [Incentive]
+  updateIncentive(where: IncentiveWhereUniqueInput!, data: IncentiveUpdateInput!): Incentive
+  updateIncentives(data: [IncentiveUpdateArgs!]!): [Incentive]
+  deleteIncentive(where: IncentiveWhereUniqueInput!): Incentive
+  deleteIncentives(where: [IncentiveWhereUniqueInput!]!): [Incentive]
+  createEndorsementDeal(data: EndorsementDealCreateInput!): EndorsementDeal
+  createEndorsementDeals(data: [EndorsementDealCreateInput!]!): [EndorsementDeal]
+  updateEndorsementDeal(where: EndorsementDealWhereUniqueInput!, data: EndorsementDealUpdateInput!): EndorsementDeal
+  updateEndorsementDeals(data: [EndorsementDealUpdateArgs!]!): [EndorsementDeal]
+  deleteEndorsementDeal(where: EndorsementDealWhereUniqueInput!): EndorsementDeal
+  deleteEndorsementDeals(where: [EndorsementDealWhereUniqueInput!]!): [EndorsementDeal]
+  createDeliverable(data: DeliverableCreateInput!): Deliverable
+  createDeliverables(data: [DeliverableCreateInput!]!): [Deliverable]
+  updateDeliverable(where: DeliverableWhereUniqueInput!, data: DeliverableUpdateInput!): Deliverable
+  updateDeliverables(data: [DeliverableUpdateArgs!]!): [Deliverable]
+  deleteDeliverable(where: DeliverableWhereUniqueInput!): Deliverable
+  deleteDeliverables(where: [DeliverableWhereUniqueInput!]!): [Deliverable]
+  createScheduledPayment(data: ScheduledPaymentCreateInput!): ScheduledPayment
+  createScheduledPayments(data: [ScheduledPaymentCreateInput!]!): [ScheduledPayment]
+  updateScheduledPayment(where: ScheduledPaymentWhereUniqueInput!, data: ScheduledPaymentUpdateInput!): ScheduledPayment
+  updateScheduledPayments(data: [ScheduledPaymentUpdateArgs!]!): [ScheduledPayment]
+  deleteScheduledPayment(where: ScheduledPaymentWhereUniqueInput!): ScheduledPayment
+  deleteScheduledPayments(where: [ScheduledPaymentWhereUniqueInput!]!): [ScheduledPayment]
+  createCommissionInvoice(data: CommissionInvoiceCreateInput!): CommissionInvoice
+  createCommissionInvoices(data: [CommissionInvoiceCreateInput!]!): [CommissionInvoice]
+  updateCommissionInvoice(where: CommissionInvoiceWhereUniqueInput!, data: CommissionInvoiceUpdateInput!): CommissionInvoice
+  updateCommissionInvoices(data: [CommissionInvoiceUpdateArgs!]!): [CommissionInvoice]
+  deleteCommissionInvoice(where: CommissionInvoiceWhereUniqueInput!): CommissionInvoice
+  deleteCommissionInvoices(where: [CommissionInvoiceWhereUniqueInput!]!): [CommissionInvoice]
+  createCommissionInvoiceLine(data: CommissionInvoiceLineCreateInput!): CommissionInvoiceLine
+  createCommissionInvoiceLines(data: [CommissionInvoiceLineCreateInput!]!): [CommissionInvoiceLine]
+  updateCommissionInvoiceLine(where: CommissionInvoiceLineWhereUniqueInput!, data: CommissionInvoiceLineUpdateInput!): CommissionInvoiceLine
+  updateCommissionInvoiceLines(data: [CommissionInvoiceLineUpdateArgs!]!): [CommissionInvoiceLine]
+  deleteCommissionInvoiceLine(where: CommissionInvoiceLineWhereUniqueInput!): CommissionInvoiceLine
+  deleteCommissionInvoiceLines(where: [CommissionInvoiceLineWhereUniqueInput!]!): [CommissionInvoiceLine]
+  createCommissionLedgerEntry(data: CommissionLedgerEntryCreateInput!): CommissionLedgerEntry
+  createCommissionLedgerEntries(data: [CommissionLedgerEntryCreateInput!]!): [CommissionLedgerEntry]
+  updateCommissionLedgerEntry(where: CommissionLedgerEntryWhereUniqueInput!, data: CommissionLedgerEntryUpdateInput!): CommissionLedgerEntry
+  updateCommissionLedgerEntries(data: [CommissionLedgerEntryUpdateArgs!]!): [CommissionLedgerEntry]
+  deleteCommissionLedgerEntry(where: CommissionLedgerEntryWhereUniqueInput!): CommissionLedgerEntry
+  deleteCommissionLedgerEntries(where: [CommissionLedgerEntryWhereUniqueInput!]!): [CommissionLedgerEntry]
+  createAgentSplit(data: AgentSplitCreateInput!): AgentSplit
+  createAgentSplits(data: [AgentSplitCreateInput!]!): [AgentSplit]
+  updateAgentSplit(where: AgentSplitWhereUniqueInput!, data: AgentSplitUpdateInput!): AgentSplit
+  updateAgentSplits(data: [AgentSplitUpdateArgs!]!): [AgentSplit]
+  deleteAgentSplit(where: AgentSplitWhereUniqueInput!): AgentSplit
+  deleteAgentSplits(where: [AgentSplitWhereUniqueInput!]!): [AgentSplit]
+  createClientTrustAccount(data: ClientTrustAccountCreateInput!): ClientTrustAccount
+  createClientTrustAccounts(data: [ClientTrustAccountCreateInput!]!): [ClientTrustAccount]
+  updateClientTrustAccount(where: ClientTrustAccountWhereUniqueInput!, data: ClientTrustAccountUpdateInput!): ClientTrustAccount
+  updateClientTrustAccounts(data: [ClientTrustAccountUpdateArgs!]!): [ClientTrustAccount]
+  deleteClientTrustAccount(where: ClientTrustAccountWhereUniqueInput!): ClientTrustAccount
+  deleteClientTrustAccounts(where: [ClientTrustAccountWhereUniqueInput!]!): [ClientTrustAccount]
+  createClientTrustEntry(data: ClientTrustEntryCreateInput!): ClientTrustEntry
+  createClientTrustEntries(data: [ClientTrustEntryCreateInput!]!): [ClientTrustEntry]
+  updateClientTrustEntry(where: ClientTrustEntryWhereUniqueInput!, data: ClientTrustEntryUpdateInput!): ClientTrustEntry
+  updateClientTrustEntries(data: [ClientTrustEntryUpdateArgs!]!): [ClientTrustEntry]
+  deleteClientTrustEntry(where: ClientTrustEntryWhereUniqueInput!): ClientTrustEntry
+  deleteClientTrustEntries(where: [ClientTrustEntryWhereUniqueInput!]!): [ClientTrustEntry]
+  createDocument(data: DocumentCreateInput!): Document
+  createDocuments(data: [DocumentCreateInput!]!): [Document]
+  updateDocument(where: DocumentWhereUniqueInput!, data: DocumentUpdateInput!): Document
+  updateDocuments(data: [DocumentUpdateArgs!]!): [Document]
+  deleteDocument(where: DocumentWhereUniqueInput!): Document
+  deleteDocuments(where: [DocumentWhereUniqueInput!]!): [Document]
+  createTask(data: TaskCreateInput!): Task
+  createTasks(data: [TaskCreateInput!]!): [Task]
+  updateTask(where: TaskWhereUniqueInput!, data: TaskUpdateInput!): Task
+  updateTasks(data: [TaskUpdateArgs!]!): [Task]
+  deleteTask(where: TaskWhereUniqueInput!): Task
+  deleteTasks(where: [TaskWhereUniqueInput!]!): [Task]
+  createAuditEvent(data: AuditEventCreateInput!): AuditEvent
+  createAuditEvents(data: [AuditEventCreateInput!]!): [AuditEvent]
+  updateAuditEvent(where: AuditEventWhereUniqueInput!, data: AuditEventUpdateInput!): AuditEvent
+  updateAuditEvents(data: [AuditEventUpdateArgs!]!): [AuditEvent]
+  deleteAuditEvent(where: AuditEventWhereUniqueInput!): AuditEvent
+  deleteAuditEvents(where: [AuditEventWhereUniqueInput!]!): [AuditEvent]
+  createPaymentProvider(data: PaymentProviderCreateInput!): PaymentProvider
+  createPaymentProviders(data: [PaymentProviderCreateInput!]!): [PaymentProvider]
+  updatePaymentProvider(where: PaymentProviderWhereUniqueInput!, data: PaymentProviderUpdateInput!): PaymentProvider
+  updatePaymentProviders(data: [PaymentProviderUpdateArgs!]!): [PaymentProvider]
+  deletePaymentProvider(where: PaymentProviderWhereUniqueInput!): PaymentProvider
+  deletePaymentProviders(where: [PaymentProviderWhereUniqueInput!]!): [PaymentProvider]
+  createPaymentCollection(data: PaymentCollectionCreateInput!): PaymentCollection
+  createPaymentCollections(data: [PaymentCollectionCreateInput!]!): [PaymentCollection]
+  updatePaymentCollection(where: PaymentCollectionWhereUniqueInput!, data: PaymentCollectionUpdateInput!): PaymentCollection
+  updatePaymentCollections(data: [PaymentCollectionUpdateArgs!]!): [PaymentCollection]
+  deletePaymentCollection(where: PaymentCollectionWhereUniqueInput!): PaymentCollection
+  deletePaymentCollections(where: [PaymentCollectionWhereUniqueInput!]!): [PaymentCollection]
+  createPaymentSession(data: PaymentSessionCreateInput!): PaymentSession
+  createPaymentSessions(data: [PaymentSessionCreateInput!]!): [PaymentSession]
+  updatePaymentSession(where: PaymentSessionWhereUniqueInput!, data: PaymentSessionUpdateInput!): PaymentSession
+  updatePaymentSessions(data: [PaymentSessionUpdateArgs!]!): [PaymentSession]
+  deletePaymentSession(where: PaymentSessionWhereUniqueInput!): PaymentSession
+  deletePaymentSessions(where: [PaymentSessionWhereUniqueInput!]!): [PaymentSession]
+  createPayment(data: PaymentCreateInput!): Payment
+  createPayments(data: [PaymentCreateInput!]!): [Payment]
+  updatePayment(where: PaymentWhereUniqueInput!, data: PaymentUpdateInput!): Payment
+  updatePayments(data: [PaymentUpdateArgs!]!): [Payment]
+  deletePayment(where: PaymentWhereUniqueInput!): Payment
+  deletePayments(where: [PaymentWhereUniqueInput!]!): [Payment]
+  createRefund(data: RefundCreateInput!): Refund
+  createRefunds(data: [RefundCreateInput!]!): [Refund]
+  updateRefund(where: RefundWhereUniqueInput!, data: RefundUpdateInput!): Refund
+  updateRefunds(data: [RefundUpdateArgs!]!): [Refund]
+  deleteRefund(where: RefundWhereUniqueInput!): Refund
+  deleteRefunds(where: [RefundWhereUniqueInput!]!): [Refund]
+  createPaymentWebhookEvent(data: PaymentWebhookEventCreateInput!): PaymentWebhookEvent
+  createPaymentWebhookEvents(data: [PaymentWebhookEventCreateInput!]!): [PaymentWebhookEvent]
+  updatePaymentWebhookEvent(where: PaymentWebhookEventWhereUniqueInput!, data: PaymentWebhookEventUpdateInput!): PaymentWebhookEvent
+  updatePaymentWebhookEvents(data: [PaymentWebhookEventUpdateArgs!]!): [PaymentWebhookEvent]
+  deletePaymentWebhookEvent(where: PaymentWebhookEventWhereUniqueInput!): PaymentWebhookEvent
+  deletePaymentWebhookEvents(where: [PaymentWebhookEventWhereUniqueInput!]!): [PaymentWebhookEvent]
+  createIdempotencyKey(data: IdempotencyKeyCreateInput!): IdempotencyKey
+  createIdempotencyKeys(data: [IdempotencyKeyCreateInput!]!): [IdempotencyKey]
+  updateIdempotencyKey(where: IdempotencyKeyWhereUniqueInput!, data: IdempotencyKeyUpdateInput!): IdempotencyKey
+  updateIdempotencyKeys(data: [IdempotencyKeyUpdateArgs!]!): [IdempotencyKey]
+  deleteIdempotencyKey(where: IdempotencyKeyWhereUniqueInput!): IdempotencyKey
+  deleteIdempotencyKeys(where: [IdempotencyKeyWhereUniqueInput!]!): [IdempotencyKey]
   endSession: Boolean!
   authenticateUserWithPassword(email: String!, password: String!): UserAuthenticationWithPasswordResult
   createInitialUser(data: CreateInitialUserInput!): UserAuthenticationWithPasswordSuccess!
@@ -856,18 +4734,102 @@ type Query {
   role(where: RoleWhereUniqueInput!): Role
   roles(where: RoleWhereInput! = {}, orderBy: [RoleOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: RoleWhereUniqueInput): [Role!]
   rolesCount(where: RoleWhereInput! = {}): Int
-  todo(where: TodoWhereUniqueInput!): Todo
-  todos(where: TodoWhereInput! = {}, orderBy: [TodoOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: TodoWhereUniqueInput): [Todo!]
-  todosCount(where: TodoWhereInput! = {}): Int
-  todoImage(where: TodoImageWhereUniqueInput!): TodoImage
-  todoImages(where: TodoImageWhereInput! = {}, orderBy: [TodoImageOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: TodoImageWhereUniqueInput): [TodoImage!]
-  todoImagesCount(where: TodoImageWhereInput! = {}): Int
   oAuthApp(where: OAuthAppWhereUniqueInput!): OAuthApp
   oAuthApps(where: OAuthAppWhereInput! = {}, orderBy: [OAuthAppOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: OAuthAppWhereUniqueInput): [OAuthApp!]
   oAuthAppsCount(where: OAuthAppWhereInput! = {}): Int
   oAuthToken(where: OAuthTokenWhereUniqueInput!): OAuthToken
   oAuthTokens(where: OAuthTokenWhereInput! = {}, orderBy: [OAuthTokenOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: OAuthTokenWhereUniqueInput): [OAuthToken!]
   oAuthTokensCount(where: OAuthTokenWhereInput! = {}): Int
+  agency(where: AgencyWhereUniqueInput!): Agency
+  agencies(where: AgencyWhereInput! = {}, orderBy: [AgencyOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: AgencyWhereUniqueInput): [Agency!]
+  agenciesCount(where: AgencyWhereInput! = {}): Int
+  agentCertification(where: AgentCertificationWhereUniqueInput!): AgentCertification
+  agentCertifications(where: AgentCertificationWhereInput! = {}, orderBy: [AgentCertificationOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: AgentCertificationWhereUniqueInput): [AgentCertification!]
+  agentCertificationsCount(where: AgentCertificationWhereInput! = {}): Int
+  team(where: TeamWhereUniqueInput!): Team
+  teams(where: TeamWhereInput! = {}, orderBy: [TeamOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: TeamWhereUniqueInput): [Team!]
+  teamsCount(where: TeamWhereInput! = {}): Int
+  athlete(where: AthleteWhereUniqueInput!): Athlete
+  athletes(where: AthleteWhereInput! = {}, orderBy: [AthleteOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: AthleteWhereUniqueInput): [Athlete!]
+  athletesCount(where: AthleteWhereInput! = {}): Int
+  representationAgreement(where: RepresentationAgreementWhereUniqueInput!): RepresentationAgreement
+  representationAgreements(where: RepresentationAgreementWhereInput! = {}, orderBy: [RepresentationAgreementOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: RepresentationAgreementWhereUniqueInput): [RepresentationAgreement!]
+  representationAgreementsCount(where: RepresentationAgreementWhereInput! = {}): Int
+  contact(where: ContactWhereUniqueInput!): Contact
+  contacts(where: ContactWhereInput! = {}, orderBy: [ContactOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: ContactWhereUniqueInput): [Contact!]
+  contactsCount(where: ContactWhereInput! = {}): Int
+  brand(where: BrandWhereUniqueInput!): Brand
+  brands(where: BrandWhereInput! = {}, orderBy: [BrandOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: BrandWhereUniqueInput): [Brand!]
+  brandsCount(where: BrandWhereInput! = {}): Int
+  interaction(where: InteractionWhereUniqueInput!): Interaction
+  interactions(where: InteractionWhereInput! = {}, orderBy: [InteractionOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: InteractionWhereUniqueInput): [Interaction!]
+  interactionsCount(where: InteractionWhereInput! = {}): Int
+  playingContract(where: PlayingContractWhereUniqueInput!): PlayingContract
+  playingContracts(where: PlayingContractWhereInput! = {}, orderBy: [PlayingContractOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: PlayingContractWhereUniqueInput): [PlayingContract!]
+  playingContractsCount(where: PlayingContractWhereInput! = {}): Int
+  contractYear(where: ContractYearWhereUniqueInput!): ContractYear
+  contractYears(where: ContractYearWhereInput! = {}, orderBy: [ContractYearOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: ContractYearWhereUniqueInput): [ContractYear!]
+  contractYearsCount(where: ContractYearWhereInput! = {}): Int
+  incentive(where: IncentiveWhereUniqueInput!): Incentive
+  incentives(where: IncentiveWhereInput! = {}, orderBy: [IncentiveOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: IncentiveWhereUniqueInput): [Incentive!]
+  incentivesCount(where: IncentiveWhereInput! = {}): Int
+  endorsementDeal(where: EndorsementDealWhereUniqueInput!): EndorsementDeal
+  endorsementDeals(where: EndorsementDealWhereInput! = {}, orderBy: [EndorsementDealOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: EndorsementDealWhereUniqueInput): [EndorsementDeal!]
+  endorsementDealsCount(where: EndorsementDealWhereInput! = {}): Int
+  deliverable(where: DeliverableWhereUniqueInput!): Deliverable
+  deliverables(where: DeliverableWhereInput! = {}, orderBy: [DeliverableOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: DeliverableWhereUniqueInput): [Deliverable!]
+  deliverablesCount(where: DeliverableWhereInput! = {}): Int
+  scheduledPayment(where: ScheduledPaymentWhereUniqueInput!): ScheduledPayment
+  scheduledPayments(where: ScheduledPaymentWhereInput! = {}, orderBy: [ScheduledPaymentOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: ScheduledPaymentWhereUniqueInput): [ScheduledPayment!]
+  scheduledPaymentsCount(where: ScheduledPaymentWhereInput! = {}): Int
+  commissionInvoice(where: CommissionInvoiceWhereUniqueInput!): CommissionInvoice
+  commissionInvoices(where: CommissionInvoiceWhereInput! = {}, orderBy: [CommissionInvoiceOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: CommissionInvoiceWhereUniqueInput): [CommissionInvoice!]
+  commissionInvoicesCount(where: CommissionInvoiceWhereInput! = {}): Int
+  commissionInvoiceLine(where: CommissionInvoiceLineWhereUniqueInput!): CommissionInvoiceLine
+  commissionInvoiceLines(where: CommissionInvoiceLineWhereInput! = {}, orderBy: [CommissionInvoiceLineOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: CommissionInvoiceLineWhereUniqueInput): [CommissionInvoiceLine!]
+  commissionInvoiceLinesCount(where: CommissionInvoiceLineWhereInput! = {}): Int
+  commissionLedgerEntry(where: CommissionLedgerEntryWhereUniqueInput!): CommissionLedgerEntry
+  commissionLedgerEntries(where: CommissionLedgerEntryWhereInput! = {}, orderBy: [CommissionLedgerEntryOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: CommissionLedgerEntryWhereUniqueInput): [CommissionLedgerEntry!]
+  commissionLedgerEntriesCount(where: CommissionLedgerEntryWhereInput! = {}): Int
+  agentSplit(where: AgentSplitWhereUniqueInput!): AgentSplit
+  agentSplits(where: AgentSplitWhereInput! = {}, orderBy: [AgentSplitOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: AgentSplitWhereUniqueInput): [AgentSplit!]
+  agentSplitsCount(where: AgentSplitWhereInput! = {}): Int
+  clientTrustAccount(where: ClientTrustAccountWhereUniqueInput!): ClientTrustAccount
+  clientTrustAccounts(where: ClientTrustAccountWhereInput! = {}, orderBy: [ClientTrustAccountOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: ClientTrustAccountWhereUniqueInput): [ClientTrustAccount!]
+  clientTrustAccountsCount(where: ClientTrustAccountWhereInput! = {}): Int
+  clientTrustEntry(where: ClientTrustEntryWhereUniqueInput!): ClientTrustEntry
+  clientTrustEntries(where: ClientTrustEntryWhereInput! = {}, orderBy: [ClientTrustEntryOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: ClientTrustEntryWhereUniqueInput): [ClientTrustEntry!]
+  clientTrustEntriesCount(where: ClientTrustEntryWhereInput! = {}): Int
+  document(where: DocumentWhereUniqueInput!): Document
+  documents(where: DocumentWhereInput! = {}, orderBy: [DocumentOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: DocumentWhereUniqueInput): [Document!]
+  documentsCount(where: DocumentWhereInput! = {}): Int
+  task(where: TaskWhereUniqueInput!): Task
+  tasks(where: TaskWhereInput! = {}, orderBy: [TaskOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: TaskWhereUniqueInput): [Task!]
+  tasksCount(where: TaskWhereInput! = {}): Int
+  auditEvent(where: AuditEventWhereUniqueInput!): AuditEvent
+  auditEvents(where: AuditEventWhereInput! = {}, orderBy: [AuditEventOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: AuditEventWhereUniqueInput): [AuditEvent!]
+  auditEventsCount(where: AuditEventWhereInput! = {}): Int
+  paymentProvider(where: PaymentProviderWhereUniqueInput!): PaymentProvider
+  paymentProviders(where: PaymentProviderWhereInput! = {}, orderBy: [PaymentProviderOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: PaymentProviderWhereUniqueInput): [PaymentProvider!]
+  paymentProvidersCount(where: PaymentProviderWhereInput! = {}): Int
+  paymentCollection(where: PaymentCollectionWhereUniqueInput!): PaymentCollection
+  paymentCollections(where: PaymentCollectionWhereInput! = {}, orderBy: [PaymentCollectionOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: PaymentCollectionWhereUniqueInput): [PaymentCollection!]
+  paymentCollectionsCount(where: PaymentCollectionWhereInput! = {}): Int
+  paymentSession(where: PaymentSessionWhereUniqueInput!): PaymentSession
+  paymentSessions(where: PaymentSessionWhereInput! = {}, orderBy: [PaymentSessionOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: PaymentSessionWhereUniqueInput): [PaymentSession!]
+  paymentSessionsCount(where: PaymentSessionWhereInput! = {}): Int
+  payment(where: PaymentWhereUniqueInput!): Payment
+  payments(where: PaymentWhereInput! = {}, orderBy: [PaymentOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: PaymentWhereUniqueInput): [Payment!]
+  paymentsCount(where: PaymentWhereInput! = {}): Int
+  refund(where: RefundWhereUniqueInput!): Refund
+  refunds(where: RefundWhereInput! = {}, orderBy: [RefundOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: RefundWhereUniqueInput): [Refund!]
+  refundsCount(where: RefundWhereInput! = {}): Int
+  paymentWebhookEvent(where: PaymentWebhookEventWhereUniqueInput!): PaymentWebhookEvent
+  paymentWebhookEvents(where: PaymentWebhookEventWhereInput! = {}, orderBy: [PaymentWebhookEventOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: PaymentWebhookEventWhereUniqueInput): [PaymentWebhookEvent!]
+  paymentWebhookEventsCount(where: PaymentWebhookEventWhereInput! = {}): Int
+  idempotencyKey(where: IdempotencyKeyWhereUniqueInput!): IdempotencyKey
+  idempotencyKeys(where: IdempotencyKeyWhereInput! = {}, orderBy: [IdempotencyKeyOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: IdempotencyKeyWhereUniqueInput): [IdempotencyKey!]
+  idempotencyKeysCount(where: IdempotencyKeyWhereInput! = {}): Int
   keystone: KeystoneMeta!
   authenticatedItem: AuthenticatedItem
   validateUserPasswordResetToken(email: String!, token: String!): ValidateUserPasswordResetTokenResult
