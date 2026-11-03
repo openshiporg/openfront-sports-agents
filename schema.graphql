@@ -4480,12 +4480,17 @@ type Mutation {
   markPaymentReceived(scheduledPaymentId: ID!, idempotencyKey: String!): AgencyJSON!
   draftCommissionInvoice(athleteId: ID!, scheduledPaymentIds: [ID!]!, idempotencyKey: String!): AgencyJSON!
   sendCommissionInvoice(invoiceId: ID!, idempotencyKey: String!): AgencyJSON!
+  voidCommissionInvoice(invoiceId: ID!, reason: String!, idempotencyKey: String!): AgencyJSON!
   recordInvoicePayment(invoiceId: ID!, amountCents: Int!, reference: String!, idempotencyKey: String!): AgencyJSON!
   reverseLedgerEntry(entryId: ID!, reason: String!, idempotencyKey: String!): AgencyJSON!
   postTrustEntry(accountId: ID!, entryType: String!, amountCents: Int!, reference: String!, invoiceId: ID, reversesId: ID, idempotencyKey: String!): AgencyJSON!
   moveRecruitingStage(athleteId: ID!, stage: String!, idempotencyKey: String!): AgencyJSON!
   completeDeliverable(deliverableId: ID!, proofLink: String!, idempotencyKey: String!): AgencyJSON!
+  activateEndorsementDeal(dealId: ID!, idempotencyKey: String!): AgencyJSON!
+  generateAutoTasks: AgencyJSON!
   payCommissionInvoice(invoiceId: ID!, idempotencyKey: String!): AgencyJSON!
+  ensureOnboardingRecord(entity: String!, data: AgencyJSON!): AgencyJSON!
+  updateActiveUser(data: AgencyJSON!): AgencyJSON!
 }
 
 union UserAuthenticationWithPasswordResult = UserAuthenticationWithPasswordSuccess | UserAuthenticationWithPasswordFailure

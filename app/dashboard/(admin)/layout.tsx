@@ -14,7 +14,7 @@ export default async function ListLayout({ children }: { children: React.ReactNo
   const user = userResponse.success ? userResponse.data?.authenticatedItem : null;
 
   return (
-    <DashboardLayout adminMeta={adminMeta} authenticatedItem={user}>
+    <DashboardLayout adminMeta={adminMeta} authenticatedItem={user} athletesCount={userResponse.success ? userResponse.data?.athletesCount : null} agencyName={userResponse.success ? userResponse.data?.agencies?.[0]?.name : null}>
       {children}
     </DashboardLayout>
   );

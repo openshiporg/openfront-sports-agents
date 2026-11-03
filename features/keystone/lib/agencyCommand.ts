@@ -19,7 +19,7 @@ export async function command(context:any,permission:Permission,athleteId:string
   if(replay){if(attempt.recoveryPoint==='completed')return attempt.responseBody;throw new Error('Command already processing');}
   const result=await fn(tx);const safe=JSON.parse(JSON.stringify(result,(_,v)=>typeof v==='bigint'?v.toString():v));
   await updateIdempotencyAttempt(tx,attempt.id,'completed',safe,200);return safe;
- },{timeout:20000});
+ },{timeout:60000,maxWait:15000});
 }
 export async function transition(tx:any,context:any,model:string,id:string,from:string[],to:string,requestId:string,extra:any={}){
  const before=await tx[model].findUnique({where:{id}});if(!before||!from.includes(before.status))throw new Error('Invalid state transition');

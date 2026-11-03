@@ -40,22 +40,29 @@ import { Home, Database, ChevronRight, Package } from 'lucide-react'
 import { Logo, LogoIcon } from '@/features/dashboard/components/Logo'
 import { UserProfileClient } from './UserProfileClient'
 import { visibleSidebarLists } from '../lib/sidebarAccess'
+import { platformNavGroups } from '@/features/platform/lib/navigation'
+import { OnboardingCards, dismissOnboarding } from '@/features/platform/onboarding'
 
 interface User {
   id: string;
   email: string;
   name?: string;
+  onboardingStatus?: string;
   role?: {
     canAccessDashboard?: boolean;
+    canManageOnboarding?: boolean;
   };
 }
 
 interface SidebarProps {
   adminMeta: AdminMeta | null
   user?: User | null
+  athletesCount?: number | null
+  agencyName?: string | null
+  onOpenOnboarding?: () => void
 }
 
-export function Sidebar({ adminMeta, user }: SidebarProps) {
+export function Sidebar({ adminMeta, user, athletesCount, agencyName, onOpenOnboarding }: SidebarProps) {
   const { isMobile, setOpenMobile } = useSidebar()
   const pathname = usePathname()
 
@@ -103,7 +110,7 @@ export function Sidebar({ adminMeta, user }: SidebarProps) {
       <SidebarHeader>
         <SidebarMenuButton asChild>
           <div className="group-has-[[data-collapsible=icon]]/sidebar-wrapper:hidden p-2">
-            <Logo />
+            <Logo name={agencyName} />
           </div>
         </SidebarMenuButton>
         <SidebarMenuButton asChild>
@@ -127,6 +134,25 @@ export function Sidebar({ adminMeta, user }: SidebarProps) {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
+
+        {/* Agency workflow slices */}
+        {platformNavGroups.map((group) => (
+          <SidebarGroup key={group.id}>
+            <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
+            <SidebarMenu>
+              {group.items.filter((item) => item.href !== '/dashboard').map((item) => (
+                <SidebarMenuItem key={item.href}>
+                  <SidebarMenuButton asChild isActive={isLinkActive(item.href)} tooltip={item.title}>
+                    <Link href={item.href} onClick={() => setOpenMobile(false)}>
+                      <item.icon className="h-4 w-4" />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroup>
+        ))}
 
         {/* Models Dropdown - Collapsible */}
         {dashboardItems.map((dashboardItem) => (
@@ -224,6 +250,16 @@ export function Sidebar({ adminMeta, user }: SidebarProps) {
       </SidebarContent>
       
       <SidebarFooter>
+        <div className="mb-2 w-full overflow-visible">
+          <OnboardingCards
+            steps={[{ href: '#onboarding', title: 'Set up your agency', description: 'Add staff, athletes, contracts, endorsements and commission records to start.' }]}
+            onboardingStatus={user?.onboardingStatus}
+            athletesCount={athletesCount}
+            userRole={user?.role}
+            onDismiss={async () => { try { await dismissOnboarding() } catch (error) { console.error('Error dismissing onboarding:', error) } }}
+            onOpenDialog={onOpenOnboarding}
+          />
+        </div>
         {user && <UserProfileClient user={user} />}
       </SidebarFooter>
       

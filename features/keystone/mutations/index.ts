@@ -2,6 +2,8 @@ import { mergeSchemas } from "@graphql-tools/schema";
 import type { GraphQLSchema } from 'graphql';
 import redirectToInit from "./redirectToInit";
 import {agencyTypeDefs,agencyMutations,agencyQueries} from './agency';
+import ensureOnboardingRecord from './ensureOnboardingRecord';
+import updateActiveUser from './updateActiveUser';
 import {portalTypeDefs,portalQueries,portalMutations} from './portal';
 
 const graphql = String.raw;
@@ -13,12 +15,14 @@ export function extendGraphqlSchema(baseSchema: GraphQLSchema) {
       type Query {
         redirectToInit: Boolean
       }
-    ` + agencyTypeDefs + portalTypeDefs,
+    ` + agencyTypeDefs + portalTypeDefs + `
+      extend type Mutation { ensureOnboardingRecord(entity:String!,data:AgencyJSON!):AgencyJSON! updateActiveUser(data:AgencyJSON!):AgencyJSON! }
+    `,
     resolvers: {
       Query: { 
         redirectToInit, ...agencyQueries, ...portalQueries,
       },
-      Mutation: {...agencyMutations,...portalMutations},
+      Mutation: {...agencyMutations,...portalMutations,ensureOnboardingRecord,updateActiveUser},
     },
   });
 }

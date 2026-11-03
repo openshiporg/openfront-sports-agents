@@ -1,0 +1,1638 @@
+{
+  "full": {
+    "agency": {
+      "name": "Meridian Sports Group",
+      "defaultPlayingCommissionBps": 300,
+      "defaultEndorsementCommissionBps": 1500,
+      "currencyCode": "USD",
+      "fiscalYearStart": 1,
+      "refundApprovalThresholdCents": 100000
+    },
+    "roles": [
+      {
+        "name": "Owner",
+        "permissions": [
+          "*"
+        ]
+      },
+      {
+        "name": "Agent",
+        "permissions": [
+          "canAccessDashboard",
+          "canSeeOtherPeople",
+          "canManageAthletes",
+          "canManageContracts",
+          "canManageEndorsements",
+          "canReadPayments"
+        ]
+      },
+      {
+        "name": "Marketing Rep",
+        "permissions": [
+          "canAccessDashboard",
+          "canSeeOtherPeople",
+          "canManageAthletes",
+          "canManageEndorsements"
+        ]
+      },
+      {
+        "name": "Accountant",
+        "permissions": [
+          "canAccessDashboard",
+          "canSeeOtherPeople",
+          "canViewAllClients",
+          "canManageCommissions",
+          "canManageTrust",
+          "canManagePayments",
+          "canReadPayments",
+          "canIssueRefunds",
+          "canReadAudit"
+        ]
+      },
+      {
+        "name": "Customer",
+        "permissions": []
+      }
+    ],
+    "staff": [
+      {
+        "name": "Dana Whitfield",
+        "email": "dana@meridiansports.example",
+        "role": "Owner"
+      },
+      {
+        "name": "Marcus Bell",
+        "email": "marcus@meridiansports.example",
+        "role": "Agent"
+      },
+      {
+        "name": "Elena Ruiz",
+        "email": "elena@meridiansports.example",
+        "role": "Agent"
+      },
+      {
+        "name": "Priya Nair",
+        "email": "priya@meridiansports.example",
+        "role": "Marketing Rep"
+      },
+      {
+        "name": "Tom Okafor",
+        "email": "tom@meridiansports.example",
+        "role": "Accountant"
+      }
+    ],
+    "certifications": [
+      {
+        "userEmail": "dana@meridiansports.example",
+        "body": "NFLPA",
+        "number": "NFLPA-20418",
+        "issuedAt": "2022-03-01",
+        "expiresInDays": 420
+      },
+      {
+        "userEmail": "marcus@meridiansports.example",
+        "body": "NBPA",
+        "number": "NBPA-7731",
+        "issuedAt": "2023-01-15",
+        "expiresInDays": 300
+      },
+      {
+        "userEmail": "elena@meridiansports.example",
+        "body": "MLSPA",
+        "number": "MLSPA-5520",
+        "issuedAt": "2021-07-01",
+        "expiresInDays": 35
+      },
+      {
+        "userEmail": "priya@meridiansports.example",
+        "body": "NCAA_NIL_STATE",
+        "number": "NIL-TX-0912",
+        "issuedAt": "2024-02-10",
+        "expiresInDays": 500
+      }
+    ],
+    "teams": [
+      {
+        "name": "Austin Hawks",
+        "league": "NFL",
+        "city": "Austin"
+      },
+      {
+        "name": "Denver Peaks",
+        "league": "NFL",
+        "city": "Denver"
+      },
+      {
+        "name": "Chicago Lakers",
+        "league": "NBA",
+        "city": "Chicago"
+      },
+      {
+        "name": "Phoenix Suns Bay",
+        "league": "NBA",
+        "city": "Phoenix"
+      },
+      {
+        "name": "Seattle Storm Cats",
+        "league": "WNBA",
+        "city": "Seattle"
+      },
+      {
+        "name": "Atlanta Flame",
+        "league": "WNBA",
+        "city": "Atlanta"
+      },
+      {
+        "name": "Portland Pines",
+        "league": "MLS",
+        "city": "Portland"
+      },
+      {
+        "name": "Columbus Crew Hill",
+        "league": "MLS",
+        "city": "Columbus"
+      },
+      {
+        "name": "Texas State",
+        "league": "NCAA",
+        "city": "San Marcos"
+      }
+    ],
+    "athletes": [
+      {
+        "fullName": "Jalen Carter",
+        "preferredName": "Jalen",
+        "sport": "Football",
+        "league": "NFL",
+        "position": "QB",
+        "status": "client",
+        "leadAgentEmail": "marcus@meridiansports.example",
+        "supportEmails": [],
+        "email": "jalen.carter@clients.meridiansports.example",
+        "phone": "+1 512 555 0110",
+        "recruitingStage": "signed",
+        "isPublic": true,
+        "socialHandles": {
+          "instagram": "@jalen_carter"
+        },
+        "followerCounts": {
+          "instagram": 50000
+        },
+        "marketabilityNotes": "Strong regional following.",
+        "eligibility": {
+          "nilEligible": false
+        },
+        "team": "Austin Hawks",
+        "representationStartedAt": "2025-06-01"
+      },
+      {
+        "fullName": "Andre Mitchell",
+        "preferredName": "Andre",
+        "sport": "Football",
+        "league": "NFL",
+        "position": "WR",
+        "status": "client",
+        "leadAgentEmail": "dana@meridiansports.example",
+        "supportEmails": [],
+        "email": "andre.mitchell@clients.meridiansports.example",
+        "phone": "+1 512 555 0111",
+        "recruitingStage": "signed",
+        "isPublic": true,
+        "socialHandles": {
+          "instagram": "@andre_mitchell"
+        },
+        "followerCounts": {
+          "instagram": 73000
+        },
+        "marketabilityNotes": "Strong regional following.",
+        "eligibility": {
+          "nilEligible": false
+        },
+        "team": "Denver Peaks",
+        "representationStartedAt": "2025-06-01"
+      },
+      {
+        "fullName": "Cole Brannigan",
+        "preferredName": "Cole",
+        "sport": "Football",
+        "league": "NFL",
+        "position": "LB",
+        "status": "client",
+        "leadAgentEmail": "dana@meridiansports.example",
+        "supportEmails": [],
+        "email": "cole.brannigan@clients.meridiansports.example",
+        "phone": "+1 512 555 0112",
+        "recruitingStage": "signed",
+        "isPublic": true,
+        "socialHandles": {
+          "instagram": "@cole_brannigan"
+        },
+        "followerCounts": {
+          "instagram": 96000
+        },
+        "marketabilityNotes": "Strong regional following.",
+        "eligibility": {
+          "nilEligible": false
+        },
+        "team": "Austin Hawks",
+        "representationStartedAt": "2025-06-01"
+      },
+      {
+        "fullName": "Terrence Fields",
+        "preferredName": "Terrence",
+        "sport": "Basketball",
+        "league": "NBA",
+        "position": "PG",
+        "status": "client",
+        "leadAgentEmail": "marcus@meridiansports.example",
+        "supportEmails": [],
+        "email": "terrence.fields@clients.meridiansports.example",
+        "phone": "+1 512 555 0113",
+        "recruitingStage": "signed",
+        "isPublic": true,
+        "socialHandles": {
+          "instagram": "@terrence_fields"
+        },
+        "followerCounts": {
+          "instagram": 119000
+        },
+        "marketabilityNotes": "Strong regional following.",
+        "eligibility": {
+          "nilEligible": false
+        },
+        "team": "Chicago Lakers",
+        "representationStartedAt": "2025-06-01"
+      },
+      {
+        "fullName": "Devin Park",
+        "preferredName": "Devin",
+        "sport": "Basketball",
+        "league": "NBA",
+        "position": "SG",
+        "status": "client",
+        "leadAgentEmail": "marcus@meridiansports.example",
+        "supportEmails": [],
+        "email": "devin.park@clients.meridiansports.example",
+        "phone": "+1 512 555 0114",
+        "recruitingStage": "signed",
+        "isPublic": true,
+        "socialHandles": {
+          "instagram": "@devin_park"
+        },
+        "followerCounts": {
+          "instagram": 142000
+        },
+        "marketabilityNotes": "Strong regional following.",
+        "eligibility": {
+          "nilEligible": false
+        },
+        "team": "Phoenix Suns Bay",
+        "representationStartedAt": "2025-06-01"
+      },
+      {
+        "fullName": "Aaliyah Brooks",
+        "preferredName": "Aaliyah",
+        "sport": "Basketball",
+        "league": "WNBA",
+        "position": "F",
+        "status": "client",
+        "leadAgentEmail": "elena@meridiansports.example",
+        "supportEmails": [],
+        "email": "aaliyah.brooks@clients.meridiansports.example",
+        "phone": "+1 512 555 0115",
+        "recruitingStage": "signed",
+        "isPublic": true,
+        "socialHandles": {
+          "instagram": "@aaliyah_brooks"
+        },
+        "followerCounts": {
+          "instagram": 165000
+        },
+        "marketabilityNotes": "Strong regional following.",
+        "eligibility": {
+          "nilEligible": false
+        },
+        "team": "Seattle Storm Cats",
+        "representationStartedAt": "2025-06-01"
+      },
+      {
+        "fullName": "Simone Reyes",
+        "preferredName": "Simone",
+        "sport": "Basketball",
+        "league": "WNBA",
+        "position": "G",
+        "status": "client",
+        "leadAgentEmail": "elena@meridiansports.example",
+        "supportEmails": [],
+        "email": "simone.reyes@clients.meridiansports.example",
+        "phone": "+1 512 555 0116",
+        "recruitingStage": "signed",
+        "isPublic": true,
+        "socialHandles": {
+          "instagram": "@simone_reyes"
+        },
+        "followerCounts": {
+          "instagram": 188000
+        },
+        "marketabilityNotes": "Strong regional following.",
+        "eligibility": {
+          "nilEligible": false
+        },
+        "team": "Atlanta Flame",
+        "representationStartedAt": "2025-06-01"
+      },
+      {
+        "fullName": "Mateo Silva",
+        "preferredName": "Mateo",
+        "sport": "Soccer",
+        "league": "MLS",
+        "position": "MF",
+        "status": "client",
+        "leadAgentEmail": "elena@meridiansports.example",
+        "supportEmails": [],
+        "email": "mateo.silva@clients.meridiansports.example",
+        "phone": "+1 512 555 0117",
+        "recruitingStage": "signed",
+        "isPublic": true,
+        "socialHandles": {
+          "instagram": "@mateo_silva"
+        },
+        "followerCounts": {
+          "instagram": 211000
+        },
+        "marketabilityNotes": "Strong regional following.",
+        "eligibility": {
+          "nilEligible": false
+        },
+        "team": "Portland Pines",
+        "representationStartedAt": "2025-06-01"
+      },
+      {
+        "fullName": "Owen Hartley",
+        "preferredName": "Owen",
+        "sport": "Soccer",
+        "league": "MLS",
+        "position": "GK",
+        "status": "recruiting",
+        "leadAgentEmail": "elena@meridiansports.example",
+        "supportEmails": [],
+        "email": "owen.hartley@clients.meridiansports.example",
+        "phone": "+1 512 555 0118",
+        "recruitingStage": "pitched",
+        "isPublic": false,
+        "socialHandles": {
+          "instagram": "@owen_hartley"
+        },
+        "followerCounts": {
+          "instagram": 234000
+        },
+        "marketabilityNotes": "Strong regional following.",
+        "eligibility": {
+          "nilEligible": false
+        },
+        "team": "Columbus Crew Hill"
+      },
+      {
+        "fullName": "Kayla Moreno",
+        "preferredName": "Kayla",
+        "sport": "Basketball",
+        "league": "NCAA",
+        "position": "G",
+        "status": "client",
+        "leadAgentEmail": "marcus@meridiansports.example",
+        "supportEmails": [
+          "priya@meridiansports.example"
+        ],
+        "email": "kayla.moreno@clients.meridiansports.example",
+        "phone": "+1 512 555 0119",
+        "recruitingStage": "signed",
+        "isPublic": true,
+        "socialHandles": {
+          "instagram": "@kayla_moreno"
+        },
+        "followerCounts": {
+          "instagram": 257000
+        },
+        "marketabilityNotes": "Strong regional following.",
+        "eligibility": {
+          "nilEligible": true
+        },
+        "team": "Texas State",
+        "representationStartedAt": "2025-06-01"
+      },
+      {
+        "fullName": "Brandon Cho",
+        "preferredName": "Brandon",
+        "sport": "Football",
+        "league": "NCAA",
+        "position": "RB",
+        "status": "client",
+        "leadAgentEmail": "dana@meridiansports.example",
+        "supportEmails": [
+          "priya@meridiansports.example"
+        ],
+        "email": "brandon.cho@clients.meridiansports.example",
+        "phone": "+1 512 555 0120",
+        "recruitingStage": "signed",
+        "isPublic": true,
+        "socialHandles": {
+          "instagram": "@brandon_cho"
+        },
+        "followerCounts": {
+          "instagram": 280000
+        },
+        "marketabilityNotes": "Strong regional following.",
+        "eligibility": {
+          "nilEligible": true
+        },
+        "team": "Texas State",
+        "representationStartedAt": "2025-06-01"
+      },
+      {
+        "fullName": "Isaiah Grant",
+        "preferredName": "Isaiah",
+        "sport": "Football",
+        "league": "NFL",
+        "position": "CB",
+        "status": "prospect",
+        "leadAgentEmail": "dana@meridiansports.example",
+        "supportEmails": [],
+        "email": "isaiah.grant@clients.meridiansports.example",
+        "phone": "+1 512 555 0121",
+        "recruitingStage": "contacted",
+        "isPublic": false,
+        "socialHandles": {
+          "instagram": "@isaiah_grant"
+        },
+        "followerCounts": {
+          "instagram": 303000
+        },
+        "marketabilityNotes": "Strong regional following.",
+        "eligibility": {
+          "nilEligible": false
+        },
+        "contactAllowedInDays": -10
+      },
+      {
+        "fullName": "Lena Fischer",
+        "preferredName": "Lena",
+        "sport": "Soccer",
+        "league": "NWSL",
+        "position": "FW",
+        "status": "prospect",
+        "leadAgentEmail": "elena@meridiansports.example",
+        "supportEmails": [],
+        "email": "lena.fischer@clients.meridiansports.example",
+        "phone": "+1 512 555 0122",
+        "recruitingStage": "contacted",
+        "isPublic": false,
+        "socialHandles": {
+          "instagram": "@lena_fischer"
+        },
+        "followerCounts": {
+          "instagram": 326000
+        },
+        "marketabilityNotes": "Strong regional following.",
+        "eligibility": {
+          "nilEligible": false
+        },
+        "contactAllowedInDays": -10
+      },
+      {
+        "fullName": "Tyrese Hall",
+        "preferredName": "Tyrese",
+        "sport": "Basketball",
+        "league": "NBA",
+        "position": "C",
+        "status": "prospect",
+        "leadAgentEmail": "marcus@meridiansports.example",
+        "supportEmails": [],
+        "email": "tyrese.hall@clients.meridiansports.example",
+        "phone": "+1 512 555 0123",
+        "recruitingStage": "contacted",
+        "isPublic": false,
+        "socialHandles": {
+          "instagram": "@tyrese_hall"
+        },
+        "followerCounts": {
+          "instagram": 349000
+        },
+        "marketabilityNotes": "Strong regional following.",
+        "eligibility": {
+          "nilEligible": false
+        },
+        "contactAllowedInDays": 45
+      }
+    ],
+    "agreements": [
+      {
+        "athlete": "Jalen Carter",
+        "agentEmail": "marcus@meridiansports.example",
+        "scope": "both",
+        "playingCommissionBps": 300,
+        "marketingCommissionBps": 1500,
+        "capBps": 300,
+        "effectiveAt": "2025-06-01",
+        "expiresInDays": 900,
+        "terminationNoticeDays": 30,
+        "status": "filed_with_union"
+      },
+      {
+        "athlete": "Andre Mitchell",
+        "agentEmail": "dana@meridiansports.example",
+        "scope": "both",
+        "playingCommissionBps": 300,
+        "marketingCommissionBps": 1500,
+        "capBps": 300,
+        "effectiveAt": "2025-06-01",
+        "expiresInDays": 900,
+        "terminationNoticeDays": 30,
+        "status": "filed_with_union"
+      },
+      {
+        "athlete": "Cole Brannigan",
+        "agentEmail": "dana@meridiansports.example",
+        "scope": "both",
+        "playingCommissionBps": 300,
+        "marketingCommissionBps": 1500,
+        "capBps": 300,
+        "effectiveAt": "2025-06-01",
+        "expiresInDays": 70,
+        "terminationNoticeDays": 30,
+        "status": "filed_with_union"
+      },
+      {
+        "athlete": "Terrence Fields",
+        "agentEmail": "marcus@meridiansports.example",
+        "scope": "both",
+        "playingCommissionBps": 300,
+        "marketingCommissionBps": 1500,
+        "capBps": 300,
+        "effectiveAt": "2025-06-01",
+        "expiresInDays": 900,
+        "terminationNoticeDays": 30,
+        "status": "filed_with_union"
+      },
+      {
+        "athlete": "Devin Park",
+        "agentEmail": "marcus@meridiansports.example",
+        "scope": "both",
+        "playingCommissionBps": 300,
+        "marketingCommissionBps": 1500,
+        "capBps": 300,
+        "effectiveAt": "2025-06-01",
+        "expiresInDays": 900,
+        "terminationNoticeDays": 30,
+        "status": "filed_with_union"
+      },
+      {
+        "athlete": "Aaliyah Brooks",
+        "agentEmail": "elena@meridiansports.example",
+        "scope": "both",
+        "playingCommissionBps": 300,
+        "marketingCommissionBps": 1500,
+        "capBps": 300,
+        "effectiveAt": "2025-06-01",
+        "expiresInDays": 900,
+        "terminationNoticeDays": 30,
+        "status": "filed_with_union"
+      },
+      {
+        "athlete": "Simone Reyes",
+        "agentEmail": "elena@meridiansports.example",
+        "scope": "both",
+        "playingCommissionBps": 300,
+        "marketingCommissionBps": 1500,
+        "capBps": 300,
+        "effectiveAt": "2025-06-01",
+        "expiresInDays": 900,
+        "terminationNoticeDays": 30,
+        "status": "filed_with_union"
+      },
+      {
+        "athlete": "Mateo Silva",
+        "agentEmail": "elena@meridiansports.example",
+        "scope": "both",
+        "playingCommissionBps": 300,
+        "marketingCommissionBps": 1500,
+        "capBps": 300,
+        "effectiveAt": "2025-06-01",
+        "expiresInDays": 900,
+        "terminationNoticeDays": 30,
+        "status": "filed_with_union"
+      },
+      {
+        "athlete": "Kayla Moreno",
+        "agentEmail": "marcus@meridiansports.example",
+        "scope": "marketing",
+        "playingCommissionBps": 0,
+        "marketingCommissionBps": 1500,
+        "capBps": 300,
+        "effectiveAt": "2025-06-01",
+        "expiresInDays": 900,
+        "terminationNoticeDays": 30,
+        "status": "signed"
+      },
+      {
+        "athlete": "Brandon Cho",
+        "agentEmail": "dana@meridiansports.example",
+        "scope": "marketing",
+        "playingCommissionBps": 0,
+        "marketingCommissionBps": 1500,
+        "capBps": 300,
+        "effectiveAt": "2025-06-01",
+        "expiresInDays": 900,
+        "terminationNoticeDays": 30,
+        "status": "signed"
+      }
+    ],
+    "contacts": [
+      {
+        "name": "Rosa Carter",
+        "org": "Carter family",
+        "role": "Mother",
+        "email": "rosa.carter@family.example",
+        "phone": "+1 512 555 0188",
+        "athletes": [
+          "Jalen Carter"
+        ]
+      },
+      {
+        "name": "Coach Wills",
+        "org": "Texas State",
+        "role": "Head coach",
+        "email": "wills@txst.example",
+        "phone": "+1 512 555 0144",
+        "athletes": [
+          "Kayla Moreno",
+          "Brandon Cho"
+        ]
+      },
+      {
+        "name": "Gina Ortiz",
+        "org": "Northline Apparel",
+        "role": "Brand manager",
+        "email": "gina@northline.example",
+        "phone": "+1 212 555 0101",
+        "athletes": []
+      },
+      {
+        "name": "Sam Becker",
+        "org": "Volt Energy",
+        "role": "Partnerships",
+        "email": "sam@volt.example",
+        "phone": "+1 212 555 0102",
+        "athletes": []
+      }
+    ],
+    "brands": [
+      {
+        "name": "Northline Apparel",
+        "category": "Athletic footwear",
+        "website": "https://northlineapparel.example",
+        "contacts": [
+          "Gina Ortiz"
+        ]
+      },
+      {
+        "name": "Volt Energy",
+        "category": "Beverages",
+        "website": "https://voltenergy.example",
+        "contacts": [
+          "Sam Becker"
+        ]
+      },
+      {
+        "name": "Summit Bank",
+        "category": "Financial services",
+        "website": "https://summitbank.example",
+        "contacts": []
+      },
+      {
+        "name": "Horizon Motors",
+        "category": "Automotive",
+        "website": "https://horizonmotors.example",
+        "contacts": []
+      },
+      {
+        "name": "Peak Nutrition",
+        "category": "Supplements",
+        "website": "https://peaknutrition.example",
+        "contacts": []
+      },
+      {
+        "name": "Streamline Audio",
+        "category": "Electronics",
+        "website": "https://streamlineaudio.example",
+        "contacts": []
+      },
+      {
+        "name": "Harbor Insurance",
+        "category": "Insurance",
+        "website": "https://harborinsurance.example",
+        "contacts": []
+      },
+      {
+        "name": "Pulse Fitness",
+        "category": "Fitness",
+        "website": "https://pulsefitness.example",
+        "contacts": []
+      },
+      {
+        "name": "Coastal Water",
+        "category": "Beverages",
+        "website": "https://coastalwater.example",
+        "contacts": []
+      }
+    ],
+    "contracts": [
+      {
+        "athlete": "Jalen Carter",
+        "team": "Austin Hawks",
+        "league": "NFL",
+        "contractType": "rookie_scale",
+        "startSeason": "2026",
+        "endSeason": "2028",
+        "totalValueCents": 1800000000,
+        "guaranteedCents": 900000000,
+        "signingBonusCents": 900000000,
+        "status": "signed",
+        "signedAt": "2025-07-01",
+        "years": [
+          {
+            "season": "2026",
+            "baseSalaryCents": 220000000,
+            "guaranteedCents": 110000000,
+            "rosterBonusCents": 0,
+            "workoutBonusCents": 0,
+            "payPeriods": 17,
+            "paySchedule": "game_checks"
+          },
+          {
+            "season": "2027",
+            "baseSalaryCents": 260000000,
+            "guaranteedCents": 130000000,
+            "rosterBonusCents": 0,
+            "workoutBonusCents": 0,
+            "payPeriods": 17,
+            "paySchedule": "game_checks"
+          },
+          {
+            "season": "2028",
+            "baseSalaryCents": 300000000,
+            "guaranteedCents": 150000000,
+            "rosterBonusCents": 0,
+            "workoutBonusCents": 0,
+            "payPeriods": 17,
+            "paySchedule": "game_checks"
+          }
+        ],
+        "incentives": [
+          {
+            "description": "Pro Bowl / All-Star selection",
+            "amountCents": 50000000,
+            "likelyToBeEarned": false,
+            "status": "pending"
+          }
+        ]
+      },
+      {
+        "athlete": "Andre Mitchell",
+        "team": "Denver Peaks",
+        "league": "NFL",
+        "contractType": "veteran",
+        "startSeason": "2026",
+        "endSeason": "2027",
+        "totalValueCents": 320000000,
+        "guaranteedCents": 160000000,
+        "signingBonusCents": 160000000,
+        "status": "signed",
+        "signedAt": "2025-07-01",
+        "years": [
+          {
+            "season": "2026",
+            "baseSalaryCents": 150000000,
+            "guaranteedCents": 750000000,
+            "rosterBonusCents": 0,
+            "workoutBonusCents": 0,
+            "payPeriods": 17,
+            "paySchedule": "game_checks"
+          },
+          {
+            "season": "2027",
+            "baseSalaryCents": 170000000,
+            "guaranteedCents": 850000000,
+            "rosterBonusCents": 0,
+            "workoutBonusCents": 0,
+            "payPeriods": 17,
+            "paySchedule": "game_checks"
+          }
+        ],
+        "incentives": [
+          {
+            "description": "Pro Bowl / All-Star selection",
+            "amountCents": 50000000,
+            "likelyToBeEarned": false,
+            "status": "pending"
+          }
+        ]
+      },
+      {
+        "athlete": "Terrence Fields",
+        "team": "Chicago Lakers",
+        "league": "NBA",
+        "contractType": "veteran",
+        "startSeason": "2026",
+        "endSeason": "2027",
+        "totalValueCents": 700000000,
+        "guaranteedCents": 350000000,
+        "signingBonusCents": 350000000,
+        "status": "signed",
+        "signedAt": "2025-07-01",
+        "years": [
+          {
+            "season": "2026",
+            "baseSalaryCents": 340000000,
+            "guaranteedCents": 170000000,
+            "rosterBonusCents": 0,
+            "workoutBonusCents": 0,
+            "payPeriods": 24,
+            "paySchedule": "semi_monthly"
+          },
+          {
+            "season": "2027",
+            "baseSalaryCents": 360000000,
+            "guaranteedCents": 180000000,
+            "rosterBonusCents": 0,
+            "workoutBonusCents": 0,
+            "payPeriods": 24,
+            "paySchedule": "semi_monthly"
+          }
+        ],
+        "incentives": [
+          {
+            "description": "Pro Bowl / All-Star selection",
+            "amountCents": 50000000,
+            "likelyToBeEarned": false,
+            "status": "pending"
+          }
+        ]
+      },
+      {
+        "athlete": "Aaliyah Brooks",
+        "team": "Seattle Storm Cats",
+        "league": "WNBA",
+        "contractType": "veteran",
+        "startSeason": "2026",
+        "endSeason": "2026",
+        "totalValueCents": 18000000,
+        "guaranteedCents": 9000000,
+        "signingBonusCents": 900000,
+        "status": "signed",
+        "signedAt": "2025-07-01",
+        "years": [
+          {
+            "season": "2026",
+            "baseSalaryCents": 18000000,
+            "guaranteedCents": 9000000,
+            "rosterBonusCents": 0,
+            "workoutBonusCents": 0,
+            "payPeriods": 12,
+            "paySchedule": "semi_monthly"
+          }
+        ],
+        "incentives": [
+          {
+            "description": "Pro Bowl / All-Star selection",
+            "amountCents": 50000000,
+            "likelyToBeEarned": false,
+            "status": "pending"
+          }
+        ]
+      },
+      {
+        "athlete": "Mateo Silva",
+        "team": "Portland Pines",
+        "league": "MLS",
+        "contractType": "veteran",
+        "startSeason": "2026",
+        "endSeason": "2027",
+        "totalValueCents": 185000000,
+        "guaranteedCents": 92500000,
+        "signingBonusCents": 9250000,
+        "status": "signed",
+        "signedAt": "2025-07-01",
+        "years": [
+          {
+            "season": "2026",
+            "baseSalaryCents": 90000000,
+            "guaranteedCents": 45000000,
+            "rosterBonusCents": 0,
+            "workoutBonusCents": 0,
+            "payPeriods": 24,
+            "paySchedule": "semi_monthly"
+          },
+          {
+            "season": "2027",
+            "baseSalaryCents": 95000000,
+            "guaranteedCents": 47500000,
+            "rosterBonusCents": 0,
+            "workoutBonusCents": 0,
+            "payPeriods": 24,
+            "paySchedule": "semi_monthly"
+          }
+        ],
+        "incentives": [
+          {
+            "description": "Pro Bowl / All-Star selection",
+            "amountCents": 50000000,
+            "likelyToBeEarned": false,
+            "status": "pending"
+          }
+        ]
+      },
+      {
+        "athlete": "Cole Brannigan",
+        "team": "Austin Hawks",
+        "league": "NFL",
+        "contractType": "extension",
+        "startSeason": "2026",
+        "endSeason": "2026",
+        "totalValueCents": 900000000,
+        "guaranteedCents": 450000000,
+        "signingBonusCents": 45000000,
+        "status": "signed",
+        "signedAt": "2025-07-01",
+        "years": [
+          {
+            "season": "2026",
+            "baseSalaryCents": 900000000,
+            "guaranteedCents": 450000000,
+            "rosterBonusCents": 0,
+            "workoutBonusCents": 0,
+            "payPeriods": 17,
+            "paySchedule": "game_checks"
+          }
+        ],
+        "incentives": [
+          {
+            "description": "Pro Bowl / All-Star selection",
+            "amountCents": 50000000,
+            "likelyToBeEarned": false,
+            "status": "pending"
+          }
+        ]
+      }
+    ],
+    "deals": [
+      {
+        "athlete": "Jalen Carter",
+        "brand": "Northline Apparel",
+        "ownerEmail": "priya@meridiansports.example",
+        "status": "negotiating",
+        "activate": true,
+        "termStartInDays": -120,
+        "termEndInDays": 245,
+        "totalValueCents": 600000000,
+        "commissionBps": 1500,
+        "exclusivityCategory": "athletic footwear",
+        "territory": "United States",
+        "paymentTerms": "Net 30 from invoice",
+        "deliverables": [
+          {
+            "kind": "social_post",
+            "dueInDays": -60,
+            "status": "completed"
+          },
+          {
+            "kind": "appearance",
+            "dueInDays": 4,
+            "status": "scheduled"
+          },
+          {
+            "kind": "photo_shoot",
+            "dueInDays": 21,
+            "status": "scheduled"
+          }
+        ]
+      },
+      {
+        "athlete": "Jalen Carter",
+        "brand": "Peak Nutrition",
+        "ownerEmail": "priya@meridiansports.example",
+        "status": "negotiating",
+        "activate": true,
+        "termStartInDays": -60,
+        "termEndInDays": 300,
+        "totalValueCents": 150000000,
+        "commissionBps": 1500,
+        "exclusivityCategory": "supplements",
+        "territory": "United States",
+        "paymentTerms": "Net 30 from invoice",
+        "deliverables": [
+          {
+            "kind": "social_post",
+            "dueInDays": 6,
+            "status": "scheduled"
+          }
+        ]
+      },
+      {
+        "athlete": "Andre Mitchell",
+        "brand": "Volt Energy",
+        "ownerEmail": "priya@meridiansports.example",
+        "status": "negotiating",
+        "activate": true,
+        "termStartInDays": -90,
+        "termEndInDays": 270,
+        "totalValueCents": 240000000,
+        "commissionBps": 1500,
+        "exclusivityCategory": "energy drinks",
+        "territory": "United States",
+        "paymentTerms": "Net 30 from invoice",
+        "deliverables": [
+          {
+            "kind": "commercial",
+            "dueInDays": 30,
+            "status": "scheduled"
+          },
+          {
+            "kind": "social_post",
+            "dueInDays": -20,
+            "status": "completed"
+          }
+        ]
+      },
+      {
+        "athlete": "Terrence Fields",
+        "brand": "Summit Bank",
+        "ownerEmail": "priya@meridiansports.example",
+        "status": "negotiating",
+        "activate": true,
+        "termStartInDays": -100,
+        "termEndInDays": 265,
+        "totalValueCents": 400000000,
+        "commissionBps": 1500,
+        "exclusivityCategory": "financial services",
+        "territory": "United States",
+        "paymentTerms": "Net 30 from invoice",
+        "deliverables": [
+          {
+            "kind": "appearance",
+            "dueInDays": 3,
+            "status": "scheduled"
+          },
+          {
+            "kind": "autograph_session",
+            "dueInDays": 40,
+            "status": "scheduled"
+          }
+        ]
+      },
+      {
+        "athlete": "Terrence Fields",
+        "brand": "Streamline Audio",
+        "ownerEmail": "priya@meridiansports.example",
+        "status": "negotiating",
+        "activate": true,
+        "termStartInDays": -30,
+        "termEndInDays": 330,
+        "totalValueCents": 120000000,
+        "commissionBps": 1500,
+        "exclusivityCategory": "headphones",
+        "territory": "United States",
+        "paymentTerms": "Net 30 from invoice",
+        "deliverables": [
+          {
+            "kind": "social_post",
+            "dueInDays": 12,
+            "status": "scheduled"
+          }
+        ]
+      },
+      {
+        "athlete": "Devin Park",
+        "brand": "Pulse Fitness",
+        "ownerEmail": "priya@meridiansports.example",
+        "status": "negotiating",
+        "activate": true,
+        "termStartInDays": -45,
+        "termEndInDays": 320,
+        "totalValueCents": 90000000,
+        "commissionBps": 1500,
+        "exclusivityCategory": "fitness",
+        "territory": "United States",
+        "paymentTerms": "Net 30 from invoice",
+        "deliverables": [
+          {
+            "kind": "social_post",
+            "dueInDays": -5,
+            "status": "missed"
+          },
+          {
+            "kind": "photo_shoot",
+            "dueInDays": 25,
+            "status": "scheduled"
+          }
+        ]
+      },
+      {
+        "athlete": "Aaliyah Brooks",
+        "brand": "Coastal Water",
+        "ownerEmail": "priya@meridiansports.example",
+        "status": "negotiating",
+        "activate": true,
+        "termStartInDays": -75,
+        "termEndInDays": 290,
+        "totalValueCents": 60000000,
+        "commissionBps": 1500,
+        "exclusivityCategory": "bottled water",
+        "territory": "United States",
+        "paymentTerms": "Net 30 from invoice",
+        "deliverables": [
+          {
+            "kind": "appearance",
+            "dueInDays": 9,
+            "status": "scheduled"
+          }
+        ]
+      },
+      {
+        "athlete": "Simone Reyes",
+        "brand": "Harbor Insurance",
+        "ownerEmail": "priya@meridiansports.example",
+        "status": "negotiating",
+        "activate": true,
+        "termStartInDays": -20,
+        "termEndInDays": 340,
+        "totalValueCents": 75000000,
+        "commissionBps": 1500,
+        "exclusivityCategory": "insurance",
+        "territory": "United States",
+        "paymentTerms": "Net 30 from invoice",
+        "deliverables": [
+          {
+            "kind": "social_post",
+            "dueInDays": 5,
+            "status": "scheduled"
+          }
+        ]
+      },
+      {
+        "athlete": "Mateo Silva",
+        "brand": "Horizon Motors",
+        "ownerEmail": "priya@meridiansports.example",
+        "status": "negotiating",
+        "activate": true,
+        "termStartInDays": -80,
+        "termEndInDays": 285,
+        "totalValueCents": 110000000,
+        "commissionBps": 1500,
+        "exclusivityCategory": "automotive",
+        "territory": "United States",
+        "paymentTerms": "Net 30 from invoice",
+        "deliverables": [
+          {
+            "kind": "commercial",
+            "dueInDays": 50,
+            "status": "scheduled"
+          }
+        ]
+      },
+      {
+        "athlete": "Kayla Moreno",
+        "brand": "Volt Energy",
+        "ownerEmail": "priya@meridiansports.example",
+        "status": "negotiating",
+        "activate": true,
+        "termStartInDays": -30,
+        "termEndInDays": 150,
+        "totalValueCents": 15000000,
+        "commissionBps": 1500,
+        "exclusivityCategory": "energy drinks",
+        "territory": "United States",
+        "paymentTerms": "Net 30 from invoice",
+        "deliverables": [
+          {
+            "kind": "social_post",
+            "dueInDays": 2,
+            "status": "scheduled"
+          },
+          {
+            "kind": "social_post",
+            "dueInDays": 16,
+            "status": "scheduled"
+          }
+        ]
+      },
+      {
+        "athlete": "Brandon Cho",
+        "brand": "Northline Apparel",
+        "ownerEmail": "priya@meridiansports.example",
+        "status": "negotiating",
+        "activate": true,
+        "termStartInDays": -15,
+        "termEndInDays": 200,
+        "totalValueCents": 24000000,
+        "commissionBps": 1500,
+        "exclusivityCategory": "athletic footwear",
+        "territory": "United States",
+        "paymentTerms": "Net 30 from invoice",
+        "deliverables": [
+          {
+            "kind": "photo_shoot",
+            "dueInDays": 20,
+            "status": "scheduled"
+          }
+        ]
+      },
+      {
+        "athlete": "Jalen Carter",
+        "brand": "Volt Energy",
+        "ownerEmail": "priya@meridiansports.example",
+        "status": "negotiating",
+        "activate": true,
+        "termStartInDays": -30,
+        "termEndInDays": 200,
+        "totalValueCents": 200000000,
+        "commissionBps": 1500,
+        "exclusivityCategory": "athletic footwear",
+        "territory": "United States",
+        "paymentTerms": "Net 30 from invoice",
+        "deliverables": [
+          {
+            "kind": "social_post",
+            "dueInDays": 10,
+            "status": "scheduled"
+          }
+        ]
+      }
+    ],
+    "splits": [
+      {
+        "athlete": "Jalen Carter",
+        "userEmail": "marcus@meridiansports.example",
+        "shareBps": 7000
+      },
+      {
+        "athlete": "Andre Mitchell",
+        "userEmail": "dana@meridiansports.example",
+        "shareBps": 7000
+      },
+      {
+        "athlete": "Cole Brannigan",
+        "userEmail": "dana@meridiansports.example",
+        "shareBps": 7000
+      },
+      {
+        "athlete": "Terrence Fields",
+        "userEmail": "marcus@meridiansports.example",
+        "shareBps": 7000
+      },
+      {
+        "athlete": "Devin Park",
+        "userEmail": "marcus@meridiansports.example",
+        "shareBps": 7000
+      },
+      {
+        "athlete": "Aaliyah Brooks",
+        "userEmail": "elena@meridiansports.example",
+        "shareBps": 7000
+      },
+      {
+        "athlete": "Simone Reyes",
+        "userEmail": "elena@meridiansports.example",
+        "shareBps": 7000
+      },
+      {
+        "athlete": "Mateo Silva",
+        "userEmail": "elena@meridiansports.example",
+        "shareBps": 7000
+      },
+      {
+        "athlete": "Kayla Moreno",
+        "userEmail": "marcus@meridiansports.example",
+        "shareBps": 7000
+      },
+      {
+        "athlete": "Brandon Cho",
+        "userEmail": "dana@meridiansports.example",
+        "shareBps": 7000
+      },
+      {
+        "athlete": "Jalen Carter",
+        "userEmail": "priya@meridiansports.example",
+        "shareBps": 3000
+      },
+      {
+        "athlete": "Andre Mitchell",
+        "userEmail": "priya@meridiansports.example",
+        "shareBps": 3000
+      },
+      {
+        "athlete": "Cole Brannigan",
+        "userEmail": "priya@meridiansports.example",
+        "shareBps": 3000
+      },
+      {
+        "athlete": "Terrence Fields",
+        "userEmail": "priya@meridiansports.example",
+        "shareBps": 3000
+      },
+      {
+        "athlete": "Devin Park",
+        "userEmail": "priya@meridiansports.example",
+        "shareBps": 3000
+      },
+      {
+        "athlete": "Aaliyah Brooks",
+        "userEmail": "priya@meridiansports.example",
+        "shareBps": 3000
+      },
+      {
+        "athlete": "Simone Reyes",
+        "userEmail": "priya@meridiansports.example",
+        "shareBps": 3000
+      },
+      {
+        "athlete": "Mateo Silva",
+        "userEmail": "priya@meridiansports.example",
+        "shareBps": 3000
+      },
+      {
+        "athlete": "Kayla Moreno",
+        "userEmail": "priya@meridiansports.example",
+        "shareBps": 3000
+      },
+      {
+        "athlete": "Brandon Cho",
+        "userEmail": "priya@meridiansports.example",
+        "shareBps": 3000
+      }
+    ],
+    "paymentProviders": [
+      {
+        "name": "Stripe",
+        "code": "pp_stripe_stripe",
+        "isInstalled": true,
+        "createPaymentFunction": "stripe",
+        "capturePaymentFunction": "stripe",
+        "refundPaymentFunction": "stripe",
+        "getPaymentStatusFunction": "stripe",
+        "generatePaymentLinkFunction": "stripe",
+        "handleWebhookFunction": "stripe"
+      },
+      {
+        "name": "Manual / Wire",
+        "code": "pp_system_default",
+        "isInstalled": true,
+        "createPaymentFunction": "manual",
+        "capturePaymentFunction": "manual",
+        "refundPaymentFunction": "manual",
+        "getPaymentStatusFunction": "manual",
+        "generatePaymentLinkFunction": "manual",
+        "handleWebhookFunction": "manual"
+      }
+    ],
+    "money": {
+      "receive": 14,
+      "trustAthlete": "Andre Mitchell",
+      "trustDepositCents": 8000000
+    }
+  },
+  "minimal": {
+    "agency": {
+      "name": "Meridian Sports Group",
+      "defaultPlayingCommissionBps": 300,
+      "defaultEndorsementCommissionBps": 1500,
+      "currencyCode": "USD",
+      "fiscalYearStart": 1,
+      "refundApprovalThresholdCents": 100000
+    },
+    "roles": [
+      {
+        "name": "Owner",
+        "permissions": [
+          "*"
+        ]
+      },
+      {
+        "name": "Agent",
+        "permissions": [
+          "canAccessDashboard",
+          "canSeeOtherPeople",
+          "canManageAthletes",
+          "canManageContracts",
+          "canManageEndorsements",
+          "canReadPayments"
+        ]
+      },
+      {
+        "name": "Marketing Rep",
+        "permissions": [
+          "canAccessDashboard",
+          "canSeeOtherPeople",
+          "canManageAthletes",
+          "canManageEndorsements"
+        ]
+      },
+      {
+        "name": "Accountant",
+        "permissions": [
+          "canAccessDashboard",
+          "canSeeOtherPeople",
+          "canViewAllClients",
+          "canManageCommissions",
+          "canManageTrust",
+          "canManagePayments",
+          "canReadPayments",
+          "canIssueRefunds",
+          "canReadAudit"
+        ]
+      },
+      {
+        "name": "Customer",
+        "permissions": []
+      }
+    ],
+    "staff": [
+      {
+        "name": "Marcus Bell",
+        "email": "marcus@meridiansports.example",
+        "role": "Agent"
+      }
+    ],
+    "certifications": [
+      {
+        "userEmail": "marcus@meridiansports.example",
+        "body": "NBPA",
+        "number": "NBPA-7731",
+        "issuedAt": "2023-01-15",
+        "expiresInDays": 300
+      }
+    ],
+    "teams": [
+      {
+        "name": "Chicago Lakers",
+        "league": "NBA",
+        "city": "Chicago"
+      }
+    ],
+    "athletes": [
+      {
+        "fullName": "Terrence Fields",
+        "preferredName": "Terrence",
+        "sport": "Basketball",
+        "league": "NBA",
+        "position": "PG",
+        "status": "client",
+        "leadAgentEmail": "marcus@meridiansports.example",
+        "supportEmails": [],
+        "email": "terrence.fields@clients.meridiansports.example",
+        "phone": "+1 512 555 0113",
+        "recruitingStage": "signed",
+        "isPublic": true,
+        "socialHandles": {
+          "instagram": "@terrence_fields"
+        },
+        "followerCounts": {
+          "instagram": 119000
+        },
+        "marketabilityNotes": "Strong regional following.",
+        "eligibility": {
+          "nilEligible": false
+        },
+        "team": "Chicago Lakers",
+        "representationStartedAt": "2025-06-01"
+      }
+    ],
+    "agreements": [
+      {
+        "athlete": "Terrence Fields",
+        "agentEmail": "marcus@meridiansports.example",
+        "scope": "both",
+        "playingCommissionBps": 300,
+        "marketingCommissionBps": 1500,
+        "capBps": 300,
+        "effectiveAt": "2025-06-01",
+        "expiresInDays": 900,
+        "terminationNoticeDays": 30,
+        "status": "filed_with_union"
+      }
+    ],
+    "contacts": [],
+    "brands": [
+      {
+        "name": "Summit Bank",
+        "category": "Financial services",
+        "website": "https://summitbank.example",
+        "contacts": []
+      }
+    ],
+    "contracts": [
+      {
+        "athlete": "Terrence Fields",
+        "team": "Chicago Lakers",
+        "league": "NBA",
+        "contractType": "veteran",
+        "startSeason": "2026",
+        "endSeason": "2027",
+        "totalValueCents": 700000000,
+        "guaranteedCents": 350000000,
+        "signingBonusCents": 350000000,
+        "status": "signed",
+        "signedAt": "2025-07-01",
+        "years": [
+          {
+            "season": "2026",
+            "baseSalaryCents": 340000000,
+            "guaranteedCents": 170000000,
+            "rosterBonusCents": 0,
+            "workoutBonusCents": 0,
+            "payPeriods": 24,
+            "paySchedule": "semi_monthly"
+          },
+          {
+            "season": "2027",
+            "baseSalaryCents": 360000000,
+            "guaranteedCents": 180000000,
+            "rosterBonusCents": 0,
+            "workoutBonusCents": 0,
+            "payPeriods": 24,
+            "paySchedule": "semi_monthly"
+          }
+        ],
+        "incentives": [
+          {
+            "description": "Pro Bowl / All-Star selection",
+            "amountCents": 50000000,
+            "likelyToBeEarned": false,
+            "status": "pending"
+          }
+        ]
+      }
+    ],
+    "deals": [
+      {
+        "athlete": "Terrence Fields",
+        "brand": "Summit Bank",
+        "ownerEmail": "marcus@meridiansports.example",
+        "status": "negotiating",
+        "activate": true,
+        "termStartInDays": -100,
+        "termEndInDays": 265,
+        "totalValueCents": 400000000,
+        "commissionBps": 1500,
+        "exclusivityCategory": "financial services",
+        "territory": "United States",
+        "paymentTerms": "Net 30 from invoice",
+        "deliverables": [
+          {
+            "kind": "appearance",
+            "dueInDays": 3,
+            "status": "scheduled"
+          },
+          {
+            "kind": "autograph_session",
+            "dueInDays": 40,
+            "status": "scheduled"
+          }
+        ]
+      }
+    ],
+    "splits": [
+      {
+        "athlete": "Terrence Fields",
+        "userEmail": "marcus@meridiansports.example",
+        "shareBps": 10000
+      }
+    ],
+    "paymentProviders": [
+      {
+        "name": "Stripe",
+        "code": "pp_stripe_stripe",
+        "isInstalled": true,
+        "createPaymentFunction": "stripe",
+        "capturePaymentFunction": "stripe",
+        "refundPaymentFunction": "stripe",
+        "getPaymentStatusFunction": "stripe",
+        "generatePaymentLinkFunction": "stripe",
+        "handleWebhookFunction": "stripe"
+      },
+      {
+        "name": "Manual / Wire",
+        "code": "pp_system_default",
+        "isInstalled": true,
+        "createPaymentFunction": "manual",
+        "capturePaymentFunction": "manual",
+        "refundPaymentFunction": "manual",
+        "getPaymentStatusFunction": "manual",
+        "generatePaymentLinkFunction": "manual",
+        "handleWebhookFunction": "manual"
+      }
+    ],
+    "money": {
+      "receive": 3
+    }
+  }
+}

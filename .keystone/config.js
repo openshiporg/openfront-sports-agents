@@ -1451,7 +1451,7 @@ async function command(context, permission, athleteId, action, args, fn) {
     const safe = JSON.parse(JSON.stringify(result, (_, v) => typeof v === "bigint" ? v.toString() : v));
     await updateIdempotencyAttempt(tx, attempt.id, "completed", safe, 200);
     return safe;
-  }, { timeout: 2e4 });
+  }, { timeout: 6e4, maxWait: 15e3 });
 }
 async function transition(tx, context, model, id, from, to, requestId, extra = {}) {
   const before = await tx[model].findUnique({ where: { id } });
@@ -1526,18 +1526,19 @@ var agencyMutations = {
       const current = await tx[a.contractId ? "playingContract" : "endorsementDeal"].findUnique({ where: { id: row.id } });
       if (!["signed", "active"].includes(current.status)) throw new Error("Signed source required");
       const periods = a.contractId ? await tx.contractYear.findMany({ where: { contractId: row.id } }) : [{ id: row.id, baseSalaryCents: current.totalValueCents, payPeriods: 1, season: new Date(current.termStart || Date.now()).getUTCFullYear().toString() }];
-      const records = [];
+      const rows = [];
       for (const year of periods) {
         const amounts = installmentAmounts(a.contractId ? year.baseSalaryCents + year.rosterBonusCents + year.workoutBonusCents : year.baseSalaryCents, year.payPeriods);
         for (let i = 0; i < amounts.length; i++) {
           const sourceKey = (a.contractId ? "contract:" : "deal:") + year.id + ":" + i;
-          const dueAt = a.contractId ? new Date(Date.UTC(Number(year.season), 8, 1 + i * 7)) : current.termStart || /* @__PURE__ */ new Date();
-          const data = { sourceKey, athleteId: row.athleteId, ...a.contractId ? { contractYearId: year.id } : { endorsementDealId: row.id }, dueAt, grossCents: amounts[i], commissionBps: current.commissionBps, currencyCode: current.currencyCode, status: "scheduled" };
-          records.push(await tx.scheduledPayment.upsert({ where: { sourceKey }, update: {}, create: data }));
+          const dueAt = a.contractId ? new Date(Date.UTC(Number(year.season), 10, 1 + i * 7)) : current.termStart || /* @__PURE__ */ new Date();
+          rows.push({ sourceKey, athleteId: row.athleteId, ...a.contractId ? { contractYearId: year.id } : { endorsementDealId: row.id }, dueAt, grossCents: amounts[i], commissionBps: current.commissionBps, currencyCode: current.currencyCode, status: "scheduled" });
         }
       }
+      const created = await tx.scheduledPayment.createMany({ data: rows, skipDuplicates: true });
+      const records = { length: created.count };
       await audit(tx, c, "schedule.generated", "Athlete", row.athleteId, null, { count: records.length }, a.idempotencyKey);
-      return { count: records.length };
+      return { count: rows.length, created: records.length };
     });
   },
   async markPaymentReceived(_, a, c) {
@@ -1562,6 +1563,17 @@ var agencyMutations = {
       }
       await audit(tx, c, "invoice.created", "CommissionInvoice", invoice.id, null, invoice, a.idempotencyKey);
       return invoice;
+    });
+  },
+  async voidCommissionInvoice(_, a, c) {
+    const row = await locate(c, "commissionInvoice", a.invoiceId);
+    return command(c, "canManageCommissions", row.athleteId, "voidCommissionInvoice", a, async (tx) => {
+      const inv = await tx.commissionInvoice.findUnique({ where: { id: row.id } });
+      if (inv.paidCents > 0) throw new Error("Reverse payments before voiding a paid invoice");
+      if (!a.reason?.trim()) throw new Error("Void reason required");
+      const result = await transition(tx, c, "commissionInvoice", row.id, ["draft", "sent"], "void", a.idempotencyKey);
+      await tx.scheduledPayment.updateMany({ where: { invoiceId: row.id }, data: { invoiceId: null } });
+      return result;
     });
   },
   async sendCommissionInvoice(_, a, c) {
@@ -1590,7 +1602,15 @@ var agencyMutations = {
       const reversed = await tx.commissionLedgerEntry.findUnique({ where: { reversalKey: row.id } });
       if (!a.reason?.trim()) throw new Error("Reversal reason required");
       const amount = exactReversal(original.amountCents, original.entryType === "reversal", Boolean(reversed));
-      const result = await tx.commissionLedgerEntry.create({ data: { entryKey: "reversal:" + row.id, reversalKey: row.id, reversesId: row.id, athleteId: row.athleteId, invoiceId: original.invoiceId, scheduledPaymentId: original.scheduledPaymentId, entryType: "reversal", amountCents: amount, reason: a.reason, preparedById: c.session.itemId, occurredAt: /* @__PURE__ */ new Date(), currencyCode: original.currencyCode } });
+      if (original.entryType === "accrual" && original.scheduledPaymentId && (await tx.scheduledPayment.findUnique({ where: { id: original.scheduledPaymentId } })).invoiceId) throw new Error("Void the invoice before reversing its accrual");
+      const reverseOne = (e, amt) => tx.commissionLedgerEntry.create({ data: { entryKey: "reversal:" + e.id, reversalKey: e.id, reversesId: e.id, athleteId: e.athleteId, invoiceId: e.invoiceId, scheduledPaymentId: e.scheduledPaymentId, payeeUserId: e.payeeUserId, entryType: "reversal", amountCents: amt, reason: a.reason, preparedById: c.session.itemId, occurredAt: /* @__PURE__ */ new Date(), currencyCode: e.currencyCode } });
+      const result = await reverseOne(original, amount);
+      if (original.entryType === "receipt" && original.invoiceId) {
+        const inv = await tx.commissionInvoice.findUnique({ where: { id: original.invoiceId } });
+        const paid = Math.max(0, inv.paidCents + Number(original.amountCents));
+        await tx.commissionInvoice.update({ where: { id: inv.id }, data: { paidCents: paid, status: paid === 0 ? "sent" : "partially_paid" } });
+        for (const split of await tx.commissionLedgerEntry.findMany({ where: { entryType: "split_to_agent", entryKey: { startsWith: "split:" + original.id + ":" } } })) await reverseOne(split, exactReversal(split.amountCents, false, false));
+      }
       await audit(tx, c, "ledger.reversed", "CommissionLedgerEntry", result.id, original, result, a.idempotencyKey);
       return result;
     });
@@ -1631,6 +1651,31 @@ var agencyMutations = {
       return result;
     });
   },
+  async activateEndorsementDeal(_, a, c) {
+    const row = await locate(c, "endorsementDeal", a.dealId);
+    const clash = async (db) => row.termStart && row.termEnd && row.exclusivityCategory ? db.endorsementDeal.findFirst({ where: { athleteId: row.athleteId, id: { not: row.id }, exclusivityCategory: row.exclusivityCategory, status: { in: ["signed", "active"] }, termStart: { lte: row.termEnd }, termEnd: { gte: row.termStart } }, select: { id: true } }) : null;
+    if (await clash(c.prisma)) {
+      await c.prisma.auditEvent.create({ data: { actorId: c.session?.itemId, action: "deal.conflict_blocked", targetList: "EndorsementDeal", targetId: row.id, after: { category: row.exclusivityCategory }, reason: "Exclusivity conflict with an active deal", requestId: a.idempotencyKey } }).catch(() => null);
+      throw new Error("Exclusivity conflict with an active deal");
+    }
+    return command(c, "canManageEndorsements", row.athleteId, "activateEndorsementDeal", a, async (tx) => {
+      if (await clash(tx)) throw new Error("Exclusivity conflict with an active deal");
+      return transition(tx, c, "endorsementDeal", row.id, ["prospect", "negotiating", "signed"], "active", a.idempotencyKey);
+    });
+  },
+  async generateAutoTasks(_, a, c) {
+    if (!c.session?.itemId || !permissions.canManageAthletes({ session: c.session })) throw new Error("Not authorized");
+    const db = c.prisma, now = Date.now(), day = 864e5, out = [];
+    const make = async (autoKey, title, dueAt, extra, assigneeId) => {
+      if (await db.task.findUnique({ where: { autoKey } })) return;
+      out.push(await db.task.create({ data: { autoKey, title, dueAt, priority: "high", status: "open", ...assigneeId ? { assigneeId } : {}, ...extra } }));
+    };
+    for (const x of await db.agentCertification.findMany({ where: { status: "active", expiresAt: { lte: new Date(now + 60 * day) } }, take: 200 })) await make("cert:" + x.id, "Renew agent certification", x.expiresAt, {}, x.userId);
+    for (const x of await db.representationAgreement.findMany({ where: { status: { in: ["signed", "filed_with_union", "active"] }, expiresAt: { lte: new Date(now + 90 * day) } }, include: { athlete: true }, take: 200 })) await make("agreement:" + x.id, "Agreement expiring", x.expiresAt, { athleteId: x.athleteId }, x.athlete?.leadAgentId);
+    for (const x of await db.deliverable.findMany({ where: { status: "scheduled", dueAt: { lte: new Date(now + 7 * day) } }, include: { deal: true }, take: 200 })) await make("deliverable:" + x.id, "Deliverable due", x.dueAt, { athleteId: x.deal?.athleteId, dealId: x.dealId }, x.deal?.ownerId);
+    for (const x of await db.scheduledPayment.findMany({ where: { status: { in: ["scheduled", "late"] }, dueAt: { lt: new Date(now) } }, include: { athlete: true }, take: 200 })) await make("payment:" + x.id, "Overdue payment follow-up", x.dueAt, { athleteId: x.athleteId }, x.athlete?.leadAgentId);
+    return { created: out.length };
+  },
   async completeDeliverable(_, a, c) {
     const row = await locate(c, "deliverable", a.deliverableId, { deal: true });
     return command(c, "canManageEndorsements", row.deal.athleteId, "completeDeliverable", a, async (tx) => {
@@ -1659,13 +1704,195 @@ var agencyTypeDefs = `
  markPaymentReceived(scheduledPaymentId:ID!,idempotencyKey:String!):AgencyJSON!
  draftCommissionInvoice(athleteId:ID!,scheduledPaymentIds:[ID!]!,idempotencyKey:String!):AgencyJSON!
  sendCommissionInvoice(invoiceId:ID!,idempotencyKey:String!):AgencyJSON!
+ voidCommissionInvoice(invoiceId:ID!,reason:String!,idempotencyKey:String!):AgencyJSON!
  recordInvoicePayment(invoiceId:ID!,amountCents:Int!,reference:String!,idempotencyKey:String!):AgencyJSON!
  reverseLedgerEntry(entryId:ID!,reason:String!,idempotencyKey:String!):AgencyJSON!
  postTrustEntry(accountId:ID!,entryType:String!,amountCents:Int!,reference:String!,invoiceId:ID,reversesId:ID,idempotencyKey:String!):AgencyJSON!
  moveRecruitingStage(athleteId:ID!,stage:String!,idempotencyKey:String!):AgencyJSON!
  completeDeliverable(deliverableId:ID!,proofLink:String!,idempotencyKey:String!):AgencyJSON!
+ activateEndorsementDeal(dealId:ID!,idempotencyKey:String!):AgencyJSON!
+ generateAutoTasks:AgencyJSON!
  }
 `;
+
+// features/keystone/mutations/ensureOnboardingRecord.ts
+var import_node_crypto4 = __toESM(require("node:crypto"));
+var dt = (v) => v ? new Date(v) : void 0;
+var days = (n) => new Date(Date.now() + n * 864e5);
+var clean = (o) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== void 0));
+async function must(db, model, where, label) {
+  const row = await db[model].findFirst({ where });
+  if (!row) throw new Error(`${label} not found`);
+  return row;
+}
+async function findOrCreate(db, model, where, data) {
+  return await db[model].findFirst({ where }) || db[model].create({ data });
+}
+var handlers = {
+  async Agency(c, d) {
+    const db = c.prisma;
+    return await db.agency.findFirst() || db.agency.create({ data: d });
+  },
+  async Role(c, d) {
+    const db = c.prisma;
+    const flags = Object.fromEntries(permissionNames.map((n) => [n, (d.permissions || []).includes(n) || d.permissions?.includes("*")]));
+    return await db.role.findFirst({ where: { name: d.name } }) || db.role.create({ data: { name: d.name, ...flags } });
+  },
+  async Staff(c, d) {
+    const db = c.prisma;
+    const existing = await db.user.findFirst({ where: { email: d.email } });
+    if (existing) return existing;
+    const role = await must(db, "role", { name: d.role }, "Role");
+    return c.sudo().query.User.createOne({ data: { name: d.name, email: d.email, password: import_node_crypto4.default.randomBytes(18).toString("base64url"), role: { connect: { id: role.id } } }, query: "id" });
+  },
+  async AgentCertification(c, d) {
+    const db = c.prisma;
+    const user = await must(db, "user", { email: d.userEmail }, "Agent");
+    return findOrCreate(db, "agentCertification", { number: d.number }, { userId: user.id, body: d.body, number: d.number, issuedAt: dt(d.issuedAt), expiresAt: d.expiresInDays != null ? days(d.expiresInDays) : dt(d.expiresAt), status: d.status || "active" });
+  },
+  async Team(c, d) {
+    return findOrCreate(c.prisma, "team", { name: d.name, league: d.league }, d);
+  },
+  async Athlete(c, d) {
+    const db = c.prisma;
+    const lead = d.leadAgentEmail ? await must(db, "user", { email: d.leadAgentEmail }, "Lead agent") : null;
+    const team = d.team ? await must(db, "team", { name: d.team }, "Team") : null;
+    const support = d.supportEmails?.length ? await db.user.findMany({ where: { email: { in: d.supportEmails } }, select: { id: true } }) : [];
+    const { leadAgentEmail, team: _t, supportEmails, dateOfBirth, representationStartedAt, contactAllowedInDays, ...rest } = d;
+    const existing = await db.athlete.findFirst({ where: { fullName: d.fullName } });
+    if (existing) return existing;
+    return db.athlete.create({ data: clean({ ...rest, dateOfBirth: dt(dateOfBirth), representationStartedAt: dt(representationStartedAt), contactAllowedFrom: contactAllowedInDays != null ? days(contactAllowedInDays) : void 0, leadAgentId: lead?.id, teamId: team?.id, supportStaff: support.length ? { connect: support } : void 0 }) });
+  },
+  async RepresentationAgreement(c, d) {
+    const db = c.prisma;
+    const athlete = await must(db, "athlete", { fullName: d.athlete }, "Athlete");
+    const agent = await must(db, "user", { email: d.agentEmail }, "Agent");
+    const { athlete: _a, agentEmail, effectiveAt, expiresAt, expiresInDays, ...rest } = d;
+    return findOrCreate(db, "representationAgreement", { athleteId: athlete.id, scope: d.scope }, clean({ ...rest, athleteId: athlete.id, agentId: agent.id, effectiveAt: dt(effectiveAt), expiresAt: expiresInDays != null ? days(expiresInDays) : dt(expiresAt), filedAt: d.status === "filed_with_union" || d.status === "active" ? dt(effectiveAt) : void 0 }));
+  },
+  async Contact(c, d) {
+    const db = c.prisma;
+    const athletes = d.athletes?.length ? await db.athlete.findMany({ where: { fullName: { in: d.athletes } }, select: { id: true } }) : [];
+    const { athletes: _a, ...rest } = d;
+    return findOrCreate(db, "contact", { name: d.name, org: d.org }, { ...rest, athletes: athletes.length ? { connect: athletes } : void 0 });
+  },
+  async Brand(c, d) {
+    const db = c.prisma;
+    const contacts = d.contacts?.length ? await db.contact.findMany({ where: { name: { in: d.contacts } }, select: { id: true } }) : [];
+    const { contacts: _c, ...rest } = d;
+    return findOrCreate(db, "brand", { name: d.name }, { ...rest, contacts: contacts.length ? { connect: contacts } : void 0 });
+  },
+  async PlayingContract(c, d) {
+    const db = c.prisma;
+    const athlete = await must(db, "athlete", { fullName: d.athlete }, "Athlete");
+    const team = d.team ? await must(db, "team", { name: d.team }, "Team") : null;
+    const agreement = await must(db, "representationAgreement", { athleteId: athlete.id, scope: { in: ["playing", "both"] } }, "Playing agreement");
+    const existing = await db.playingContract.findFirst({ where: { athleteId: athlete.id, startSeason: d.startSeason } });
+    if (existing) return existing;
+    const { athlete: _a, team: _t, years = [], incentives = [], signedAt, ...rest } = d;
+    const contract = await db.playingContract.create({ data: clean({ ...rest, athleteId: athlete.id, teamId: team?.id, representationAgreementId: agreement.id, commissionBps: agreement.playingCommissionBps, signedAt: dt(signedAt) }) });
+    for (const y of years) await db.contractYear.create({ data: { ...y, contractId: contract.id } });
+    for (const i of incentives) await db.incentive.create({ data: { ...i, contractId: contract.id } });
+    return contract;
+  },
+  async EndorsementDeal(c, d) {
+    const db = c.prisma;
+    const athlete = await must(db, "athlete", { fullName: d.athlete }, "Athlete");
+    const brand = await must(db, "brand", { name: d.brand }, "Brand");
+    const owner = await must(db, "user", { email: d.ownerEmail }, "Owner");
+    const termStart = d.termStartInDays != null ? days(d.termStartInDays) : dt(d.termStart);
+    const termEnd = d.termEndInDays != null ? days(d.termEndInDays) : dt(d.termEnd);
+    const existing = await db.endorsementDeal.findFirst({ where: { athleteId: athlete.id, brandId: brand.id, exclusivityCategory: d.exclusivityCategory } });
+    if (existing) return existing;
+    const { athlete: _a, brand: _b, ownerEmail, deliverables = [], termStartInDays, termEndInDays, activate, status, ...rest } = d;
+    const deal = await db.endorsementDeal.create({ data: clean({ ...rest, athleteId: athlete.id, brandId: brand.id, ownerId: owner.id, termStart, termEnd, status: activate ? "negotiating" : status, commissionBps: rest.commissionBps ?? 1500 }) });
+    for (const x of deliverables) await db.deliverable.create({ data: clean({ dealId: deal.id, kind: x.kind, notes: x.notes, status: x.status || "scheduled", dueAt: days(x.dueInDays), completedAt: x.status === "completed" ? days(x.dueInDays) : void 0, proofLink: x.status === "completed" ? "https://proof.meridiansports.example/" + import_node_crypto4.default.randomBytes(4).toString("hex") : void 0 }) });
+    if (activate) {
+      try {
+        await agencyMutations.activateEndorsementDeal(null, { dealId: deal.id, idempotencyKey: "seed:activate:" + deal.id }, c);
+      } catch (e) {
+        if (!/Exclusivity/.test(e.message)) throw e;
+      }
+    }
+    return deal;
+  },
+  async AgentSplit(c, d) {
+    const db = c.prisma;
+    const athlete = await must(db, "athlete", { fullName: d.athlete }, "Athlete");
+    const user = await must(db, "user", { email: d.userEmail }, "Agent");
+    return findOrCreate(db, "agentSplit", { athleteId: athlete.id, userId: user.id }, { athleteId: athlete.id, userId: user.id, shareBps: d.shareBps });
+  },
+  async PaymentProvider(c, d) {
+    return findOrCreate(c.prisma, "paymentProvider", { code: d.code }, d);
+  },
+  // Money: runs the same domain commands as operators (schedule, receipt/accrual, invoice, payment, reversal, trust).
+  async Money(c, d) {
+    const db = c.prisma;
+    const run = (name, args) => agencyMutations[name](null, args, c);
+    for (const contract of await db.playingContract.findMany({ where: { status: "signed" } })) await run("generatePaymentSchedule", { contractId: contract.id, idempotencyKey: "seed:sched:" + contract.id });
+    for (const deal of await db.endorsementDeal.findMany({ where: { status: "active" } })) await run("generatePaymentSchedule", { dealId: deal.id, idempotencyKey: "seed:sched:" + deal.id });
+    const dueAll = await db.scheduledPayment.findMany({ where: { status: "scheduled", dueAt: { lt: /* @__PURE__ */ new Date() } }, orderBy: [{ dueAt: "asc" }, { id: "asc" }], take: 500 });
+    const taken = /* @__PURE__ */ new Map();
+    const due = dueAll.filter((p) => {
+      const n = taken.get(p.athleteId) || 0;
+      if (n >= 3 || [...taken.values()].reduce((a, b) => a + b, 0) >= (d.receive ?? 14)) return false;
+      taken.set(p.athleteId, n + 1);
+      return true;
+    });
+    for (const p of due) await run("markPaymentReceived", { scheduledPaymentId: p.id, idempotencyKey: "seed:recv:" + p.id });
+    await db.scheduledPayment.updateMany({ where: { status: "scheduled", dueAt: { lt: days(-30) } }, data: { status: "late" } });
+    const received = await db.scheduledPayment.findMany({ where: { status: "received", invoiceId: null, commissionCents: { gt: 0 } }, orderBy: { id: "asc" } });
+    const byAthlete = /* @__PURE__ */ new Map();
+    for (const p of received) byAthlete.set(p.athleteId, [...byAthlete.get(p.athleteId) || [], p]);
+    const plan = ["draft", "sent", "partially_paid", "paid", "void"];
+    let i = 0;
+    let firstReceipt = null;
+    for (const [athleteId, list13] of byAthlete) {
+      if (i >= plan.length) break;
+      const status = plan[i++];
+      const invoice = await run("draftCommissionInvoice", { athleteId, scheduledPaymentIds: list13.slice(0, 3).map((p) => p.id), idempotencyKey: "seed:inv:" + athleteId });
+      if (status === "void") {
+        await run("voidCommissionInvoice", { invoiceId: invoice.id, reason: "Issued in error", idempotencyKey: "seed:void:" + invoice.id });
+        continue;
+      }
+      if (status === "draft") continue;
+      await run("sendCommissionInvoice", { invoiceId: invoice.id, idempotencyKey: "seed:send:" + invoice.id });
+      if (status === "partially_paid") await run("recordInvoicePayment", { invoiceId: invoice.id, amountCents: Math.max(1, Math.floor(invoice.totalCents / 2)), reference: "Wire received", idempotencyKey: "seed:pay:" + invoice.id });
+      if (status === "paid") await run("recordInvoicePayment", { invoiceId: invoice.id, amountCents: invoice.totalCents, reference: "Wire received", idempotencyKey: "seed:pay:" + invoice.id });
+    }
+    const open = await db.commissionInvoice.findFirst({ where: { status: "sent" }, orderBy: { number: "asc" } });
+    if (open) {
+      await run("recordInvoicePayment", { invoiceId: open.id, amountCents: 1e5, reference: "Wire posted to wrong client", idempotencyKey: "seed:misposted:" + open.id });
+      const bad = await db.commissionLedgerEntry.findFirst({ where: { invoiceId: open.id, entryType: "receipt" } });
+      if (bad) await run("reverseLedgerEntry", { entryId: bad.id, reason: "Misposted wire corrected by accounting", idempotencyKey: "seed:rev:" + bad.id });
+    }
+    const trustAthlete = d.trustAthlete ? await db.athlete.findFirst({ where: { fullName: d.trustAthlete } }) : null;
+    if (trustAthlete) {
+      const account = await findOrCreate(db, "clientTrustAccount", { athleteId: trustAthlete.id }, { athleteId: trustAthlete.id, name: trustAthlete.fullName + " client funds", currencyCode: "USD" });
+      await run("postTrustEntry", { accountId: account.id, entryType: "deposit", amountCents: d.trustDepositCents || 5e6, reference: "Endorsement payment held for client", idempotencyKey: "seed:trust:dep:" + account.id });
+    }
+    await run("generateAutoTasks", {});
+    return { id: "money" };
+  }
+};
+async function ensureOnboardingRecord(_root, { entity, data }, context) {
+  if (!context.session?.itemId || !permissions.canManageOnboarding({ session: context.session })) throw new Error("Not authorized");
+  const handler = handlers[entity];
+  if (!handler) throw new Error("Unsupported setup record");
+  const record = await handler(context, data);
+  if (!record?.id) throw new Error(`${entity} setup did not return a persisted record`);
+  return { id: record.id };
+}
+
+// features/keystone/mutations/updateActiveUser.ts
+async function updateActiveUser(_root, { data }, context) {
+  if (!isSignedIn({ session: context.session })) throw new Error("Not authenticated");
+  const allowed = /* @__PURE__ */ new Set(["email", "name", "phone", "password", "onboardingStatus"]);
+  if (Object.keys(data || {}).some((key) => !allowed.has(key))) throw new Error("Unsupported profile field");
+  if (data.onboardingStatus && !["not_started", "in_progress", "completed", "dismissed"].includes(data.onboardingStatus)) throw new Error("Invalid onboarding status");
+  const user = await context.sudo().db.User.updateOne({ where: { id: context.session.itemId }, data });
+  return { id: user.id, onboardingStatus: user.onboardingStatus };
+}
 
 // features/keystone/mutations/portal.ts
 async function portalAthlete(c) {
@@ -1707,14 +1934,16 @@ function extendGraphqlSchema(baseSchema) {
       type Query {
         redirectToInit: Boolean
       }
-    ` + agencyTypeDefs + portalTypeDefs,
+    ` + agencyTypeDefs + portalTypeDefs + `
+      extend type Mutation { ensureOnboardingRecord(entity:String!,data:AgencyJSON!):AgencyJSON! updateActiveUser(data:AgencyJSON!):AgencyJSON! }
+    `,
     resolvers: {
       Query: {
         redirectToInit: redirectToInit_default,
         ...agencyQueries,
         ...portalQueries
       },
-      Mutation: { ...agencyMutations, ...portalMutations }
+      Mutation: { ...agencyMutations, ...portalMutations, ensureOnboardingRecord, updateActiveUser }
     }
   });
 }

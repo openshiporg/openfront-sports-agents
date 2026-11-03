@@ -1,3 +1,4 @@
+import {permissions} from '../access';
 import {command,audit,transition,humanCode,authorizeAthlete} from '../lib/agencyCommand';
 import {commission,allocateCommission,installmentAmounts,trustBalance,exactReversal} from '../lib/commission';
 async function locate(context:any,model:string,id:string,include:any={}){if(!context.session)throw new Error('Not authorized');const row=await context.prisma[model].findUnique({where:{id},include});if(!row)throw new Error('Record not found');return row;}
@@ -18,11 +19,12 @@ export const agencyMutations = {
  async generatePaymentSchedule(_:unknown,a:any,c:any){if(Boolean(a.contractId)===Boolean(a.dealId))throw new Error('Choose contract or endorsement');const row=await locate(c,a.contractId?'playingContract':'endorsementDeal',a.contractId||a.dealId);return command(c,'canManageCommissions',row.athleteId,'generatePaymentSchedule',a,async tx=>{
  const current=await tx[a.contractId?'playingContract':'endorsementDeal'].findUnique({where:{id:row.id}});if(!['signed','active'].includes(current.status))throw new Error('Signed source required');
  const periods=a.contractId?await tx.contractYear.findMany({where:{contractId:row.id}}):[{id:row.id,baseSalaryCents:current.totalValueCents,payPeriods:1,season:new Date(current.termStart||Date.now()).getUTCFullYear().toString()}];
- const records=[];for(const year of periods){const amounts=installmentAmounts(a.contractId?year.baseSalaryCents+year.rosterBonusCents+year.workoutBonusCents:year.baseSalaryCents,year.payPeriods);for(let i=0;i<amounts.length;i++){
- const sourceKey=(a.contractId?'contract:':'deal:')+year.id+':'+i;const dueAt=a.contractId?new Date(Date.UTC(Number(year.season),8,1+i*7)):current.termStart||new Date();
- const data={sourceKey,athleteId:row.athleteId,...(a.contractId?{contractYearId:year.id}:{endorsementDealId:row.id}),dueAt,grossCents:amounts[i],commissionBps:current.commissionBps,currencyCode:current.currencyCode,status:'scheduled'};
- records.push(await tx.scheduledPayment.upsert({where:{sourceKey},update:{},create:data}));}}
- await audit(tx,c,'schedule.generated','Athlete',row.athleteId,null,{count:records.length},a.idempotencyKey);return {count:records.length};
+ const rows:any[]=[];for(const year of periods){const amounts=installmentAmounts(a.contractId?year.baseSalaryCents+year.rosterBonusCents+year.workoutBonusCents:year.baseSalaryCents,year.payPeriods);for(let i=0;i<amounts.length;i++){
+ const sourceKey=(a.contractId?'contract:':'deal:')+year.id+':'+i;const dueAt=a.contractId?new Date(Date.UTC(Number(year.season),10,1+i*7)):current.termStart||new Date();
+ rows.push({sourceKey,athleteId:row.athleteId,...(a.contractId?{contractYearId:year.id}:{endorsementDealId:row.id}),dueAt,grossCents:amounts[i],commissionBps:current.commissionBps,currencyCode:current.currencyCode,status:'scheduled'});}}
+ // Idempotent by source key: existing periods are skipped, never duplicated.
+ const created=await tx.scheduledPayment.createMany({data:rows,skipDuplicates:true});const records={length:created.count};
+ await audit(tx,c,'schedule.generated','Athlete',row.athleteId,null,{count:records.length},a.idempotencyKey);return {count:rows.length,created:records.length};
  });},
  async markPaymentReceived(_:unknown,a:any,c:any){const row=await locate(c,'scheduledPayment',a.scheduledPaymentId);return command(c,'canManageCommissions',row.athleteId,'markPaymentReceived',a,async tx=>{
  const payment=await tx.scheduledPayment.findUnique({where:{id:row.id}});const math=commission(payment.grossCents,payment.commissionBps);
@@ -37,6 +39,11 @@ export const agencyMutations = {
  for(const row of rows){await tx.commissionInvoiceLine.create({data:{invoiceId:invoice.id,scheduledPaymentId:row.id,description:'Commission '+row.sourceKey,grossCents:row.grossCents,commissionBps:row.commissionBps,commissionCents:row.commissionCents,unitPriceCents:row.commissionCents,quantity:1,currencyCode:row.currencyCode}});await tx.scheduledPayment.update({where:{id:row.id},data:{invoiceId:invoice.id}});}
  await audit(tx,c,'invoice.created','CommissionInvoice',invoice.id,null,invoice,a.idempotencyKey);return invoice;
  });},
+ async voidCommissionInvoice(_:unknown,a:any,c:any){const row=await locate(c,'commissionInvoice',a.invoiceId);return command(c,'canManageCommissions',row.athleteId,'voidCommissionInvoice',a,async tx=>{
+ const inv=await tx.commissionInvoice.findUnique({where:{id:row.id}});if(inv.paidCents>0)throw new Error('Reverse payments before voiding a paid invoice');if(!a.reason?.trim())throw new Error('Void reason required');
+ const result=await transition(tx,c,'commissionInvoice',row.id,['draft','sent'],'void',a.idempotencyKey);
+ await tx.scheduledPayment.updateMany({where:{invoiceId:row.id},data:{invoiceId:null}});return result;
+ });},
  async sendCommissionInvoice(_:unknown,a:any,c:any){const row=await locate(c,'commissionInvoice',a.invoiceId);return command(c,'canManageCommissions',row.athleteId,'sendCommissionInvoice',a,async tx=>transition(tx,c,'commissionInvoice',row.id,['draft'],'sent',a.idempotencyKey));},
  async recordInvoicePayment(_:unknown,a:any,c:any){const row=await locate(c,'commissionInvoice',a.invoiceId);return command(c,'canManageCommissions',row.athleteId,'recordInvoicePayment',a,async tx=>{
  const invoice=await tx.commissionInvoice.findUnique({where:{id:row.id}});if(!Number.isSafeInteger(a.amountCents)||a.amountCents<1||a.amountCents>invoice.totalCents-invoice.paidCents||!a.reference?.trim())throw new Error('Valid payment amount and reference required');
@@ -47,7 +54,12 @@ export const agencyMutations = {
  });},
  async reverseLedgerEntry(_:unknown,a:any,c:any){const row=await locate(c,'commissionLedgerEntry',a.entryId);return command(c,'canManageCommissions',row.athleteId,'reverseLedgerEntry',a,async tx=>{
  const original=await tx.commissionLedgerEntry.findUnique({where:{id:row.id}});const reversed=await tx.commissionLedgerEntry.findUnique({where:{reversalKey:row.id}});if(!a.reason?.trim())throw new Error('Reversal reason required');
- const amount=exactReversal(original.amountCents,original.entryType==='reversal',Boolean(reversed));const result=await tx.commissionLedgerEntry.create({data:{entryKey:'reversal:'+row.id,reversalKey:row.id,reversesId:row.id,athleteId:row.athleteId,invoiceId:original.invoiceId,scheduledPaymentId:original.scheduledPaymentId,entryType:'reversal',amountCents:amount,reason:a.reason,preparedById:c.session.itemId,occurredAt:new Date(),currencyCode:original.currencyCode}});await audit(tx,c,'ledger.reversed','CommissionLedgerEntry',result.id,original,result,a.idempotencyKey);return result;
+ const amount=exactReversal(original.amountCents,original.entryType==='reversal',Boolean(reversed));if(original.entryType==='accrual'&&original.scheduledPaymentId&&(await tx.scheduledPayment.findUnique({where:{id:original.scheduledPaymentId}})).invoiceId)throw new Error('Void the invoice before reversing its accrual');
+ const reverseOne=(e:any,amt:bigint)=>tx.commissionLedgerEntry.create({data:{entryKey:'reversal:'+e.id,reversalKey:e.id,reversesId:e.id,athleteId:e.athleteId,invoiceId:e.invoiceId,scheduledPaymentId:e.scheduledPaymentId,payeeUserId:e.payeeUserId,entryType:'reversal',amountCents:amt,reason:a.reason,preparedById:c.session.itemId,occurredAt:new Date(),currencyCode:e.currencyCode}});
+ const result=await reverseOne(original,amount);
+ if(original.entryType==='receipt'&&original.invoiceId){const inv=await tx.commissionInvoice.findUnique({where:{id:original.invoiceId}});const paid=Math.max(0,inv.paidCents+Number(original.amountCents));await tx.commissionInvoice.update({where:{id:inv.id},data:{paidCents:paid,status:paid===0?'sent':'partially_paid'}});
+ for(const split of await tx.commissionLedgerEntry.findMany({where:{entryType:'split_to_agent',entryKey:{startsWith:'split:'+original.id+':'}}}))await reverseOne(split,exactReversal(split.amountCents,false,false));}
+ await audit(tx,c,'ledger.reversed','CommissionLedgerEntry',result.id,original,result,a.idempotencyKey);return result;
  });},
  async postTrustEntry(_:unknown,a:any,c:any){const row=await locate(c,'clientTrustAccount',a.accountId);return command(c,'canManageTrust',row.athleteId,'postTrustEntry',a,async tx=>{
  if(!Number.isSafeInteger(a.amountCents)||a.amountCents<1||!a.reference?.trim()||!['deposit','commission_transfer','disbursement_to_client','reversal'].includes(a.entryType))throw new Error('Invalid trust entry');
@@ -60,6 +72,18 @@ export const agencyMutations = {
  async moveRecruitingStage(_:unknown,a:any,c:any){return command(c,'canManageAthletes',a.athleteId,'moveRecruitingStage',a,async tx=>{
  const row=await tx.athlete.findUnique({where:{id:a.athleteId}});const stages=['identified','contacted','meeting','pitched','verbal','signed','lost'];if(!stages.includes(a.stage)||a.stage===row.recruitingStage)throw new Error('Invalid recruiting stage');if(row.contactAllowedFrom&&row.contactAllowedFrom>new Date()&&a.stage!=='lost')throw new Error('Contact window has not opened');const result=await tx.athlete.update({where:{id:row.id},data:{recruitingStage:a.stage}});await audit(tx,c,'recruiting.moved','Athlete',row.id,row,result,a.idempotencyKey);return result;
  });},
+
+ async activateEndorsementDeal(_:unknown,a:any,c:any){const row=await locate(c,'endorsementDeal',a.dealId);
+ const clash=async(db:any)=>row.termStart&&row.termEnd&&row.exclusivityCategory?db.endorsementDeal.findFirst({where:{athleteId:row.athleteId,id:{not:row.id},exclusivityCategory:row.exclusivityCategory,status:{in:['signed','active']},termStart:{lte:row.termEnd},termEnd:{gte:row.termStart}},select:{id:true}}):null;
+ if(await clash(c.prisma)){await c.prisma.auditEvent.create({data:{actorId:c.session?.itemId,action:'deal.conflict_blocked',targetList:'EndorsementDeal',targetId:row.id,after:{category:row.exclusivityCategory},reason:'Exclusivity conflict with an active deal',requestId:a.idempotencyKey}}).catch(()=>null);throw new Error('Exclusivity conflict with an active deal');}
+ return command(c,'canManageEndorsements',row.athleteId,'activateEndorsementDeal',a,async tx=>{if(await clash(tx))throw new Error('Exclusivity conflict with an active deal');return transition(tx,c,'endorsementDeal',row.id,['prospect','negotiating','signed'],'active',a.idempotencyKey);});},
+ async generateAutoTasks(_:unknown,a:any,c:any){if(!c.session?.itemId||!permissions.canManageAthletes({session:c.session}))throw new Error('Not authorized');const db=c.prisma,now=Date.now(),day=86400000,out:any[]=[];
+ const make=async(autoKey:string,title:string,dueAt:Date,extra:any,assigneeId?:string|null)=>{if(await db.task.findUnique({where:{autoKey}}))return;out.push(await db.task.create({data:{autoKey,title,dueAt,priority:'high',status:'open',...(assigneeId?{assigneeId}:{}),...extra}}));};
+ for(const x of await db.agentCertification.findMany({where:{status:'active',expiresAt:{lte:new Date(now+60*day)}},take:200}))await make('cert:'+x.id,'Renew agent certification',x.expiresAt,{},x.userId);
+ for(const x of await db.representationAgreement.findMany({where:{status:{in:['signed','filed_with_union','active']},expiresAt:{lte:new Date(now+90*day)}},include:{athlete:true},take:200}))await make('agreement:'+x.id,'Agreement expiring',x.expiresAt,{athleteId:x.athleteId},x.athlete?.leadAgentId);
+ for(const x of await db.deliverable.findMany({where:{status:'scheduled',dueAt:{lte:new Date(now+7*day)}},include:{deal:true},take:200}))await make('deliverable:'+x.id,'Deliverable due',x.dueAt,{athleteId:x.deal?.athleteId,dealId:x.dealId},x.deal?.ownerId);
+ for(const x of await db.scheduledPayment.findMany({where:{status:{in:['scheduled','late']},dueAt:{lt:new Date(now)}},include:{athlete:true},take:200}))await make('payment:'+x.id,'Overdue payment follow-up',x.dueAt,{athleteId:x.athleteId},x.athlete?.leadAgentId);
+ return {created:out.length};},
  async completeDeliverable(_:unknown,a:any,c:any){const row=await locate(c,'deliverable',a.deliverableId,{deal:true});return command(c,'canManageEndorsements',row.deal.athleteId,'completeDeliverable',a,async tx=>{if(!a.proofLink?.startsWith('https://'))throw new Error('HTTPS proof required');return transition(tx,c,'deliverable',row.id,['scheduled','missed'],'completed',a.idempotencyKey,{completedAt:new Date(),proofLink:a.proofLink});});},
 };
 export const agencyQueries={
@@ -75,10 +99,13 @@ export const agencyTypeDefs = `
  markPaymentReceived(scheduledPaymentId:ID!,idempotencyKey:String!):AgencyJSON!
  draftCommissionInvoice(athleteId:ID!,scheduledPaymentIds:[ID!]!,idempotencyKey:String!):AgencyJSON!
  sendCommissionInvoice(invoiceId:ID!,idempotencyKey:String!):AgencyJSON!
+ voidCommissionInvoice(invoiceId:ID!,reason:String!,idempotencyKey:String!):AgencyJSON!
  recordInvoicePayment(invoiceId:ID!,amountCents:Int!,reference:String!,idempotencyKey:String!):AgencyJSON!
  reverseLedgerEntry(entryId:ID!,reason:String!,idempotencyKey:String!):AgencyJSON!
  postTrustEntry(accountId:ID!,entryType:String!,amountCents:Int!,reference:String!,invoiceId:ID,reversesId:ID,idempotencyKey:String!):AgencyJSON!
  moveRecruitingStage(athleteId:ID!,stage:String!,idempotencyKey:String!):AgencyJSON!
  completeDeliverable(deliverableId:ID!,proofLink:String!,idempotencyKey:String!):AgencyJSON!
+ activateEndorsementDeal(dealId:ID!,idempotencyKey:String!):AgencyJSON!
+ generateAutoTasks:AgencyJSON!
  }
 `;

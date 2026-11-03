@@ -1,3 +1,2 @@
-import { HomePage } from "@/features/dashboard/screens/HomePage";
-
-export default HomePage;
+import DashboardPage from "@/features/platform/dashboard/screens/DashboardPage";
+export default DashboardPage;
