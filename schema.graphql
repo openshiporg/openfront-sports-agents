@@ -35,6 +35,10 @@ type User {
   task_assigneeCount(where: TaskWhereInput! = {}): Int
   auditEvent_actor(where: AuditEventWhereInput! = {}, orderBy: [AuditEventOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: AuditEventWhereUniqueInput): [AuditEvent!]
   auditEvent_actorCount(where: AuditEventWhereInput! = {}): Int
+  requestedApprovals(where: ManagerApprovalWhereInput! = {}, orderBy: [ManagerApprovalOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: ManagerApprovalWhereUniqueInput): [ManagerApproval!]
+  requestedApprovalsCount(where: ManagerApprovalWhereInput! = {}): Int
+  approvedApprovals(where: ManagerApprovalWhereInput! = {}, orderBy: [ManagerApprovalOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: ManagerApprovalWhereUniqueInput): [ManagerApproval!]
+  approvedApprovalsCount(where: ManagerApprovalWhereInput! = {}): Int
   onboardingStatus: UserOnboardingStatusType
   createdAt: DateTime
   updatedAt: DateTime
@@ -81,6 +85,8 @@ input UserWhereInput {
   document_uploadedBy: DocumentManyRelationFilter
   task_assignee: TaskManyRelationFilter
   auditEvent_actor: AuditEventManyRelationFilter
+  requestedApprovals: ManagerApprovalManyRelationFilter
+  approvedApprovals: ManagerApprovalManyRelationFilter
   onboardingStatus: UserOnboardingStatusTypeNullableFilter
   createdAt: DateTimeFilter
   updatedAt: DateTimeFilter
@@ -194,6 +200,12 @@ input AuditEventManyRelationFilter {
   none: AuditEventWhereInput
 }
 
+input ManagerApprovalManyRelationFilter {
+  every: ManagerApprovalWhereInput
+  some: ManagerApprovalWhereInput
+  none: ManagerApprovalWhereInput
+}
+
 input UserOnboardingStatusTypeNullableFilter {
   equals: UserOnboardingStatusType
   in: [UserOnboardingStatusType!]
@@ -261,6 +273,8 @@ input UserUpdateInput {
   document_uploadedBy: DocumentRelateToManyForUpdateInput
   task_assignee: TaskRelateToManyForUpdateInput
   auditEvent_actor: AuditEventRelateToManyForUpdateInput
+  requestedApprovals: ManagerApprovalRelateToManyForUpdateInput
+  approvedApprovals: ManagerApprovalRelateToManyForUpdateInput
   onboardingStatus: UserOnboardingStatusType
   createdAt: DateTime
   updatedAt: DateTime
@@ -341,6 +355,13 @@ input AuditEventRelateToManyForUpdateInput {
   connect: [AuditEventWhereUniqueInput!]
 }
 
+input ManagerApprovalRelateToManyForUpdateInput {
+  disconnect: [ManagerApprovalWhereUniqueInput!]
+  set: [ManagerApprovalWhereUniqueInput!]
+  create: [ManagerApprovalCreateInput!]
+  connect: [ManagerApprovalWhereUniqueInput!]
+}
+
 input UserUpdateArgs {
   where: UserWhereUniqueInput!
   data: UserUpdateInput!
@@ -365,6 +386,8 @@ input UserCreateInput {
   document_uploadedBy: DocumentRelateToManyForCreateInput
   task_assignee: TaskRelateToManyForCreateInput
   auditEvent_actor: AuditEventRelateToManyForCreateInput
+  requestedApprovals: ManagerApprovalRelateToManyForCreateInput
+  approvedApprovals: ManagerApprovalRelateToManyForCreateInput
   onboardingStatus: UserOnboardingStatusType
   createdAt: DateTime
   updatedAt: DateTime
@@ -424,6 +447,11 @@ input AuditEventRelateToManyForCreateInput {
   connect: [AuditEventWhereUniqueInput!]
 }
 
+input ManagerApprovalRelateToManyForCreateInput {
+  create: [ManagerApprovalCreateInput!]
+  connect: [ManagerApprovalWhereUniqueInput!]
+}
+
 type Role {
   id: ID!
   createdAt: DateTime
@@ -445,6 +473,7 @@ type Role {
   canIssueRefunds: Boolean
   canReadAudit: Boolean
   canManageOnboarding: Boolean
+  canApproveActions: Boolean
   assignedTo(where: UserWhereInput! = {}, orderBy: [UserOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: UserWhereUniqueInput): [User!]
   assignedToCount(where: UserWhereInput! = {}): Int
 }
@@ -477,6 +506,7 @@ input RoleWhereInput {
   canIssueRefunds: BooleanFilter
   canReadAudit: BooleanFilter
   canManageOnboarding: BooleanFilter
+  canApproveActions: BooleanFilter
   assignedTo: UserManyRelationFilter
 }
 
@@ -512,6 +542,7 @@ input RoleOrderByInput {
   canIssueRefunds: OrderDirection
   canReadAudit: OrderDirection
   canManageOnboarding: OrderDirection
+  canApproveActions: OrderDirection
 }
 
 input RoleUpdateInput {
@@ -534,6 +565,7 @@ input RoleUpdateInput {
   canIssueRefunds: Boolean
   canReadAudit: Boolean
   canManageOnboarding: Boolean
+  canApproveActions: Boolean
   assignedTo: UserRelateToManyForUpdateInput
 }
 
@@ -569,6 +601,7 @@ input RoleCreateInput {
   canIssueRefunds: Boolean
   canReadAudit: Boolean
   canManageOnboarding: Boolean
+  canApproveActions: Boolean
   assignedTo: UserRelateToManyForCreateInput
 }
 
@@ -4291,6 +4324,144 @@ input IdempotencyKeyCreateInput {
   updatedAt: DateTime
 }
 
+type ManagerApproval {
+  id: ID!
+  actionType: ManagerApprovalActionTypeType
+  targetId: String
+  amountCents: Int
+  reason: String
+  requestFingerprint: String
+  requestPayload: JSON
+  status: ManagerApprovalStatusType
+  requestedAt: DateTime
+  decidedAt: DateTime
+  consumedAt: DateTime
+  expiresAt: DateTime
+  consumedEntityType: String
+  consumedEntityId: String
+  requestedBy: User
+  approvedBy: User
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+enum ManagerApprovalActionTypeType {
+  refund_payment
+  exclusivity_override
+  commission_writeoff
+}
+
+enum ManagerApprovalStatusType {
+  requested
+  approved
+  rejected
+  consumed
+}
+
+input ManagerApprovalWhereUniqueInput {
+  id: ID
+}
+
+input ManagerApprovalWhereInput {
+  AND: [ManagerApprovalWhereInput!]
+  OR: [ManagerApprovalWhereInput!]
+  NOT: [ManagerApprovalWhereInput!]
+  id: IDFilter
+  actionType: ManagerApprovalActionTypeTypeNullableFilter
+  targetId: StringFilter
+  amountCents: IntNullableFilter
+  reason: StringFilter
+  requestFingerprint: StringFilter
+  status: ManagerApprovalStatusTypeNullableFilter
+  requestedAt: DateTimeNullableFilter
+  decidedAt: DateTimeNullableFilter
+  consumedAt: DateTimeNullableFilter
+  expiresAt: DateTimeFilter
+  consumedEntityType: StringFilter
+  consumedEntityId: StringFilter
+  requestedBy: UserWhereInput
+  approvedBy: UserWhereInput
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+}
+
+input ManagerApprovalActionTypeTypeNullableFilter {
+  equals: ManagerApprovalActionTypeType
+  in: [ManagerApprovalActionTypeType!]
+  notIn: [ManagerApprovalActionTypeType!]
+  not: ManagerApprovalActionTypeTypeNullableFilter
+}
+
+input ManagerApprovalStatusTypeNullableFilter {
+  equals: ManagerApprovalStatusType
+  in: [ManagerApprovalStatusType!]
+  notIn: [ManagerApprovalStatusType!]
+  not: ManagerApprovalStatusTypeNullableFilter
+}
+
+input ManagerApprovalOrderByInput {
+  id: OrderDirection
+  actionType: OrderDirection
+  targetId: OrderDirection
+  amountCents: OrderDirection
+  reason: OrderDirection
+  requestFingerprint: OrderDirection
+  status: OrderDirection
+  requestedAt: OrderDirection
+  decidedAt: OrderDirection
+  consumedAt: OrderDirection
+  expiresAt: OrderDirection
+  consumedEntityType: OrderDirection
+  consumedEntityId: OrderDirection
+  createdAt: OrderDirection
+  updatedAt: OrderDirection
+}
+
+input ManagerApprovalUpdateInput {
+  actionType: ManagerApprovalActionTypeType
+  targetId: String
+  amountCents: Int
+  reason: String
+  requestFingerprint: String
+  requestPayload: JSON
+  status: ManagerApprovalStatusType
+  requestedAt: DateTime
+  decidedAt: DateTime
+  consumedAt: DateTime
+  expiresAt: DateTime
+  consumedEntityType: String
+  consumedEntityId: String
+  requestedBy: UserRelateToOneForUpdateInput
+  approvedBy: UserRelateToOneForUpdateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input ManagerApprovalUpdateArgs {
+  where: ManagerApprovalWhereUniqueInput!
+  data: ManagerApprovalUpdateInput!
+}
+
+input ManagerApprovalCreateInput {
+  actionType: ManagerApprovalActionTypeType
+  targetId: String
+  amountCents: Int
+  reason: String
+  requestFingerprint: String
+  requestPayload: JSON
+  status: ManagerApprovalStatusType
+  requestedAt: DateTime
+  decidedAt: DateTime
+  consumedAt: DateTime
+  expiresAt: DateTime
+  consumedEntityType: String
+  consumedEntityId: String
+  requestedBy: UserRelateToOneForCreateInput
+  approvedBy: UserRelateToOneForCreateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
 """
 The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
 """
@@ -4469,6 +4640,12 @@ type Mutation {
   updateIdempotencyKeys(data: [IdempotencyKeyUpdateArgs!]!): [IdempotencyKey]
   deleteIdempotencyKey(where: IdempotencyKeyWhereUniqueInput!): IdempotencyKey
   deleteIdempotencyKeys(where: [IdempotencyKeyWhereUniqueInput!]!): [IdempotencyKey]
+  createManagerApproval(data: ManagerApprovalCreateInput!): ManagerApproval
+  createManagerApprovals(data: [ManagerApprovalCreateInput!]!): [ManagerApproval]
+  updateManagerApproval(where: ManagerApprovalWhereUniqueInput!, data: ManagerApprovalUpdateInput!): ManagerApproval
+  updateManagerApprovals(data: [ManagerApprovalUpdateArgs!]!): [ManagerApproval]
+  deleteManagerApproval(where: ManagerApprovalWhereUniqueInput!): ManagerApproval
+  deleteManagerApprovals(where: [ManagerApprovalWhereUniqueInput!]!): [ManagerApproval]
   endSession: Boolean!
   authenticateUserWithPassword(email: String!, password: String!): UserAuthenticationWithPasswordResult
   createInitialUser(data: CreateInitialUserInput!): UserAuthenticationWithPasswordSuccess!
@@ -4486,7 +4663,10 @@ type Mutation {
   postTrustEntry(accountId: ID!, entryType: String!, amountCents: Int!, reference: String!, invoiceId: ID, reversesId: ID, idempotencyKey: String!): AgencyJSON!
   moveRecruitingStage(athleteId: ID!, stage: String!, idempotencyKey: String!): AgencyJSON!
   completeDeliverable(deliverableId: ID!, proofLink: String!, idempotencyKey: String!): AgencyJSON!
-  activateEndorsementDeal(dealId: ID!, idempotencyKey: String!): AgencyJSON!
+  activateEndorsementDeal(dealId: ID!, approvalId: ID, idempotencyKey: String!): AgencyJSON!
+  writeOffCommissionInvoice(invoiceId: ID!, reason: String!, approvalId: ID!, idempotencyKey: String!): AgencyJSON!
+  requestManagerApproval(actionType: String!, targetId: String!, amountCents: Int, reason: String!): AgencyJSON!
+  decideManagerApproval(approvalId: ID!, decision: String!): AgencyJSON!
   generateAutoTasks: AgencyJSON!
   submitInquiry(athleteId: ID!, name: String!, email: String!, organization: String, message: String!, idempotencyKey: String!): AgencyJSON!
   payCommissionInvoice(invoiceId: ID!, proof: String, idempotencyKey: String!): AgencyJSON!
@@ -4626,6 +4806,9 @@ type Query {
   idempotencyKey(where: IdempotencyKeyWhereUniqueInput!): IdempotencyKey
   idempotencyKeys(where: IdempotencyKeyWhereInput! = {}, orderBy: [IdempotencyKeyOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: IdempotencyKeyWhereUniqueInput): [IdempotencyKey!]
   idempotencyKeysCount(where: IdempotencyKeyWhereInput! = {}): Int
+  managerApproval(where: ManagerApprovalWhereUniqueInput!): ManagerApproval
+  managerApprovals(where: ManagerApprovalWhereInput! = {}, orderBy: [ManagerApprovalOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: ManagerApprovalWhereUniqueInput): [ManagerApproval!]
+  managerApprovalsCount(where: ManagerApprovalWhereInput! = {}): Int
   keystone: KeystoneMeta!
   authenticatedItem: AuthenticatedItem
   validateUserPasswordResetToken(email: String!, token: String!): ValidateUserPasswordResetTokenResult

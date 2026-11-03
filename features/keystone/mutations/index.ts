@@ -2,6 +2,7 @@ import { mergeSchemas } from "@graphql-tools/schema";
 import type { GraphQLSchema } from 'graphql';
 import redirectToInit from "./redirectToInit";
 import {agencyTypeDefs,agencyMutations,agencyQueries} from './agency';
+import {requestManagerApproval,decideManagerApproval} from '../utils/managerApproval';
 import ensureOnboardingRecord from './ensureOnboardingRecord';
 import updateActiveUser from './updateActiveUser';
 import {portalTypeDefs,portalQueries,portalMutations} from './portal';
@@ -22,7 +23,7 @@ export function extendGraphqlSchema(baseSchema: GraphQLSchema) {
       Query: { 
         redirectToInit, ...agencyQueries, ...portalQueries,
       },
-      Mutation: {...agencyMutations,...portalMutations,ensureOnboardingRecord,updateActiveUser},
+      Mutation: {...agencyMutations,...portalMutations,ensureOnboardingRecord,updateActiveUser,requestManagerApproval,decideManagerApproval},
     },
   });
 }

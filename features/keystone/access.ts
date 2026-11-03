@@ -1,4 +1,4 @@
-export const permissionNames = ['canSeeOtherPeople','canEditOtherPeople','canManagePeople','canManageRoles','canAccessDashboard','canManageAthletes','canManageContracts','canManageEndorsements','canManageCommissions','canManageTrust','canViewAllClients','canManagePayments','canReadPayments','canIssueRefunds','canReadAudit','canManageOnboarding'] as const;
+export const permissionNames = ['canSeeOtherPeople','canEditOtherPeople','canManagePeople','canManageRoles','canAccessDashboard','canManageAthletes','canManageContracts','canManageEndorsements','canManageCommissions','canManageTrust','canViewAllClients','canManagePayments','canReadPayments','canIssueRefunds','canReadAudit','canManageOnboarding','canApproveActions'] as const;
 export type Permission = typeof permissionNames[number];
 export type Session = { itemId: string; listKey: string; data: { name: string; email?: string; role: { id: string; name: string } & Record<Permission, boolean> } };
 type Args = { session?: Session };

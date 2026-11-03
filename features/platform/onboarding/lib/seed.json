@@ -12,7 +12,8 @@
       {
         "name": "Owner",
         "permissions": [
-          "*"
+          "*",
+          "canApproveActions"
         ]
       },
       {
@@ -46,7 +47,8 @@
           "canManagePayments",
           "canReadPayments",
           "canIssueRefunds",
-          "canReadAudit"
+          "canReadAudit",
+          "canApproveActions"
         ]
       },
       {
@@ -1413,7 +1415,8 @@
       {
         "name": "Owner",
         "permissions": [
-          "*"
+          "*",
+          "canApproveActions"
         ]
       },
       {
@@ -1447,7 +1450,8 @@
           "canManagePayments",
           "canReadPayments",
           "canIssueRefunds",
-          "canReadAudit"
+          "canReadAudit",
+          "canApproveActions"
         ]
       },
       {

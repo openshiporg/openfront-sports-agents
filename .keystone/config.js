@@ -250,11 +250,11 @@ module.exports = __toCommonJS(keystone_exports);
 
 // features/keystone/index.ts
 var import_auth = require("@keystone-6/auth");
-var import_core16 = require("@keystone-6/core");
+var import_core17 = require("@keystone-6/core");
 var import_config = require("dotenv/config");
 
 // features/keystone/access.ts
-var permissionNames = ["canSeeOtherPeople", "canEditOtherPeople", "canManagePeople", "canManageRoles", "canAccessDashboard", "canManageAthletes", "canManageContracts", "canManageEndorsements", "canManageCommissions", "canManageTrust", "canViewAllClients", "canManagePayments", "canReadPayments", "canIssueRefunds", "canReadAudit", "canManageOnboarding"];
+var permissionNames = ["canSeeOtherPeople", "canEditOtherPeople", "canManagePeople", "canManageRoles", "canAccessDashboard", "canManageAthletes", "canManageContracts", "canManageEndorsements", "canManageCommissions", "canManageTrust", "canViewAllClients", "canManagePayments", "canReadPayments", "canIssueRefunds", "canReadAudit", "canManageOnboarding", "canApproveActions"];
 var isSignedIn = ({ session }) => Boolean(session);
 var permissions = Object.fromEntries(permissionNames.map((name) => [name, ({ session }) => session?.data.role?.[name] ?? false]));
 function athleteScope({ session }) {
@@ -394,6 +394,8 @@ var User = (0, import_core2.list)({
     document_uploadedBy: rel("Document.uploadedBy", true),
     task_assignee: rel("Task.assignee", true),
     auditEvent_actor: rel("AuditEvent.actor", true),
+    requestedApprovals: rel("ManagerApproval.requestedBy", true),
+    approvedApprovals: rel("ManagerApproval.approvedBy", true),
     onboardingStatus: (0, import_fields3.select)({ type: "enum", options: ["not_started", "in_progress", "completed", "dismissed"], defaultValue: "not_started" }),
     ...trackingFields
   }
@@ -1493,10 +1495,63 @@ var PaymentWebhookEvent = (0, import_core13.list)({
   }
 });
 
-// features/keystone/models/IdempotencyKey.ts
+// features/keystone/models/ManagerApproval.ts
 var import_core14 = require("@keystone-6/core");
 var import_fields35 = require("@keystone-6/core/fields");
-var IdempotencyKey = (0, import_core14.list)({
+var ManagerApproval = (0, import_core14.list)({
+  access: {
+    operation: {
+      query: ({ session }) => permissions.canApproveActions({ session }) || permissions.canIssueRefunds({ session }) || permissions.canManageCommissions({ session }) || permissions.canManageEndorsements({ session }),
+      create: () => false,
+      update: () => false,
+      delete: () => false
+    }
+  },
+  fields: {
+    actionType: (0, import_fields35.select)({
+      type: "enum",
+      options: [
+        { label: "Refund payment", value: "refund_payment" },
+        { label: "Exclusivity override", value: "exclusivity_override" },
+        { label: "Commission write-off", value: "commission_writeoff" }
+      ],
+      validation: { isRequired: true },
+      isIndexed: true
+    }),
+    targetId: (0, import_fields35.text)({ validation: { isRequired: true }, isIndexed: true }),
+    amountCents: (0, import_fields35.integer)(),
+    reason: (0, import_fields35.text)({ validation: { isRequired: true }, ui: { displayMode: "textarea" } }),
+    requestFingerprint: (0, import_fields35.text)({ validation: { isRequired: true } }),
+    requestPayload: (0, import_fields35.json)(),
+    status: (0, import_fields35.select)({
+      type: "enum",
+      options: [
+        { label: "Requested", value: "requested" },
+        { label: "Approved", value: "approved" },
+        { label: "Rejected", value: "rejected" },
+        { label: "Consumed", value: "consumed" }
+      ],
+      defaultValue: "requested",
+      validation: { isRequired: true },
+      isIndexed: true,
+      access: { create: () => false, update: () => false }
+    }),
+    requestedAt: (0, import_fields35.timestamp)({ defaultValue: { kind: "now" }, isIndexed: true }),
+    decidedAt: (0, import_fields35.timestamp)(),
+    consumedAt: (0, import_fields35.timestamp)(),
+    expiresAt: (0, import_fields35.timestamp)({ validation: { isRequired: true }, isIndexed: true }),
+    consumedEntityType: (0, import_fields35.text)(),
+    consumedEntityId: (0, import_fields35.text)(),
+    requestedBy: (0, import_fields35.relationship)({ ref: "User.requestedApprovals" }),
+    approvedBy: (0, import_fields35.relationship)({ ref: "User.approvedApprovals" }),
+    ...trackingFields
+  }
+});
+
+// features/keystone/models/IdempotencyKey.ts
+var import_core15 = require("@keystone-6/core");
+var import_fields36 = require("@keystone-6/core/fields");
+var IdempotencyKey = (0, import_core15.list)({
   access: {
     operation: {
       query: () => false,
@@ -1507,26 +1562,26 @@ var IdempotencyKey = (0, import_core14.list)({
   },
   ui: { isHidden: true },
   fields: {
-    idempotencyKey: (0, import_fields35.text)({
+    idempotencyKey: (0, import_fields36.text)({
       isIndexed: "unique",
       validation: { isRequired: true }
     }),
-    requestMethod: (0, import_fields35.text)({ validation: { isRequired: true } }),
-    requestParams: (0, import_fields35.json)(),
-    requestPath: (0, import_fields35.text)({ validation: { isRequired: true } }),
-    responseCode: (0, import_fields35.integer)(),
-    responseBody: (0, import_fields35.json)(),
-    recoveryPoint: (0, import_fields35.text)({
+    requestMethod: (0, import_fields36.text)({ validation: { isRequired: true } }),
+    requestParams: (0, import_fields36.json)(),
+    requestPath: (0, import_fields36.text)({ validation: { isRequired: true } }),
+    responseCode: (0, import_fields36.integer)(),
+    responseBody: (0, import_fields36.json)(),
+    recoveryPoint: (0, import_fields36.text)({
       defaultValue: "started",
       validation: { isRequired: true }
     }),
-    lockedAt: (0, import_fields35.timestamp)(),
+    lockedAt: (0, import_fields36.timestamp)(),
     ...trackingFields
   }
 });
 
 // features/keystone/models/index.ts
-var models = { User, Role, OAuthApp, OAuthToken, Agency, AgentCertification, Team, Athlete, RepresentationAgreement, Contact, Brand, Interaction, PlayingContract, ContractYear, Incentive, EndorsementDeal, Deliverable, ScheduledPayment, CommissionInvoice, CommissionInvoiceLine, CommissionLedgerEntry, AgentSplit, ClientTrustAccount, ClientTrustEntry, Document, Task, AuditEvent, PaymentProvider, PaymentCollection, PaymentSession, Payment, Refund, PaymentWebhookEvent, IdempotencyKey };
+var models = { User, Role, OAuthApp, OAuthToken, Agency, AgentCertification, Team, Athlete, RepresentationAgreement, Contact, Brand, Interaction, PlayingContract, ContractYear, Incentive, EndorsementDeal, Deliverable, ScheduledPayment, CommissionInvoice, CommissionInvoiceLine, CommissionLedgerEntry, AgentSplit, ClientTrustAccount, ClientTrustEntry, Document, Task, AuditEvent, PaymentProvider, PaymentCollection, PaymentSession, Payment, Refund, PaymentWebhookEvent, IdempotencyKey, ManagerApproval };
 
 // features/keystone/index.ts
 var import_session = require("@keystone-6/core/session");
@@ -1719,6 +1774,56 @@ async function applyInvoiceReceipt(tx, context, invoiceId, amountCents, referenc
   return { id: invoice.id, paidCents: paid, status };
 }
 
+// features/keystone/utils/managerApproval.ts
+var ACTIONS = ["refund_payment", "exclusivity_override", "commission_writeoff"];
+var APPROVAL_TTL_MS = 60 * 60 * 1e3;
+function normalized(input) {
+  return canonicalIdempotencyParams({ actionType: input.actionType, targetId: input.targetId, reason: input.reason.trim(), amountCents: input.amountCents ?? null });
+}
+function canRequest(context, action) {
+  const s = { session: context.session };
+  return action === "refund_payment" ? permissions.canIssueRefunds(s) : action === "exclusivity_override" ? permissions.canManageEndorsements(s) : permissions.canManageCommissions(s);
+}
+async function requestManagerApproval(_root, input, context) {
+  const requesterId = context.session?.itemId;
+  if (!requesterId || !ACTIONS.includes(input.actionType) || !canRequest(context, input.actionType)) throw new Error("Not authorized to request this approval");
+  if (!input.targetId?.trim()) throw new Error("Approval target is required");
+  if (!input.reason?.trim()) throw new Error("Approval reason is required");
+  if (input.amountCents != null && (!Number.isSafeInteger(input.amountCents) || input.amountCents < 0)) throw new Error("Invalid amount");
+  const payload = normalized(input);
+  const row = await context.prisma.managerApproval.create({ data: { actionType: input.actionType, targetId: input.targetId.trim(), amountCents: input.amountCents ?? null, reason: input.reason.trim(), requestPayload: payload, requestFingerprint: idempotencyFingerprint(payload), status: "requested", requestedById: requesterId, expiresAt: new Date(Date.now() + APPROVAL_TTL_MS) } });
+  return { id: row.id, status: row.status };
+}
+async function decideManagerApproval(_root, { approvalId, decision }, context) {
+  const approverId = context.session?.itemId;
+  if (!approverId || !permissions.canApproveActions({ session: context.session })) throw new Error("Not authorized to decide approvals");
+  if (!["approved", "rejected"].includes(decision)) throw new Error("Invalid decision");
+  return context.prisma.$transaction(async (tx) => {
+    const a = await tx.managerApproval.findUnique({ where: { id: approvalId } });
+    if (!a) throw new Error("Approval not found");
+    if (a.requestedById === approverId) throw new Error("The requester cannot decide their own approval");
+    if (a.status !== "requested") throw new Error(`Approval is already ${a.status}`);
+    if (new Date(a.expiresAt) <= /* @__PURE__ */ new Date()) throw new Error("Approval has expired");
+    const r = await tx.managerApproval.updateMany({ where: { id: a.id, status: "requested", requestedById: { not: approverId } }, data: { status: decision, approvedById: approverId, decidedAt: /* @__PURE__ */ new Date() } });
+    if (r.count !== 1) throw new Error("Approval changed concurrently");
+    return { id: a.id, status: decision };
+  }, { isolationLevel: "Serializable" });
+}
+async function consumeManagerApproval(tx, input) {
+  if (!input.approvalId) throw new Error("Independent manager approval is required");
+  if (!input.actorId) throw new Error("Authenticated actor is required");
+  const a = await tx.managerApproval.findUnique({ where: { id: input.approvalId } });
+  if (!a) throw new Error("Approval not found");
+  const fp = idempotencyFingerprint(normalized(input));
+  if (a.requestFingerprint !== idempotencyFingerprint(a.requestPayload || {}) || a.requestFingerprint !== fp || a.requestedById !== input.actorId) throw new Error("Approval does not match this request");
+  if (!a.approvedById || a.approvedById === input.actorId) throw new Error("Approval must come from a different user");
+  if (a.status !== "approved") throw new Error(`Approval is ${a.status}`);
+  if (new Date(a.expiresAt) <= /* @__PURE__ */ new Date()) throw new Error("Approval has expired");
+  const r = await tx.managerApproval.updateMany({ where: { id: a.id, status: "approved", requestedById: input.actorId, approvedById: { not: input.actorId }, expiresAt: { gt: /* @__PURE__ */ new Date() } }, data: { status: "consumed", consumedAt: /* @__PURE__ */ new Date(), consumedEntityType: input.entityType, consumedEntityId: input.entityId } });
+  if (r.count !== 1) throw new Error("Approval was already used or has expired");
+  return a;
+}
+
 // features/keystone/mutations/agency.ts
 async function locate(context, model, id, include = {}) {
   if (!context.session) throw new Error("Not authorized");
@@ -1872,14 +1977,37 @@ var agencyMutations = {
   },
   async activateEndorsementDeal(_, a, c) {
     const row = await locate(c, "endorsementDeal", a.dealId);
-    const clash = async (db) => row.termStart && row.termEnd && row.exclusivityCategory ? db.endorsementDeal.findFirst({ where: { athleteId: row.athleteId, id: { not: row.id }, exclusivityCategory: row.exclusivityCategory, status: { in: ["signed", "active"] }, termStart: { lte: row.termEnd }, termEnd: { gte: row.termStart } }, select: { id: true } }) : null;
-    if (await clash(c.prisma)) {
-      await c.prisma.auditEvent.create({ data: { actorId: c.session?.itemId, action: "deal.conflict_blocked", targetList: "EndorsementDeal", targetId: row.id, after: { category: row.exclusivityCategory }, reason: "Exclusivity conflict with an active deal", requestId: a.idempotencyKey } }).catch(() => null);
-      throw new Error("Exclusivity conflict with an active deal");
+    const clash = async (db) => row.termStart && row.termEnd && row.exclusivityCategory ? db.endorsementDeal.findMany({ where: { athleteId: row.athleteId, id: { not: row.id }, exclusivityCategory: row.exclusivityCategory, status: { in: ["signed", "active"] }, termStart: { lte: row.termEnd }, termEnd: { gte: row.termStart } }, select: { id: true }, take: 20 }) : [];
+    if (!a.approvalId) {
+      const hit = await clash(c.prisma);
+      if (hit.length) {
+        await c.prisma.auditEvent.create({ data: { actorId: c.session?.itemId, action: "deal.conflict_blocked", targetList: "EndorsementDeal", targetId: row.id, after: { category: row.exclusivityCategory, conflictingDealIds: hit.map((x) => x.id) }, reason: "Exclusivity conflict with an active deal", requestId: a.idempotencyKey } }).catch(() => null);
+        throw new Error("Exclusivity conflict with an active deal");
+      }
     }
     return command(c, "canManageEndorsements", row.athleteId, "activateEndorsementDeal", a, async (tx) => {
-      if (await clash(tx)) throw new Error("Exclusivity conflict with an active deal");
+      const hit = await clash(tx);
+      if (hit.length) {
+        if (!a.approvalId) throw new Error("Exclusivity conflict with an active deal");
+        const ap = await tx.managerApproval.findUnique({ where: { id: a.approvalId } });
+        if (!ap || ap.actionType !== "exclusivity_override" || ap.targetId !== row.id) throw new Error("Approval does not match this request");
+        await consumeManagerApproval(tx, { approvalId: a.approvalId, actorId: c.session.itemId, actionType: "exclusivity_override", targetId: row.id, reason: ap.reason, amountCents: null, entityType: "EndorsementDeal", entityId: row.id });
+        await audit(tx, c, "deal.exclusivity_overridden", "EndorsementDeal", row.id, null, { approvalId: a.approvalId, conflictingDealIds: hit.map((x) => x.id) }, a.idempotencyKey);
+      }
       return transition(tx, c, "endorsementDeal", row.id, ["prospect", "negotiating", "signed"], "active", a.idempotencyKey);
+    });
+  },
+  async writeOffCommissionInvoice(_, a, c) {
+    const row = await locate(c, "commissionInvoice", a.invoiceId);
+    return command(c, "canManageCommissions", row.athleteId, "writeOffCommissionInvoice", a, async (tx) => {
+      if (!a.reason?.trim()) throw new Error("Write-off reason required");
+      const inv = await tx.commissionInvoice.findUnique({ where: { id: row.id } });
+      const balance = inv.totalCents - inv.paidCents;
+      if (!["sent", "partially_paid"].includes(inv.status) || balance < 1) throw new Error("Only an unpaid sent invoice can be written off");
+      await consumeManagerApproval(tx, { approvalId: a.approvalId, actorId: c.session.itemId, actionType: "commission_writeoff", targetId: inv.id, reason: a.reason, amountCents: balance, entityType: "CommissionInvoice", entityId: inv.id });
+      const result = await transition(tx, c, "commissionInvoice", inv.id, ["sent", "partially_paid"], "written_off", a.idempotencyKey);
+      await tx.commissionLedgerEntry.create({ data: { entryKey: "writeoff:" + inv.id, athleteId: inv.athleteId, invoiceId: inv.id, entryType: "write_off", amountCents: -BigInt(balance), reason: a.reason.trim(), preparedById: c.session.itemId, approvedById: (await tx.managerApproval.findUnique({ where: { id: a.approvalId } })).approvedById, occurredAt: /* @__PURE__ */ new Date(), currencyCode: inv.currencyCode } });
+      return result;
     });
   },
   async generateAutoTasks(_, a, c) {
@@ -1929,7 +2057,10 @@ var agencyTypeDefs = `
  postTrustEntry(accountId:ID!,entryType:String!,amountCents:Int!,reference:String!,invoiceId:ID,reversesId:ID,idempotencyKey:String!):AgencyJSON!
  moveRecruitingStage(athleteId:ID!,stage:String!,idempotencyKey:String!):AgencyJSON!
  completeDeliverable(deliverableId:ID!,proofLink:String!,idempotencyKey:String!):AgencyJSON!
- activateEndorsementDeal(dealId:ID!,idempotencyKey:String!):AgencyJSON!
+ activateEndorsementDeal(dealId:ID!,approvalId:ID,idempotencyKey:String!):AgencyJSON!
+ writeOffCommissionInvoice(invoiceId:ID!,reason:String!,approvalId:ID!,idempotencyKey:String!):AgencyJSON!
+ requestManagerApproval(actionType:String!,targetId:String!,amountCents:Int,reason:String!):AgencyJSON!
+ decideManagerApproval(approvalId:ID!,decision:String!):AgencyJSON!
  generateAutoTasks:AgencyJSON!
  }
 `;
@@ -2066,10 +2197,10 @@ var handlers = {
     const plan = ["draft", "sent", "partially_paid", "paid", "void"];
     let i = 0;
     let firstReceipt = null;
-    for (const [athleteId, list13] of byAthlete) {
+    for (const [athleteId, list14] of byAthlete) {
       if (i >= plan.length) break;
       const status = plan[i++];
-      const invoice = await run("draftCommissionInvoice", { athleteId, scheduledPaymentIds: list13.slice(0, 3).map((p) => p.id), idempotencyKey: "seed:inv:" + athleteId });
+      const invoice = await run("draftCommissionInvoice", { athleteId, scheduledPaymentIds: list14.slice(0, 3).map((p) => p.id), idempotencyKey: "seed:inv:" + athleteId });
       if (status === "void") {
         await run("voidCommissionInvoice", { invoiceId: invoice.id, reason: "Issued in error", idempotencyKey: "seed:void:" + invoice.id });
         continue;
@@ -2376,7 +2507,7 @@ function extendGraphqlSchema(baseSchema) {
         ...agencyQueries,
         ...portalQueries
       },
-      Mutation: { ...agencyMutations, ...portalMutations, ensureOnboardingRecord, updateActiveUser }
+      Mutation: { ...agencyMutations, ...portalMutations, ensureOnboardingRecord, updateActiveUser, requestManagerApproval, decideManagerApproval }
     }
   });
 }
@@ -2523,7 +2654,7 @@ var { withAuth } = (0, import_auth.createAuth)({
   `
 });
 var keystone_default = withAuth(
-  (0, import_core16.config)({
+  (0, import_core17.config)({
     db: {
       provider: "postgresql",
       url: databaseURL

@@ -31,6 +31,7 @@ import { PaymentSession } from "./PaymentSession";
 import { Payment } from "./Payment";
 import { Refund } from "./Refund";
 import { PaymentWebhookEvent } from "./PaymentWebhookEvent";
+import { ManagerApproval } from "./ManagerApproval";
 import { IdempotencyKey } from "./IdempotencyKey";
-export const models = { User, Role, OAuthApp, OAuthToken, Agency, AgentCertification, Team, Athlete, RepresentationAgreement, Contact, Brand, Interaction, PlayingContract, ContractYear, Incentive, EndorsementDeal, Deliverable, ScheduledPayment, CommissionInvoice, CommissionInvoiceLine, CommissionLedgerEntry, AgentSplit, ClientTrustAccount, ClientTrustEntry, Document, Task, AuditEvent, PaymentProvider, PaymentCollection, PaymentSession, Payment, Refund, PaymentWebhookEvent, IdempotencyKey };
+export const models = { User, Role, OAuthApp, OAuthToken, Agency, AgentCertification, Team, Athlete, RepresentationAgreement, Contact, Brand, Interaction, PlayingContract, ContractYear, Incentive, EndorsementDeal, Deliverable, ScheduledPayment, CommissionInvoice, CommissionInvoiceLine, CommissionLedgerEntry, AgentSplit, ClientTrustAccount, ClientTrustEntry, Document, Task, AuditEvent, PaymentProvider, PaymentCollection, PaymentSession, Payment, Refund, PaymentWebhookEvent, IdempotencyKey, ManagerApproval };
 export default models;

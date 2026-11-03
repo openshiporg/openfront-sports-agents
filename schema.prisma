@@ -32,6 +32,8 @@ model User {
   document_uploadedBy              Document[]                @relation("Document_uploadedBy")
   task_assignee                    Task[]                    @relation("Task_assignee")
   auditEvent_actor                 AuditEvent[]              @relation("AuditEvent_actor")
+  requestedApprovals               ManagerApproval[]         @relation("ManagerApproval_requestedBy")
+  approvedApprovals                ManagerApproval[]         @relation("ManagerApproval_approvedBy")
   onboardingStatus                 UserOnboardingStatusType? @default(not_started)
   createdAt                        DateTime                  @default(now())
   updatedAt                        DateTime                  @default(now()) @updatedAt
@@ -67,6 +69,7 @@ model Role {
   canIssueRefunds       Boolean  @default(false)
   canReadAudit          Boolean  @default(false)
   canManageOnboarding   Boolean  @default(false)
+  canApproveActions     Boolean  @default(false)
   assignedTo            User[]   @relation("User_role")
 }
 
@@ -809,6 +812,37 @@ model IdempotencyKey {
   updatedAt      DateTime  @default(now()) @updatedAt
 }
 
+model ManagerApproval {
+  id                 String                        @id @default(cuid())
+  actionType         ManagerApprovalActionTypeType
+  targetId           String                        @default("")
+  amountCents        Int?
+  reason             String                        @default("")
+  requestFingerprint String                        @default("")
+  requestPayload     Json?
+  status             ManagerApprovalStatusType     @default(requested)
+  requestedAt        DateTime?                     @default(now())
+  decidedAt          DateTime?
+  consumedAt         DateTime?
+  expiresAt          DateTime
+  consumedEntityType String                        @default("")
+  consumedEntityId   String                        @default("")
+  requestedBy        User?                         @relation("ManagerApproval_requestedBy", fields: [requestedById], references: [id])
+  requestedById      String?                       @map("requestedBy")
+  approvedBy         User?                         @relation("ManagerApproval_approvedBy", fields: [approvedById], references: [id])
+  approvedById       String?                       @map("approvedBy")
+  createdAt          DateTime                      @default(now())
+  updatedAt          DateTime                      @default(now()) @updatedAt
+
+  @@index([actionType])
+  @@index([targetId])
+  @@index([status])
+  @@index([requestedAt])
+  @@index([expiresAt])
+  @@index([requestedById])
+  @@index([approvedById])
+}
+
 enum UserOnboardingStatusType {
   not_started
   in_progress
@@ -992,4 +1026,17 @@ enum TaskPriorityType {
 enum PaymentCollectionDescriptionType {
   default
   refund
+}
+
+enum ManagerApprovalActionTypeType {
+  refund_payment
+  exclusivity_override
+  commission_writeoff
+}
+
+enum ManagerApprovalStatusType {
+  requested
+  approved
+  rejected
+  consumed
 }

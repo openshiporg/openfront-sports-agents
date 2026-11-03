@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { PlatformPage, Section, Row, Cell, Empty, ErrorState } from '../../components/Section'
 import { StatusLabel } from '../../components/StatusLabel'
+import { RequestApprovalButton } from '../../components/ApprovalControls'
 import { CommandButton } from '../../components/CommandButton'
 import { platformQuery, moneyExact, day } from '../../lib/query'
 
@@ -58,6 +59,8 @@ export default async function CommissionsPage({ searchParams }: { searchParams: 
               <Cell className="tabular-nums">{moneyExact(i.paidCents, i.currencyCode)} of {moneyExact(i.totalCents, i.currencyCode)}</Cell>
               {i.status === 'draft' && <CommandButton operation="sendCommissionInvoice" args={{ invoiceId: i.id }} label="Send" />}
               {['sent', 'partially_paid'].includes(i.status) && <CommandButton operation="recordInvoicePayment" args={{ invoiceId: i.id, amountCents: i.totalCents - i.paidCents, reference: 'Payment received' }} label="Record payment" />}
+              {['sent', 'partially_paid'].includes(i.status) && <RequestApprovalButton actionType="commission_writeoff" targetId={i.id} amountCents={i.totalCents - i.paidCents} label="Write off" />}
+              {['sent', 'partially_paid'].includes(i.status) && <RequestApprovalButton actionType="commission_writeoff" targetId={i.id} amountCents={i.totalCents - i.paidCents} label="Write off" />}
             </Row>
           )) : <Empty>No invoices</Empty>}
         </Section>

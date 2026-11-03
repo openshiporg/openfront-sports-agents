@@ -1,6 +1,7 @@
 import {permissions} from '../access';
 import {command,audit,transition,humanCode,authorizeAthlete} from '../lib/agencyCommand';
 import {applyInvoiceReceipt} from '../lib/invoiceReceipt';
+import {consumeManagerApproval} from '../utils/managerApproval';
 import {commission,allocateCommission,installmentAmounts,trustBalance,exactReversal} from '../lib/commission';
 async function locate(context:any,model:string,id:string,include:any={}){if(!context.session)throw new Error('Not authorized');const row=await context.prisma[model].findUnique({where:{id},include});if(!row)throw new Error('Record not found');return row;}
 export const agencyMutations = {
@@ -71,9 +72,23 @@ export const agencyMutations = {
  });},
 
  async activateEndorsementDeal(_:unknown,a:any,c:any){const row=await locate(c,'endorsementDeal',a.dealId);
- const clash=async(db:any)=>row.termStart&&row.termEnd&&row.exclusivityCategory?db.endorsementDeal.findFirst({where:{athleteId:row.athleteId,id:{not:row.id},exclusivityCategory:row.exclusivityCategory,status:{in:['signed','active']},termStart:{lte:row.termEnd},termEnd:{gte:row.termStart}},select:{id:true}}):null;
- if(await clash(c.prisma)){await c.prisma.auditEvent.create({data:{actorId:c.session?.itemId,action:'deal.conflict_blocked',targetList:'EndorsementDeal',targetId:row.id,after:{category:row.exclusivityCategory},reason:'Exclusivity conflict with an active deal',requestId:a.idempotencyKey}}).catch(()=>null);throw new Error('Exclusivity conflict with an active deal');}
- return command(c,'canManageEndorsements',row.athleteId,'activateEndorsementDeal',a,async tx=>{if(await clash(tx))throw new Error('Exclusivity conflict with an active deal');return transition(tx,c,'endorsementDeal',row.id,['prospect','negotiating','signed'],'active',a.idempotencyKey);});},
+ const clash=async(db:any)=>row.termStart&&row.termEnd&&row.exclusivityCategory?db.endorsementDeal.findMany({where:{athleteId:row.athleteId,id:{not:row.id},exclusivityCategory:row.exclusivityCategory,status:{in:['signed','active']},termStart:{lte:row.termEnd},termEnd:{gte:row.termStart}},select:{id:true},take:20}):[];
+ if(!a.approvalId){const hit=await clash(c.prisma);if(hit.length){await c.prisma.auditEvent.create({data:{actorId:c.session?.itemId,action:'deal.conflict_blocked',targetList:'EndorsementDeal',targetId:row.id,after:{category:row.exclusivityCategory,conflictingDealIds:hit.map((x:any)=>x.id)},reason:'Exclusivity conflict with an active deal',requestId:a.idempotencyKey}}).catch(()=>null);throw new Error('Exclusivity conflict with an active deal');}}
+ return command(c,'canManageEndorsements',row.athleteId,'activateEndorsementDeal',a,async tx=>{const hit=await clash(tx);
+ if(hit.length){if(!a.approvalId)throw new Error('Exclusivity conflict with an active deal');
+  const ap=await tx.managerApproval.findUnique({where:{id:a.approvalId}});if(!ap||ap.actionType!=='exclusivity_override'||ap.targetId!==row.id)throw new Error('Approval does not match this request');
+  await consumeManagerApproval(tx,{approvalId:a.approvalId,actorId:c.session.itemId,actionType:'exclusivity_override',targetId:row.id,reason:ap.reason,amountCents:null,entityType:'EndorsementDeal',entityId:row.id});
+  await audit(tx,c,'deal.exclusivity_overridden','EndorsementDeal',row.id,null,{approvalId:a.approvalId,conflictingDealIds:hit.map((x:any)=>x.id)},a.idempotencyKey);}
+ return transition(tx,c,'endorsementDeal',row.id,['prospect','negotiating','signed'],'active',a.idempotencyKey);});},
+ async writeOffCommissionInvoice(_:unknown,a:any,c:any){const row=await locate(c,'commissionInvoice',a.invoiceId);return command(c,'canManageCommissions',row.athleteId,'writeOffCommissionInvoice',a,async tx=>{
+ if(!a.reason?.trim())throw new Error('Write-off reason required');
+ const inv=await tx.commissionInvoice.findUnique({where:{id:row.id}});const balance=inv.totalCents-inv.paidCents;
+ if(!['sent','partially_paid'].includes(inv.status)||balance<1)throw new Error('Only an unpaid sent invoice can be written off');
+ await consumeManagerApproval(tx,{approvalId:a.approvalId,actorId:c.session.itemId,actionType:'commission_writeoff',targetId:inv.id,reason:a.reason,amountCents:balance,entityType:'CommissionInvoice',entityId:inv.id});
+ const result=await transition(tx,c,'commissionInvoice',inv.id,['sent','partially_paid'],'written_off',a.idempotencyKey);
+ await tx.commissionLedgerEntry.create({data:{entryKey:'writeoff:'+inv.id,athleteId:inv.athleteId,invoiceId:inv.id,entryType:'write_off',amountCents:-BigInt(balance),reason:a.reason.trim(),preparedById:c.session.itemId,approvedById:(await tx.managerApproval.findUnique({where:{id:a.approvalId}})).approvedById,occurredAt:new Date(),currencyCode:inv.currencyCode}});
+ return result;
+ });},
  async generateAutoTasks(_:unknown,a:any,c:any){if(!c.session?.itemId||!permissions.canManageAthletes({session:c.session}))throw new Error('Not authorized');const db=c.prisma,now=Date.now(),day=86400000,out:any[]=[];
  const make=async(autoKey:string,title:string,dueAt:Date,extra:any,assigneeId?:string|null)=>{if(await db.task.findUnique({where:{autoKey}}))return;out.push(await db.task.create({data:{autoKey,title,dueAt,priority:'high',status:'open',...(assigneeId?{assigneeId}:{}),...extra}}));};
  for(const x of await db.agentCertification.findMany({where:{status:'active',expiresAt:{lte:new Date(now+60*day)}},take:200}))await make('cert:'+x.id,'Renew agent certification',x.expiresAt,{},x.userId);
@@ -102,7 +117,10 @@ export const agencyTypeDefs = `
  postTrustEntry(accountId:ID!,entryType:String!,amountCents:Int!,reference:String!,invoiceId:ID,reversesId:ID,idempotencyKey:String!):AgencyJSON!
  moveRecruitingStage(athleteId:ID!,stage:String!,idempotencyKey:String!):AgencyJSON!
  completeDeliverable(deliverableId:ID!,proofLink:String!,idempotencyKey:String!):AgencyJSON!
- activateEndorsementDeal(dealId:ID!,idempotencyKey:String!):AgencyJSON!
+ activateEndorsementDeal(dealId:ID!,approvalId:ID,idempotencyKey:String!):AgencyJSON!
+ writeOffCommissionInvoice(invoiceId:ID!,reason:String!,approvalId:ID!,idempotencyKey:String!):AgencyJSON!
+ requestManagerApproval(actionType:String!,targetId:String!,amountCents:Int,reason:String!):AgencyJSON!
+ decideManagerApproval(approvalId:ID!,decision:String!):AgencyJSON!
  generateAutoTasks:AgencyJSON!
  }
 `;

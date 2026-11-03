@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { PlatformPage, Section, Row, Cell, Empty, ErrorState } from '../../components/Section'
 import { StatusLabel } from '../../components/StatusLabel'
+import { RequestApprovalButton } from '../../components/ApprovalControls'
 import { CommandButton } from '../../components/CommandButton'
 import { platformQuery, money, day } from '../../lib/query'
 
@@ -14,6 +15,7 @@ export default async function EndorsementsPage({ searchParams }: { searchParams:
     data = await platformQuery(`{ endorsementDeals(orderBy: { termStart: asc }, take: 200) { id status termStart termEnd totalValueCents currencyCode exclusivityCategory athlete { id fullName } brand { name } owner { name } }
       deliverables(orderBy: { dueAt: asc }, take: 200) { id kind status dueAt completedAt proofLink deal { id exclusivityCategory athlete { fullName } brand { name } } } }`)
   } catch (e: any) { return <PlatformPage title="Endorsements"><ErrorState message={e.message} /></PlatformPage> }
+  for (const d of data.endorsementDeals) d.blocked = ['prospect', 'negotiating', 'signed'].includes(d.status) && !!d.exclusivityCategory && data.endorsementDeals.some((o: any) => o.id !== d.id && o.athlete?.id === d.athlete?.id && o.exclusivityCategory === d.exclusivityCategory && ['signed', 'active'].includes(o.status) && o.termStart <= d.termEnd && o.termEnd >= d.termStart)
   return (
     <PlatformPage title="Endorsements">
       <div className="inline-flex gap-1 rounded-lg bg-muted p-1">
@@ -30,7 +32,7 @@ export default async function EndorsementsPage({ searchParams }: { searchParams:
                 <Cell className="font-medium"><StatusLabel value={d.status} className="mr-2" />{d.athlete?.fullName} <span className="font-normal text-muted-foreground">for {d.brand?.name}</span></Cell>
                 <Cell muted>{d.exclusivityCategory} · {day(d.termStart)} to {day(d.termEnd)} · {d.owner?.name}</Cell>
                 <Cell className="tabular-nums">{money(d.totalValueCents, d.currencyCode)}</Cell>
-                {['prospect', 'negotiating', 'signed'].includes(d.status) && <CommandButton operation="activateEndorsementDeal" args={{ dealId: d.id }} label="Activate" />}
+                {['prospect', 'negotiating', 'signed'].includes(d.status) && (d.blocked ? <RequestApprovalButton actionType="exclusivity_override" targetId={d.id} label="Request override" /> : <CommandButton operation="activateEndorsementDeal" args={{ dealId: d.id }} label="Activate" />)}
               </Row>
             ))}
           </Section>
