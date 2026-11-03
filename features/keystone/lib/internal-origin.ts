@@ -77,31 +77,3 @@ export function createInternalGraphqlFetch(source: string | null | undefined, en
     }
   }
 }
-
-/** Adds the signed end-user identity of the incoming request to the headers of a loopback GraphQL call. */
-export function applyInternalIdentity(target: Headers, incoming: HeaderReader | null | undefined): Headers {
-  for (const [name, value] of Object.entries(internalIdentityHeaders(clientSourceFromHeaders(incoming)))) target.set(name, value)
-  return target
-}
-
-/**
- * A fetch for server-side GraphQL clients that live longer than one request: the visitor's address is
- * read from the current request at call time and signed per call. Browser calls are left untouched.
- */
-export function withRequestIdentity(
-  inner: typeof fetch = fetch,
-  currentRequestHeaders: () => Promise<HeaderReader | null | undefined> = async () => (await import('next/headers')).headers(),
-): typeof fetch {
-  // The visitor is read from the CURRENT request on every call, never captured when a client is built,
-  // so a cached/singleton GraphQL client can never pin the first visitor's identity.
-  return async (input, init) => {
-    if (typeof window !== 'undefined') return inner(input, init)
-    const headers = new Headers(init?.headers)
-    try {
-      applyInternalIdentity(headers, await currentRequestHeaders())
-    } catch {
-      // No request scope: send unsigned, as before.
-    }
-    return inner(input, { ...init, headers })
-  }
-}

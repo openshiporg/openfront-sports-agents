@@ -1,18 +1,14 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { signInternalClientIdentity, verifiedInternalIdentity } from '../security/internalIdentity'
+import { requestIdentity, signInternalClientIdentity } from '../security/internalIdentity'
 import {
   clientSourceFromHeaders,
   createInternalGraphqlFetch,
   internalGraphqlEndpoint,
   internalIdentityHeaders,
   loopbackOrigin,
-  withRequestIdentity,
 } from './internal-origin'
-
-const requestIdentity = (headers: Record<string, string>, socket: string | null | undefined, secret: string, now: number) =>
-  verifiedInternalIdentity(headers, socket, secret, now) ?? `plain:${socket ?? 'unknown'}`
 
 const SECRET = 'a'.repeat(40)
 
@@ -65,12 +61,29 @@ test('SECURITY (a) valid signature from a loopback socket becomes the forwarded 
   }
 })
 
-test('SECURITY (b) the same valid headers from a non-loopback socket are ignored', () => {
-  const now = Date.now()
-  const { headers } = signedHeaders(now)
-  const spoofed = { ...headers, 'x-forwarded-for': '127.0.0.1', 'x-real-ip': '127.0.0.1' }
-  for (const socket of ['10.0.0.5', '100.64.0.9', '203.0.113.99', '::ffff:10.0.0.5', undefined, null]) {
-    assert.equal(verifiedInternalIdentity(spoofed, socket, SECRET, now), null)
+test('SECURITY (b) the same valid headers from a non-loopback socket are ignored (normal IP identity)', () => {
+  const prevRailway = process.env.RAILWAY_ENVIRONMENT
+  process.env.RAILWAY_ENVIRONMENT = 'production'
+  try {
+    const now = Date.now()
+    const { headers } = signedHeaders(now)
+    // Even with spoofed forwarding headers the socket address, not a header, decides loopback.
+    const spoofed = { ...headers, 'x-forwarded-for': '127.0.0.1', 'x-real-ip': '127.0.0.1' }
+    for (const socket of ['10.0.0.5', '100.64.0.9', '203.0.113.99', '::ffff:10.0.0.5']) {
+      assert.equal(requestIdentity(spoofed, socket, SECRET, now), '127.0.0.1', `edge x-real-ip is used for ${socket}`)
+      const noReal = requestIdentity(headers, socket, SECRET, now)
+      assert.ok(!noReal.startsWith('forwarded:'), socket)
+      assert.equal(noReal, socket)
+    }
+    const undef = requestIdentity(headers, undefined, SECRET, now)
+    assert.ok(!undef.startsWith('forwarded:'))
+    assert.equal(undef, 'unknown-local-client')
+    assert.ok(!requestIdentity(headers, null, SECRET, now).startsWith('forwarded:'))
+    // A loopback address supplied only via headers never grants the signed path.
+    assert.ok(!requestIdentity({ 'x-real-ip': '127.0.0.1', 'x-forwarded-for': '127.0.0.1' }, '10.0.0.5', SECRET, now).startsWith('forwarded:'))
+  } finally {
+    if (prevRailway === undefined) delete process.env.RAILWAY_ENVIRONMENT
+    else process.env.RAILWAY_ENVIRONMENT = prevRailway
   }
 })
 
@@ -148,93 +161,31 @@ test('browser never signs: the dashboard target falls back to the public endpoin
   }
 })
 
-test('applyInternalIdentity replaces the plain x-real-ip passthrough with the signed identity', async () => {
-  const prev = { p: process.env.PORT, s: process.env.SESSION_SECRET }
-  process.env.PORT = '4321'
-  process.env.SESSION_SECRET = SECRET
-  const original = globalThis.fetch
-  const seen: Headers[] = []
-  globalThis.fetch = (async (url: any, init: any) => { seen.push(new Headers(init.headers)); seen.push(new Headers({ 'x-url': String(url) })); return new Response('{"data":{}}') }) as typeof fetch
-  try {
-    const { applyInternalIdentity } = await import('./internal-origin')
-    const outgoing = new Headers({ 'x-real-ip': '9.9.9.9', 'x-openfront-client-identity': 'f'.repeat(64) })
-    for (const name of ['x-real-ip', 'x-openfront-client-identity']) outgoing.delete(name)
-    applyInternalIdentity(outgoing, { get: (n: string) => (n === 'x-real-ip' ? '203.0.113.7' : null) })
-    assert.equal(outgoing.get('x-real-ip'), null)
-    assert.match(outgoing.get('x-openfront-client-identity') || '', /^[a-f0-9]{64}$/)
-  } finally {
-    globalThis.fetch = original
-    if (prev.p === undefined) delete process.env.PORT; else process.env.PORT = prev.p
-    if (prev.s === undefined) delete process.env.SESSION_SECRET; else process.env.SESSION_SECRET = prev.s
-  }
-})
-
-test('server target: loopback + signed headers when PORT is valid; public and unsigned when PORT is unset or invalid', async () => {
-  const prevPort = process.env.PORT
-  const prevSecret = process.env.SESSION_SECRET
-  process.env.SESSION_SECRET = SECRET
+test('two visitors get two different signed identities through the server target (no frozen client)', async () => {
   const { getServerGraphQLTarget } = await import('../../dashboard/lib/getBaseUrl')
-  const source = { get: (n: string) => ({ 'x-real-ip': '203.0.113.7', host: 'store.example' } as Record<string, string>)[n] ?? null }
-  const original = globalThis.fetch
-  let seen: Headers | undefined
-  globalThis.fetch = (async (_u: any, init: any) => { seen = new Headers(init.headers); return new Response('{}') }) as typeof fetch
-  try {
-    process.env.PORT = '4321'
-    const target = await getServerGraphQLTarget(source)
-    assert.equal(target.endpoint, 'http://127.0.0.1:4321/api/graphql')
-    await target.fetch!(target.endpoint, { method: 'POST' })
-    assert.match(seen?.get('x-openfront-client-signature') || '', /^[a-f0-9]{64}$/)
-    for (const bad of [undefined, 'abc', '0']) {
-      if (bad === undefined) delete process.env.PORT; else process.env.PORT = bad
-      const t = await getServerGraphQLTarget(source)
-      assert.equal(t.fetch, undefined)
-      assert.ok(!t.endpoint.startsWith('http://127.0.0.1'))
-    }
-  } finally {
-    globalThis.fetch = original
-    if (prevPort === undefined) delete process.env.PORT; else process.env.PORT = prevPort
-    if (prevSecret === undefined) delete process.env.SESSION_SECRET; else process.env.SESSION_SECRET = prevSecret
-  }
-})
-
-test('withRequestIdentity signs on the server and leaves unsigned when there is no request scope or no secret', async () => {
-  const prev = process.env.SESSION_SECRET
-  process.env.SESSION_SECRET = 'short'
-  let seen: Headers | undefined
-  const inner = (async (_u: any, init: any) => { seen = new Headers(init.headers); return new Response('{}') }) as typeof fetch
-  try {
-    await withRequestIdentity(inner)('http://127.0.0.1:1/api/graphql', { headers: { cookie: 'a=b' } })
-    assert.equal(seen?.get('cookie'), 'a=b')
-    assert.equal(seen?.get('x-openfront-client-identity'), null)
-    ;(globalThis as any).window = {}
-    await withRequestIdentity(inner)('https://x.example/api/graphql', {})
-    assert.equal(seen?.get('x-openfront-client-identity'), null)
-  } finally {
-    delete (globalThis as any).window
-    if (prev === undefined) delete process.env.SESSION_SECRET; else process.env.SESSION_SECRET = prev
-  }
-})
-
-test('a long-lived client signs the CURRENT visitor on every call (two visitors, two identities, never the first one)', async () => {
-  const prev = process.env.SESSION_SECRET
+  const h = (o: Record<string, string>) => ({ get: (n: string) => o[n] ?? null })
+  const prev = { port: process.env.PORT, secret: process.env.SESSION_SECRET, fetch: globalThis.fetch }
+  const seen: Array<Record<string, string>> = []
+  process.env.PORT = '4555'
   process.env.SESSION_SECRET = SECRET
-  const seen: Headers[] = []
-  const inner = (async (_u: any, init: any) => { seen.push(new Headers(init.headers)); return new Response('{}') }) as typeof fetch
-  let current: Record<string, string> = { 'x-real-ip': '203.0.113.7' }
-  const reader = async () => ({ get: (n: string) => current[n] ?? null })
+  globalThis.fetch = (async (_url: unknown, init?: RequestInit) => {
+    seen.push(Object.fromEntries(new Headers(init?.headers).entries()))
+    return new Response('{}')
+  }) as typeof fetch
   try {
-    const shared = withRequestIdentity(inner, reader) // built once, like a cached client
-    await shared('http://127.0.0.1:1/api/graphql', {})
-    current = { 'x-real-ip': '198.51.100.9' }
-    await shared('http://127.0.0.1:1/api/graphql', {})
-    await shared('http://127.0.0.1:1/api/graphql', {})
-    const ids = seen.map((h) => h.get('x-openfront-client-identity'))
-    assert.match(ids[0] || '', /^[a-f0-9]{64}$/)
-    assert.notEqual(ids[0], ids[1])
-    assert.equal(ids[1], ids[2])
-    assert.equal(ids[0], internalIdentityHeaders('203.0.113.7')['x-openfront-client-identity'])
-    assert.equal(ids[1], internalIdentityHeaders('198.51.100.9')['x-openfront-client-identity'])
+    const a = await getServerGraphQLTarget(h({ 'x-real-ip': '203.0.113.7' }))
+    const b = await getServerGraphQLTarget(h({ 'x-real-ip': '203.0.113.8' }))
+    assert.equal(a.endpoint, 'http://127.0.0.1:4555/api/graphql')
+    await a.fetch!(a.endpoint)
+    await b.fetch!(b.endpoint)
+    await a.fetch!(a.endpoint)
+    assert.equal(seen.length, 3)
+    assert.notEqual(seen[0]['x-openfront-client-identity'], seen[1]['x-openfront-client-identity'])
+    assert.equal(seen[0]['x-openfront-client-identity'], seen[2]['x-openfront-client-identity'])
+    assert.ok(seen[1]['x-openfront-client-signature'])
   } finally {
-    if (prev === undefined) delete process.env.SESSION_SECRET; else process.env.SESSION_SECRET = prev
+    globalThis.fetch = prev.fetch
+    if (prev.port === undefined) delete process.env.PORT; else process.env.PORT = prev.port
+    if (prev.secret === undefined) delete process.env.SESSION_SECRET; else process.env.SESSION_SECRET = prev.secret
   }
 })

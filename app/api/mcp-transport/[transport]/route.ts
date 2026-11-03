@@ -12,13 +12,7 @@ import {
   isListType,
   isInputObjectType,
 } from 'graphql';
-import { getBaseUrl } from '@/features/dashboard/lib/getBaseUrl';
-import { internalGraphqlEndpoint, withRequestIdentity } from '@/features/keystone/lib/internal-origin';
-
-// Self-calls to /api/graphql carry the caller's signed identity, read from the current request per call.
-const selfFetch = withRequestIdentity();
-import { keystoneContext } from '@/features/keystone/context';
-import { authorizeMcpRequest } from '@/features/keystone/mcp-oauth/http';
+import { getBaseUrl, getServerGraphQLTarget } from '@/features/dashboard/lib/getBaseUrl';
 
 // Get simple type name for display
 function getSimpleTypeName(type: any): string {
@@ -31,13 +25,13 @@ function getSimpleTypeName(type: any): string {
   return type.name || type.toString();
 }
 
-// Execute GraphQL query as the caller: their session cookie, or their MCP OAuth bearer token
-async function executeGraphQL(query: string, graphqlEndpoint: string, auth: Record<string, string>): Promise<any> {
-  const response = await selfFetch(graphqlEndpoint, {
+// Execute GraphQL query with authentication
+async function executeGraphQL(query: string, graphqlEndpoint: string, cookie: string, doFetch: typeof fetch = fetch): Promise<any> {
+  const response = await doFetch(graphqlEndpoint, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      ...auth,
+      'Cookie': cookie,
     },
     body: JSON.stringify({ query }),
   });
@@ -50,12 +44,12 @@ async function executeGraphQL(query: string, graphqlEndpoint: string, auth: Reco
 }
 
 // Get GraphQL schema from introspection
-async function getGraphQLSchema(graphqlEndpoint: string, auth: Record<string, string>): Promise<GraphQLSchema> {
-  const response = await selfFetch(graphqlEndpoint, {
+async function getGraphQLSchema(graphqlEndpoint: string, cookie: string, doFetch: typeof fetch = fetch): Promise<GraphQLSchema> {
+  const response = await doFetch(graphqlEndpoint, {
     method: 'POST',
     headers: { 
       'Content-Type': 'application/json',
-      ...auth,
+      'Cookie': cookie,
     },
     body: JSON.stringify({ query: getIntrospectionQuery() }),
   });
@@ -80,24 +74,18 @@ export async function POST(request: Request, { params }: { params: Promise<{ tra
     const { transport } = await params;
     
     // Construct GraphQL endpoint
-    const graphqlEndpoint = internalGraphqlEndpoint() ?? `${await getBaseUrl()}/api/graphql`;
+    // Self-call: loopback with a signed end-user identity when the port is known, public otherwise.
+    const { endpoint: graphqlEndpoint, fetch: internalFetch } = await getServerGraphQLTarget(request.headers);
+    const gqlFetch = internalFetch ?? fetch;
+    
+    // Extract cookie from request
+    const cookie = request.headers.get('cookie') || ''
+  
+    // Get the GraphQL schema
+    const schema = await getGraphQLSchema(graphqlEndpoint, cookie, gqlFetch);
     
     // Parse the JSON-RPC request
     const body = await request.json();
-
-    // Every call runs as one Keystone user: the session cookie (built-in assistant)
-    // or an MCP OAuth token. Without either, answer with the OAuth challenge.
-    const authorization = await authorizeMcpRequest(keystoneContext, request, body);
-    if (authorization instanceof Response) return authorization;
-    const auth = authorization.forwardHeaders;
-
-    // Notifications have no response body (Streamable HTTP: 202 Accepted)
-    if (typeof body.method === 'string' && body.method.startsWith('notifications/')) {
-      return new Response(null, { status: 202 });
-    }
-
-    // Get the GraphQL schema
-    const schema = await getGraphQLSchema(graphqlEndpoint, auth);
     
     // Handle the request based on method
     if (body.method === 'initialize') {
@@ -118,7 +106,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ tra
         status: 200,
         headers: { 'Content-Type': 'application/json' },
       });
-    } else if (body.method === 'ping') {
+    } else if (body.method === 'notifications/initialized') {
       return new Response(JSON.stringify({
         jsonrpc: '2.0',
         id: body.id,
@@ -145,7 +133,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ tra
           properties: {
             operation: {
               type: 'string',
-              description: 'The GraphQL operation name (e.g., "users", "tasks", "roles")'
+              description: 'The GraphQL operation name (e.g., "users", "todos", "roles")'
             },
             fields: {
               type: 'string',
@@ -162,7 +150,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ tra
           properties: {
             searchTerm: {
               type: 'string',
-              description: 'The search term to find models (e.g., "User", "Task", "Role")'
+              description: 'The search term to find models (e.g., "User", "Todo", "Role")'
             }
           },
           required: ['searchTerm']
@@ -175,7 +163,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ tra
           properties: {
             typeName: {
               type: 'string',
-              description: 'The GraphQL type name to get fields for (e.g., "User", "Task", "Role")'
+              description: 'The GraphQL type name to get fields for (e.g., "User", "Todo", "Role")'
             }
           },
           required: ['typeName']
@@ -188,7 +176,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ tra
           properties: {
             inputTypeName: {
               type: 'string',
-              description: 'The GraphQL input type name (e.g., "UserCreateInput", "TaskUpdateInput")'
+              description: 'The GraphQL input type name (e.g., "UserCreateInput", "TodoUpdateInput")'
             }
           },
           required: ['inputTypeName']
@@ -201,7 +189,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ tra
           properties: {
             operation: {
               type: 'string',
-              description: 'The GraphQL create mutation name (e.g., "createUser", "createTask")'
+              description: 'The GraphQL create mutation name (e.g., "createUser", "createTodo")'
             },
             data: {
               type: 'string',
@@ -222,7 +210,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ tra
           properties: {
             operation: {
               type: 'string',
-              description: 'The GraphQL update mutation name (e.g., "updateUser", "updateTask")'
+              description: 'The GraphQL update mutation name (e.g., "updateUser", "updateTodo")'
             },
             where: {
               type: 'string',
@@ -247,7 +235,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ tra
           properties: {
             operation: {
               type: 'string',
-              description: 'The GraphQL delete mutation name (e.g., "deleteUser", "deleteTask")'
+              description: 'The GraphQL delete mutation name (e.g., "deleteUser", "deleteTodo")'
             },
             where: {
               type: 'string',
@@ -268,7 +256,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ tra
           properties: {
             modelName: {
               type: 'string',
-              description: 'The model name to search (e.g., "Product", "User", "Task"). Will be automatically converted to the correct GraphQL operation name.'
+              description: 'The model name to search (e.g., "Product", "User", "Todo"). Will be automatically converted to the correct GraphQL operation name.'
             },
             searchQuery: {
               type: 'string',
@@ -377,7 +365,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ tra
           `.trim();
           
           // Execute the query
-          const result = await executeGraphQL(queryString, graphqlEndpoint, auth);
+          const result = await executeGraphQL(queryString, graphqlEndpoint, cookie || '', gqlFetch);
           
           return new Response(JSON.stringify({
             jsonrpc: '2.0',
@@ -630,7 +618,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ tra
           `.trim();
           
           // Execute the mutation
-          const result = await executeGraphQL(mutationString, graphqlEndpoint, auth);
+          const result = await executeGraphQL(mutationString, graphqlEndpoint, cookie || '', gqlFetch);
           
           // Mark that data has changed
           dataHasChanged = true;
@@ -669,7 +657,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ tra
           `.trim();
           
           // Execute the mutation
-          const result = await executeGraphQL(mutationString, graphqlEndpoint, auth);
+          const result = await executeGraphQL(mutationString, graphqlEndpoint, cookie || '', gqlFetch);
           
           // Mark that data has changed
           dataHasChanged = true;
@@ -707,7 +695,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ tra
           `.trim();
           
           // Execute the mutation
-          const result = await executeGraphQL(mutationString, graphqlEndpoint, auth);
+          const result = await executeGraphQL(mutationString, graphqlEndpoint, cookie || '', gqlFetch);
           
           // Mark that data has changed
           dataHasChanged = true;
@@ -860,7 +848,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ tra
           `.trim();
           
           // Execute the search query
-          const result = await executeGraphQL(queryString, graphqlEndpoint, auth);
+          const result = await executeGraphQL(queryString, graphqlEndpoint, cookie || '', gqlFetch);
           
           return new Response(JSON.stringify({
             jsonrpc: '2.0',
@@ -928,10 +916,18 @@ export async function POST(request: Request, { params }: { params: Promise<{ tra
   }
 }
 
-// Stateless Streamable HTTP: no server-initiated SSE stream, so GET is 405 (MCP spec).
-export async function GET() {
-  return new Response(JSON.stringify({ error: 'Method not allowed. POST JSON-RPC to this endpoint.' }), {
-    status: 405,
-    headers: { 'Content-Type': 'application/json', Allow: 'POST' },
+export async function GET(request: Request, { params }: { params: Promise<{ transport: string }> }) {
+  const { transport } = await params;
+  
+  const baseUrl = await getBaseUrl();
+  const graphqlEndpoint = `${baseUrl}/api/graphql`;
+  
+  return new Response(JSON.stringify({ 
+    message: 'Simple MCP Server is running',
+    transport: transport,
+    graphqlEndpoint
+  }), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
   });
 }

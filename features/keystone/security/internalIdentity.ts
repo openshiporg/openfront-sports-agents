@@ -2,7 +2,7 @@ import { createHash, createHmac, timingSafeEqual } from 'node:crypto'
 
 /**
  * Dependency-free signer for the loopback-only forwarded client identity.
- * verifiedInternalIdentity verifies it (loopback socket + fresh HMAC).
+ * graphqlSecurity re-exports it and verifies it (loopback socket + fresh HMAC).
  */
 export function signInternalClientIdentity(source: string, secret: string, now = Date.now()) {
   if (!source || secret.length < 32) return null
@@ -20,7 +20,7 @@ function safeEqual(left: string, right: string) {
   return leftBuffer.length === rightBuffer.length && timingSafeEqual(leftBuffer, rightBuffer)
 }
 
-/** Verifier (copied from hospital): accepted only from a loopback socket with a fresh, valid HMAC. */
+/** Verifier (copied from hospital graphqlSecurity): loopback socket only, fresh HMAC, secret >= 32. */
 export function verifiedInternalIdentity(
   headers: Record<string, string | string[] | undefined>,
   socketAddress: string | null | undefined,
@@ -37,4 +37,20 @@ export function verifiedInternalIdentity(
   if (!Number.isFinite(age) || age > INTERNAL_IDENTITY_MAX_AGE_MS) return null
   const expected = createHmac('sha256', secret).update(`${timestamp}:${identity}`).digest('hex')
   return safeEqual(signature, expected) ? `forwarded:${identity}` : null
+}
+
+/** Hospital identity order: verified internal identity, else x-real-ip on Railway, else the socket. */
+export function requestIdentity(
+  headers: Record<string, string | string[] | undefined>,
+  socketAddress?: string | null,
+  secret = String(process.env.SESSION_SECRET || ''),
+  now = Date.now(),
+) {
+  const internal = verifiedInternalIdentity(headers, socketAddress, secret, now)
+  if (internal) return internal
+  if (process.env.RAILWAY_ENVIRONMENT) {
+    const realIp = String(headers['x-real-ip'] || '').split(',')[0]?.trim()
+    if (realIp) return realIp
+  }
+  return socketAddress || 'unknown-local-client'
 }
