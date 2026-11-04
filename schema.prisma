@@ -593,6 +593,9 @@ model Document {
   agreementId                            String?                   @map("agreement")
   kind                                   String                    @default("")
   version                                Int?                      @default(1)
+  fileName                               String                    @default("")
+  mimeType                               String                    @default("")
+  byteSize                               Int?
   sha256                                 String                    @default("")
   storageKey                             String                    @default("")
   uploadedBy                             User?                     @relation("Document_uploadedBy", fields: [uploadedById], references: [id])

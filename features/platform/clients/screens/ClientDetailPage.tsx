@@ -1,4 +1,7 @@
 import Link from 'next/link'
+import { DocumentUpload } from '../components/DocumentUpload'
+import { DownloadDocument } from '../components/DownloadDocument'
+import { objectStorageConfigured } from '@/features/integrations/storage'
 import { LogInteraction } from '../components/LogInteraction'
 import { DraftAgreement } from '../components/DraftAgreement'
 import { notFound } from 'next/navigation'
@@ -21,7 +24,7 @@ const QUERY = `query ClientDetail($id: ID!) {
     commissionLedgerEntry_athlete(orderBy: { occurredAt: desc }, take: 40) { id entryType amountCents reason occurredAt }
     clientTrustAccount_athlete { id name currencyCode }
     clientTrustEntry_athlete(orderBy: { occurredAt: desc }, take: 40) { id entryType amountCents reference occurredAt }
-    document_athlete(orderBy: { createdAt: desc }) { id kind version sha256 createdAt }
+    document_athlete(orderBy: { createdAt: desc }) { id kind version sha256 fileName byteSize verifiedAt createdAt }
     interaction_athlete(orderBy: { occurredAt: desc }, take: 40) { id kind summary occurredAt }
   }
 }`
@@ -118,8 +121,9 @@ export default async function ClientDetailPage({ params, searchParams }: { param
       )}
       {tab === 'documents' && (
         <Section title="Documents">
+          <DocumentUpload athleteId={a.id} configured={objectStorageConfigured()} />
           {a.document_athlete.length ? a.document_athlete.map((d: any) => (
-            <Row key={d.id}><Cell>{d.kind} v{d.version}</Cell><Cell muted className="font-mono">{String(d.sha256).slice(0, 12)}</Cell><Cell muted>{day(d.createdAt)}</Cell></Row>
+            <Row key={d.id}><Cell><StatusLabel value={d.verifiedAt ? 'verified' : 'unverified'} className="mr-2" />{d.fileName || d.kind} v{d.version}</Cell><Cell muted className="font-mono">{String(d.sha256).slice(0, 12)}</Cell><Cell muted>{day(d.createdAt)}</Cell>{d.verifiedAt && objectStorageConfigured() ? <DownloadDocument documentId={d.id} /> : null}</Row>
           )) : <Empty>No documents</Empty>}
         </Section>
       )}

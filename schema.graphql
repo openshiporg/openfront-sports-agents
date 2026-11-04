@@ -3327,6 +3327,9 @@ type Document {
   agreement: RepresentationAgreement
   kind: String
   version: Int
+  fileName: String
+  mimeType: String
+  byteSize: Int
   sha256: String
   storageKey: String
   uploadedBy: User
@@ -3360,6 +3363,9 @@ input DocumentWhereInput {
   agreement: RepresentationAgreementWhereInput
   kind: StringFilter
   version: IntNullableFilter
+  fileName: StringFilter
+  mimeType: StringFilter
+  byteSize: IntNullableFilter
   sha256: StringFilter
   storageKey: StringFilter
   uploadedBy: UserWhereInput
@@ -3377,6 +3383,9 @@ input DocumentOrderByInput {
   id: OrderDirection
   kind: OrderDirection
   version: OrderDirection
+  fileName: OrderDirection
+  mimeType: OrderDirection
+  byteSize: OrderDirection
   sha256: OrderDirection
   storageKey: OrderDirection
   verifiedAt: OrderDirection
@@ -3391,6 +3400,9 @@ input DocumentUpdateInput {
   agreement: RepresentationAgreementRelateToOneForUpdateInput
   kind: String
   version: Int
+  fileName: String
+  mimeType: String
+  byteSize: Int
   sha256: String
   storageKey: String
   uploadedBy: UserRelateToOneForUpdateInput
@@ -4674,6 +4686,9 @@ type Mutation {
   refundInvoicePayment(paymentId: ID!, amountCents: Int!, reason: String!, approvalId: ID, idempotencyKey: String!): AgencyJSON!
   logInteraction(athleteId: ID!, kind: String!, summary: String!, occurredAt: String, nextStepAt: String, acknowledgeContactWindow: Boolean, idempotencyKey: String!): AgencyJSON!
   completeTask(taskId: ID!, idempotencyKey: String!): AgencyJSON!
+  requestDocumentUpload(athleteId: ID!, kind: String!, fileName: String!, mimeType: String!, byteSize: Int!, sha256: String!, idempotencyKey: String!): AgencyJSON!
+  finalizeDocumentUpload(documentId: ID!, idempotencyKey: String): AgencyJSON!
+  downloadDocument(documentId: ID!, idempotencyKey: String): AgencyJSON!
   submitInquiry(athleteId: ID!, name: String!, email: String!, organization: String, message: String!, idempotencyKey: String!): AgencyJSON!
   payCommissionInvoice(invoiceId: ID!, proof: String, idempotencyKey: String!): AgencyJSON!
   confirmCommissionPayment(paymentId: ID!, proof: String): AgencyJSON!

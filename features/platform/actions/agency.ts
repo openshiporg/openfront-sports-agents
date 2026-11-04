@@ -24,6 +24,9 @@ const OPERATIONS: Record<string, string> = {
   refundInvoicePayment: 'mutation($paymentId: ID!, $amountCents: Int!, $reason: String!, $approvalId: ID, $idempotencyKey: String!) { refundInvoicePayment(paymentId: $paymentId, amountCents: $amountCents, reason: $reason, approvalId: $approvalId, idempotencyKey: $idempotencyKey) }',
   logInteraction: 'mutation($athleteId: ID!, $kind: String!, $summary: String!, $occurredAt: String, $nextStepAt: String, $acknowledgeContactWindow: Boolean, $idempotencyKey: String!) { logInteraction(athleteId: $athleteId, kind: $kind, summary: $summary, occurredAt: $occurredAt, nextStepAt: $nextStepAt, acknowledgeContactWindow: $acknowledgeContactWindow, idempotencyKey: $idempotencyKey) }',
   completeTask: 'mutation($taskId: ID!, $idempotencyKey: String!) { completeTask(taskId: $taskId, idempotencyKey: $idempotencyKey) }',
+  requestDocumentUpload: 'mutation($athleteId: ID!, $kind: String!, $fileName: String!, $mimeType: String!, $byteSize: Int!, $sha256: String!, $idempotencyKey: String!) { requestDocumentUpload(athleteId: $athleteId, kind: $kind, fileName: $fileName, mimeType: $mimeType, byteSize: $byteSize, sha256: $sha256, idempotencyKey: $idempotencyKey) }',
+  finalizeDocumentUpload: 'mutation($documentId: ID!, $idempotencyKey: String) { finalizeDocumentUpload(documentId: $documentId, idempotencyKey: $idempotencyKey) }',
+  downloadDocument: 'mutation($documentId: ID!, $idempotencyKey: String) { downloadDocument(documentId: $documentId, idempotencyKey: $idempotencyKey) }',
   generateAutoTasks: 'mutation { generateAutoTasks }',
 }
 

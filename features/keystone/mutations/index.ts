@@ -7,6 +7,7 @@ import ensureOnboardingRecord from './ensureOnboardingRecord';
 import updateActiveUser from './updateActiveUser';
 import {refundTypeDefs,refundMutations} from './refunds';
 import {crmTypeDefs,crmMutations} from './crm';
+import {documentTypeDefs,documentMutations} from './documents';
 import {portalTypeDefs,portalQueries,portalMutations} from './portal';
 
 const graphql = String.raw;
@@ -18,14 +19,14 @@ export function extendGraphqlSchema(baseSchema: GraphQLSchema) {
       type Query {
         redirectToInit: Boolean
       }
-    ` + agencyTypeDefs + refundTypeDefs + crmTypeDefs + portalTypeDefs + `
+    ` + agencyTypeDefs + refundTypeDefs + crmTypeDefs + documentTypeDefs + portalTypeDefs + `
       extend type Mutation { ensureOnboardingRecord(entity:String!,data:AgencyJSON!):AgencyJSON! updateActiveUser(data:AgencyJSON!):AgencyJSON! }
     `,
     resolvers: {
       Query: { 
         redirectToInit, ...agencyQueries, ...portalQueries,
       },
-      Mutation: {...agencyMutations,...refundMutations,...crmMutations,...portalMutations,ensureOnboardingRecord,updateActiveUser,requestManagerApproval,decideManagerApproval},
+      Mutation: {...agencyMutations,...refundMutations,...crmMutations,...documentMutations,...portalMutations,ensureOnboardingRecord,updateActiveUser,requestManagerApproval,decideManagerApproval},
     },
   });
 }
