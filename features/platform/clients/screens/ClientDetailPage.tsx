@@ -3,6 +3,7 @@ import { ScrollTabs } from '../../components/ScrollTabs'
 import { DocumentUpload } from '../components/DocumentUpload'
 import { DownloadDocument } from '../components/DownloadDocument'
 import { objectStorageConfigured } from '@/features/integrations/storage'
+import { EditProfile } from '../components/EditProfile'
 import { LogInteraction } from '../components/LogInteraction'
 import { DraftAgreement } from '../components/DraftAgreement'
 import { notFound } from 'next/navigation'
@@ -18,8 +19,8 @@ const TABS = ['overview', 'agreements', 'contracts', 'endorsements', 'payments',
 
 const QUERY = `query ClientDetail($id: ID!) {
   athlete(where: { id: $id }) {
-    id fullName preferredName sport league position status email phone recruitingStage representationStartedAt marketabilityNotes socialHandles followerCounts contactAllowedFrom
-    team { name } leadAgent { id name } supportStaff { name }
+    id fullName preferredName sport league position status email phone recruitingStage representationStartedAt marketabilityNotes socialHandles followerCounts contactAllowedFrom dateOfBirth
+    team { id name } leadAgent { id name } supportStaff { name }
     representationAgreement_athlete(orderBy: { createdAt: desc }) { id scope status playingCommissionBps marketingCommissionBps capBps effectiveAt expiresAt terminationNoticeDays }
     playingContract_athlete(orderBy: { createdAt: desc }) { id status startSeason endSeason totalValueCents commissionBps team { name } }
     endorsementDeal_athlete(orderBy: { createdAt: desc }) { id status termStart termEnd totalValueCents commissionBps exclusivityCategory brand { name } }
@@ -44,6 +45,8 @@ export default async function ClientDetailPage({ params, searchParams }: { param
   try { agents = (await platformQuery(`{ users(orderBy: { name: asc }, take: 200) { id name } }`)).users } catch { agents = [] }
   let checklist: any = null
   if (['prospect', 'recruiting'].includes(a.status)) { try { checklist = (await platformQuery(`query($id: ID!) { prospectChecklist(athleteId: $id) }`, { id })).prospectChecklist } catch { checklist = null } }
+  let teams: any[] = []
+  try { teams = (await platformQuery(`{ teams(orderBy: { name: asc }, take: 500) { id name } }`)).teams } catch { teams = [] }
   let contacts: any[] = []
   try { contacts = (await platformQuery(`{ contacts(orderBy: { name: asc }, take: 500) { id name doNotContact } }`)).contacts } catch { contacts = [] }
   let canReassign = false
@@ -55,9 +58,10 @@ export default async function ClientDetailPage({ params, searchParams }: { param
 
       {tab === 'overview' && (
         <Section title="Profile">
-          {[['Sport', `${a.sport} · ${a.league}`], ['Position', a.position], ['Team', a.team?.name], ['Lead agent', a.leadAgent?.name], ['Support', a.supportStaff.map((s: any) => s.name).join(', ')], ['Email', a.email], ['Phone', a.phone], ['Recruiting stage', a.recruitingStage], ['Represented since', day(a.representationStartedAt)], ['Notes', a.marketabilityNotes]].filter(([, v]) => v).map(([k, v]) => (
+          {[['Sport', `${a.sport} · ${a.league}`], ['Position', a.position], ['Team', a.team?.name], ['Lead agent', a.leadAgent?.name], ['Support', a.supportStaff.map((s: any) => s.name).join(', ')], ['Email', a.email], ['Phone', a.phone], ['Date of birth', a.dateOfBirth ? day(a.dateOfBirth) : ''], ['Social', Object.entries(a.socialHandles ?? {}).map(([k, h]) => `${k} ${h}${(a.followerCounts ?? {})[k] != null ? ` (${Number((a.followerCounts ?? {})[k]).toLocaleString('en-US')})` : ''}`).join(' · ')], ['Recruiting stage', a.recruitingStage], ['Represented since', day(a.representationStartedAt)], ['Notes', a.marketabilityNotes]].filter(([, v]) => v).map(([k, v]) => (
             <Row key={k as string}><Cell muted>{k}</Cell><Cell>{v}</Cell></Row>
           ))}
+          <Row className="justify-end"><EditProfile athlete={a} teams={teams} /></Row>
           {canReassign && agents.length > 0 && <Row className="justify-end"><ReassignAgent athleteId={a.id} currentId={a.leadAgent?.id} agents={agents} /></Row>}
         </Section>
       )}

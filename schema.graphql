@@ -4966,6 +4966,7 @@ type Mutation {
   saveBrand(brandId: ID, name: String!, category: String, website: String, idempotencyKey: String!): AgencyJSON!
   saveContact(contactId: ID, name: String!, org: String, role: String, email: String, phone: String, brandId: ID, idempotencyKey: String!): AgencyJSON!
   setContactDoNotContact(contactId: ID!, doNotContact: Boolean!, reason: String!, idempotencyKey: String!): AgencyJSON!
+  updateAthleteProfile(athleteId: ID!, preferredName: String, position: String, email: String, phone: String, dateOfBirth: String, marketabilityNotes: String, social: AgencyJSON, followers: AgencyJSON, teamId: ID, teamName: String, clearTeam: Boolean, idempotencyKey: String!): AgencyJSON!
   addAgentCertification(userId: ID, body: String!, number: String!, issuedAt: String!, expiresAt: String!, idempotencyKey: String!): AgencyJSON!
   renewAgentCertification(certificationId: ID!, expiresAt: String!, reason: String!, idempotencyKey: String!): AgencyJSON!
   convertProspectToClient(athleteId: ID!, idempotencyKey: String!): AgencyJSON!
