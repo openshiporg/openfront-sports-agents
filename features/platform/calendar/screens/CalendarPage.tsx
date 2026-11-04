@@ -29,7 +29,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
   if (show !== 'payments') for (const d of data.deliverables) items.push({ id: d.id, type: 'deliverable', dueAt: d.dueAt, status: d.status, title: `${d.kind.replaceAll('_', ' ')} · ${d.deal?.brand?.name ?? ''}`, athleteId: d.deal?.athlete?.id, athleteName: d.deal?.athlete?.fullName ?? '', href: `/dashboard/platform/endorsements/${d.deal?.id}`, overdue: isOverdue('deliverable', d.status, d.dueAt) })
   if (show !== 'deliverables') for (const p of data.scheduledPayments) {
     const contractId = p.contractYear?.contract?.id || p.incentive?.contract?.id
-    items.push({ id: p.id, type: 'payment', dueAt: p.dueAt, status: p.status, title: p.endorsementDeal ? `payment · ${p.endorsementDeal.brand?.name ?? 'deal'}` : `payment · ${p.contractYear?.season ?? 'incentive'} contract`, athleteId: p.athlete?.id, athleteName: p.athlete?.fullName ?? '', href: p.endorsementDeal ? `/dashboard/platform/endorsements/${p.endorsementDeal.id}` : contractId ? `/dashboard/platform/contracts/${contractId}` : '/dashboard/platform/commissions', amountCents: p.grossCents, overdue: isOverdue('payment', p.status, p.dueAt) })
+    items.push({ id: p.id, type: 'payment', dueAt: p.dueAt, status: p.status, title: p.endorsementDeal ? `payment · ${p.endorsementDeal.brand?.name ?? 'deal'}` : `payment · ${p.contractYear?.season ?? 'incentive'}`, athleteId: p.athlete?.id, athleteName: p.athlete?.fullName ?? '', href: p.endorsementDeal ? `/dashboard/platform/endorsements/${p.endorsementDeal.id}` : contractId ? `/dashboard/platform/contracts/${contractId}` : '/dashboard/platform/commissions', amountCents: p.grossCents, overdue: isOverdue('payment', p.status, p.dueAt) })
   }
   const agenda = groupByDay(items)
   const byDay = new Map(agenda.map((g) => [g.day, g.items]))
@@ -86,11 +86,13 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
           <div key={g.day}>
             <div className="bg-muted/40 px-3 py-1.5 font-mono text-xs uppercase text-muted-foreground">{day(g.day)}</div>
             {g.items.map((i) => (
-              <Row key={i.type + i.id} href={i.href}>
-                <Cell><StatusLabel value={i.overdue ? 'overdue' : i.status} className="mr-2" />{i.title}</Cell>
-                <Cell muted>{i.athleteName}</Cell>
-                {i.amountCents !== undefined && <Cell className="tabular-nums">{moneyExact(i.amountCents)}</Cell>}
-              </Row>
+              <Link key={i.type + i.id} href={i.href} className="flex items-start justify-between gap-3 border-b px-3 py-2.5 text-sm last:border-b-0 hover:bg-muted/40">
+                <div className="min-w-0 flex-1">
+                  <div className="truncate"><StatusLabel value={i.overdue ? 'overdue' : i.status} className="mr-2" />{i.title}</div>
+                  <div className="truncate text-xs text-muted-foreground">{i.athleteName}</div>
+                </div>
+                {i.amountCents !== undefined && <span className="w-24 shrink-0 text-right tabular-nums">{moneyExact(i.amountCents)}</span>}
+              </Link>
             ))}
           </div>
         )) : <Empty>{overdueView ? 'Nothing overdue' : 'Nothing due this month'}</Empty>}
