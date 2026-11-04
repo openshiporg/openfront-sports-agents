@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { DraftDeal } from '../../components/DraftRecord'
 import { PlatformPage, Section, Row, Cell, Empty, ErrorState } from '../../components/Section'
 import { StatusLabel } from '../../components/StatusLabel'
 import { RequestApprovalButton } from '../../components/ApprovalControls'
@@ -12,7 +13,7 @@ export default async function EndorsementsPage({ searchParams }: { searchParams:
   const view = tab === 'deliverables' ? 'deliverables' : 'pipeline'
   let data: any
   try {
-    data = await platformQuery(`{ endorsementDeals(orderBy: { termStart: asc }, take: 200) { id status termStart termEnd totalValueCents currencyCode exclusivityCategory athlete { id fullName } brand { name } owner { name } }
+    data = await platformQuery(`{ athletes(orderBy: { fullName: asc }, take: 300) { id name: fullName } brands(orderBy: { name: asc }, take: 300) { id name } endorsementDeals(orderBy: { termStart: asc }, take: 200) { id status termStart termEnd totalValueCents currencyCode exclusivityCategory athlete { id fullName } brand { name } owner { name } }
       deliverables(orderBy: { dueAt: asc }, take: 200) { id kind status dueAt completedAt proofLink deal { id exclusivityCategory athlete { fullName } brand { name } } } }`)
   } catch (e: any) { return <PlatformPage title="Endorsements"><ErrorState message={e.message} /></PlatformPage> }
   for (const d of data.endorsementDeals) d.blocked = ['prospect', 'negotiating', 'signed'].includes(d.status) && !!d.exclusivityCategory && data.endorsementDeals.some((o: any) => o.id !== d.id && o.athlete?.id === d.athlete?.id && o.exclusivityCategory === d.exclusivityCategory && ['signed', 'active'].includes(o.status) && o.termStart <= d.termEnd && o.termEnd >= d.termStart)
@@ -22,6 +23,7 @@ export default async function EndorsementsPage({ searchParams }: { searchParams:
         <Link href="/dashboard/platform/endorsements" className={`rounded-md px-3 py-1.5 text-sm ${view === 'pipeline' ? 'bg-background font-medium shadow-sm' : 'text-muted-foreground'}`}>Pipeline</Link>
         <Link href="/dashboard/platform/endorsements?tab=deliverables" className={`rounded-md px-3 py-1.5 text-sm ${view === 'deliverables' ? 'bg-background font-medium shadow-sm' : 'text-muted-foreground'}`}>Deliverables</Link>
       </div>
+      {view === 'pipeline' && <div className="flex justify-end"><DraftDeal athletes={data.athletes} brands={data.brands} /></div>}
       {view === 'pipeline' ? STATUSES.map((s) => {
         const rows = data.endorsementDeals.filter((d: any) => d.status === s)
         if (!rows.length) return null

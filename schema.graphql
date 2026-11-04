@@ -4688,6 +4688,8 @@ type Mutation {
   removeDeliverable(deliverableId: ID!, idempotencyKey: String!): AgencyJSON!
   amendTerms(kind: String!, reason: String!, scheduledPaymentId: ID, dealId: ID, deliverableId: ID, dueAt: String, termEnd: String, deliverableKind: String, notes: String, idempotencyKey: String!): AgencyJSON!
   exportAgentPayouts(from: String!, to: String!, idempotencyKey: String!): AgencyJSON!
+  draftPlayingContract(athleteId: ID!, teamId: ID!, contractType: String!, startSeason: String!, endSeason: String!, totalValueCents: Int!, guaranteedCents: Int!, signingBonusCents: Int!, idempotencyKey: String!): AgencyJSON!
+  draftEndorsementDeal(athleteId: ID!, brandId: ID!, termStart: String!, termEnd: String!, totalValueCents: Int!, paymentTerms: String, exclusivityCategory: String, territory: String, idempotencyKey: String!): AgencyJSON!
   submitInquiry(athleteId: ID!, name: String!, email: String!, organization: String, message: String!, idempotencyKey: String!): AgencyJSON!
   payCommissionInvoice(invoiceId: ID!, proof: String, idempotencyKey: String!): AgencyJSON!
   confirmCommissionPayment(paymentId: ID!, proof: String): AgencyJSON!
