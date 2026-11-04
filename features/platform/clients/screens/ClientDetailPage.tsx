@@ -7,6 +7,7 @@ import { DraftAgreement } from '../components/DraftAgreement'
 import { notFound } from 'next/navigation'
 import { PlatformPage, Section, Row, Cell, Empty, ErrorState } from '../../components/Section'
 import { StatusLabel } from '../../components/StatusLabel'
+import { ConversionChecklist } from '../components/ConversionChecklist'
 import { ReassignAgent } from '../components/ReassignAgent'
 import { CommandButton } from '../../components/CommandButton'
 import { platformQuery, money, moneyExact, day } from '../../lib/query'
@@ -39,6 +40,8 @@ export default async function ClientDetailPage({ params, searchParams }: { param
   if (!a) notFound()
   let agents: { id: string; name: string }[] = []
   try { agents = (await platformQuery(`{ users(orderBy: { name: asc }, take: 200) { id name } }`)).users } catch { agents = [] }
+  let checklist: any = null
+  if (['prospect', 'recruiting'].includes(a.status)) { try { checklist = (await platformQuery(`query($id: ID!) { prospectChecklist(athleteId: $id) }`, { id })).prospectChecklist } catch { checklist = null } }
   let canReassign = false
   try { canReassign = Boolean((await platformQuery(`{ authenticatedItem { ... on User { role { canViewAllClients } } } }`)).authenticatedItem?.role?.canViewAllClients) } catch { canReassign = false }
   const trust = a.clientTrustEntry_athlete.reduce((n: number, e: any) => n + Number(e.amountCents), 0)
@@ -56,6 +59,11 @@ export default async function ClientDetailPage({ params, searchParams }: { param
             <Row key={k as string}><Cell muted>{k}</Cell><Cell>{v}</Cell></Row>
           ))}
           {canReassign && agents.length > 0 && <Row className="justify-end"><ReassignAgent athleteId={a.id} currentId={a.leadAgent?.id} agents={agents} /></Row>}
+        </Section>
+      )}
+      {tab === 'overview' && checklist && (
+        <Section title="Conversion checklist" hint={checklist.ready ? 'Ready' : `${checklist.blockers.length} blocking`}>
+          <ConversionChecklist athleteId={a.id} checks={checklist.checks} ready={checklist.ready} blockers={checklist.blockers} />
         </Section>
       )}
       {tab === 'agreements' && (

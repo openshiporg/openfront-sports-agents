@@ -41,6 +41,7 @@ const OPERATIONS: Record<string, string> = {
   reassignLeadAgent: 'mutation($athleteId: ID!, $agentId: ID!, $reason: String!, $idempotencyKey: String!) { reassignLeadAgent(athleteId: $athleteId, agentId: $agentId, reason: $reason, idempotencyKey: $idempotencyKey) }',
   markProspectLost: 'mutation($athleteId: ID!, $reason: String!, $note: String, $idempotencyKey: String!) { markProspectLost(athleteId: $athleteId, reason: $reason, note: $note, idempotencyKey: $idempotencyKey) }',
   reopenProspect: 'mutation($athleteId: ID!, $note: String!, $idempotencyKey: String!) { reopenProspect(athleteId: $athleteId, note: $note, idempotencyKey: $idempotencyKey) }',
+  convertProspectToClient: 'mutation($athleteId: ID!, $idempotencyKey: String!) { convertProspectToClient(athleteId: $athleteId, idempotencyKey: $idempotencyKey) }',
   generateAutoTasks: 'mutation { generateAutoTasks }',
 }
 

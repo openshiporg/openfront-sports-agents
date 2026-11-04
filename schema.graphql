@@ -4731,6 +4731,7 @@ type Mutation {
   markProspectLost(athleteId: ID!, reason: String!, note: String, idempotencyKey: String!): AgencyJSON!
   reopenProspect(athleteId: ID!, note: String!, idempotencyKey: String!): AgencyJSON!
   reassignLeadAgent(athleteId: ID!, agentId: ID!, reason: String!, idempotencyKey: String!): AgencyJSON!
+  convertProspectToClient(athleteId: ID!, idempotencyKey: String!): AgencyJSON!
   submitInquiry(athleteId: ID!, name: String!, email: String!, organization: String, message: String!, idempotencyKey: String!): AgencyJSON!
   payCommissionInvoice(invoiceId: ID!, proof: String, idempotencyKey: String!): AgencyJSON!
   confirmCommissionPayment(paymentId: ID!, proof: String): AgencyJSON!
@@ -4881,6 +4882,7 @@ type Query {
   redirectToInit: Boolean
   checkEndorsementConflicts(athleteId: ID!, category: String!, start: String!, end: String!): AgencyJSON!
   reconcileCommissions(from: String!, to: String!): AgencyJSON!
+  prospectChecklist(athleteId: ID!): AgencyJSON!
   myAthleteSummary: AgencyJSON!
   myDeliverables: AgencyJSON!
   myInvoices: AgencyJSON!
