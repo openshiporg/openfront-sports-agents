@@ -1,4 +1,4 @@
-import { Activity, Users, Target, FileSignature, Handshake, Receipt, Landmark, Building2, ListChecks, BadgeCheck, CreditCard, Settings, ShieldCheck, type LucideIcon } from 'lucide-react'
+import { Activity, CalendarDays, Users, Target, FileSignature, Handshake, Receipt, Landmark, Building2, ListChecks, BadgeCheck, CreditCard, Settings, ShieldCheck, type LucideIcon } from 'lucide-react'
 
 export interface PlatformNavItem {
   title: string
@@ -46,6 +46,7 @@ export const platformNavGroups: PlatformNavGroup[] = [
     id: 'operations',
     title: 'Operations',
     items: [
+      { title: 'Calendar', href: '/dashboard/platform/calendar', description: 'Deliverables and payment dates across athletes.', icon: CalendarDays },
       { title: 'Tasks', href: '/dashboard/platform/tasks', description: 'Follow-ups and automatic reminders.', icon: ListChecks },
       { title: 'Certifications', href: '/dashboard/platform/certifications', description: 'Agent certifications and expiry.', icon: BadgeCheck },
       { title: 'Approvals', href: '/dashboard/platform/approvals', description: 'Overrides and write-offs that need a second person.', icon: ShieldCheck },
