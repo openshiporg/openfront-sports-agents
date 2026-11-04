@@ -23,6 +23,8 @@ type User {
   endorsementDeal_ownerCount(where: EndorsementDealWhereInput! = {}): Int
   commissionLedgerEntry_payeeUser(where: CommissionLedgerEntryWhereInput! = {}, orderBy: [CommissionLedgerEntryOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: CommissionLedgerEntryWhereUniqueInput): [CommissionLedgerEntry!]
   commissionLedgerEntry_payeeUserCount(where: CommissionLedgerEntryWhereInput! = {}): Int
+  forecastSnapshot_takenBy(where: ForecastSnapshotWhereInput! = {}, orderBy: [ForecastSnapshotOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: ForecastSnapshotWhereUniqueInput): [ForecastSnapshot!]
+  forecastSnapshot_takenByCount(where: ForecastSnapshotWhereInput! = {}): Int
   agentPayout_payee(where: AgentPayoutWhereInput! = {}, orderBy: [AgentPayoutOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: AgentPayoutWhereUniqueInput): [AgentPayout!]
   agentPayout_payeeCount(where: AgentPayoutWhereInput! = {}): Int
   agentPayout_recordedBy(where: AgentPayoutWhereInput! = {}, orderBy: [AgentPayoutOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: AgentPayoutWhereUniqueInput): [AgentPayout!]
@@ -87,6 +89,7 @@ input UserWhereInput {
   interaction_user: InteractionManyRelationFilter
   endorsementDeal_owner: EndorsementDealManyRelationFilter
   commissionLedgerEntry_payeeUser: CommissionLedgerEntryManyRelationFilter
+  forecastSnapshot_takenBy: ForecastSnapshotManyRelationFilter
   agentPayout_payee: AgentPayoutManyRelationFilter
   agentPayout_recordedBy: AgentPayoutManyRelationFilter
   agentPayout_voidedBy: AgentPayoutManyRelationFilter
@@ -186,6 +189,12 @@ input CommissionLedgerEntryManyRelationFilter {
   every: CommissionLedgerEntryWhereInput
   some: CommissionLedgerEntryWhereInput
   none: CommissionLedgerEntryWhereInput
+}
+
+input ForecastSnapshotManyRelationFilter {
+  every: ForecastSnapshotWhereInput
+  some: ForecastSnapshotWhereInput
+  none: ForecastSnapshotWhereInput
 }
 
 input AgentPayoutManyRelationFilter {
@@ -291,6 +300,7 @@ input UserUpdateInput {
   interaction_user: InteractionRelateToManyForUpdateInput
   endorsementDeal_owner: EndorsementDealRelateToManyForUpdateInput
   commissionLedgerEntry_payeeUser: CommissionLedgerEntryRelateToManyForUpdateInput
+  forecastSnapshot_takenBy: ForecastSnapshotRelateToManyForUpdateInput
   agentPayout_payee: AgentPayoutRelateToManyForUpdateInput
   agentPayout_recordedBy: AgentPayoutRelateToManyForUpdateInput
   agentPayout_voidedBy: AgentPayoutRelateToManyForUpdateInput
@@ -357,6 +367,12 @@ input CommissionLedgerEntryRelateToManyForUpdateInput {
   connect: [CommissionLedgerEntryWhereUniqueInput!]
 }
 
+input ForecastSnapshotRelateToManyForUpdateInput {
+  disconnect: [ForecastSnapshotWhereUniqueInput!]
+  set: [ForecastSnapshotWhereUniqueInput!]
+  connect: [ForecastSnapshotWhereUniqueInput!]
+}
+
 input AgentPayoutRelateToManyForUpdateInput {
   disconnect: [AgentPayoutWhereUniqueInput!]
   set: [AgentPayoutWhereUniqueInput!]
@@ -419,6 +435,7 @@ input UserCreateInput {
   interaction_user: InteractionRelateToManyForCreateInput
   endorsementDeal_owner: EndorsementDealRelateToManyForCreateInput
   commissionLedgerEntry_payeeUser: CommissionLedgerEntryRelateToManyForCreateInput
+  forecastSnapshot_takenBy: ForecastSnapshotRelateToManyForCreateInput
   agentPayout_payee: AgentPayoutRelateToManyForCreateInput
   agentPayout_recordedBy: AgentPayoutRelateToManyForCreateInput
   agentPayout_voidedBy: AgentPayoutRelateToManyForCreateInput
@@ -470,6 +487,10 @@ input EndorsementDealRelateToManyForCreateInput {
 
 input CommissionLedgerEntryRelateToManyForCreateInput {
   connect: [CommissionLedgerEntryWhereUniqueInput!]
+}
+
+input ForecastSnapshotRelateToManyForCreateInput {
+  connect: [ForecastSnapshotWhereUniqueInput!]
 }
 
 input AgentPayoutRelateToManyForCreateInput {
@@ -3687,6 +3708,101 @@ input AmendmentUpdateArgs {
   data: AmendmentUpdateInput!
 }
 
+type ForecastSnapshot {
+  id: ID!
+  month: String
+  takenAt: DateTime
+  takenBy: User
+  source: ForecastSnapshotSourceType
+  currencyCode: String
+  dealCount: Int
+  grossCents: BigInt
+  weightedCents: BigInt
+  firstMonthGrossCents: BigInt
+  firstMonthWeightedCents: BigInt
+  probabilities: JSON
+  months: JSON
+  stages: JSON
+  agents: JSON
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+enum ForecastSnapshotSourceType {
+  manual
+  cron
+}
+
+input ForecastSnapshotWhereUniqueInput {
+  id: ID
+  month: String
+}
+
+input ForecastSnapshotWhereInput {
+  AND: [ForecastSnapshotWhereInput!]
+  OR: [ForecastSnapshotWhereInput!]
+  NOT: [ForecastSnapshotWhereInput!]
+  id: IDFilter
+  month: StringFilter
+  takenAt: DateTimeNullableFilter
+  takenBy: UserWhereInput
+  source: ForecastSnapshotSourceTypeNullableFilter
+  currencyCode: StringFilter
+  dealCount: IntNullableFilter
+  grossCents: BigIntFilter
+  weightedCents: BigIntFilter
+  firstMonthGrossCents: BigIntFilter
+  firstMonthWeightedCents: BigIntFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+}
+
+input ForecastSnapshotSourceTypeNullableFilter {
+  equals: ForecastSnapshotSourceType
+  in: [ForecastSnapshotSourceType!]
+  notIn: [ForecastSnapshotSourceType!]
+  not: ForecastSnapshotSourceTypeNullableFilter
+}
+
+input ForecastSnapshotOrderByInput {
+  id: OrderDirection
+  month: OrderDirection
+  takenAt: OrderDirection
+  source: OrderDirection
+  currencyCode: OrderDirection
+  dealCount: OrderDirection
+  grossCents: OrderDirection
+  weightedCents: OrderDirection
+  firstMonthGrossCents: OrderDirection
+  firstMonthWeightedCents: OrderDirection
+  createdAt: OrderDirection
+  updatedAt: OrderDirection
+}
+
+input ForecastSnapshotUpdateInput {
+  month: String
+  takenAt: DateTime
+  takenBy: UserRelateToOneForUpdateInput
+  source: ForecastSnapshotSourceType
+  currencyCode: String
+  dealCount: Int
+  grossCents: BigInt
+  weightedCents: BigInt
+  firstMonthGrossCents: BigInt
+  firstMonthWeightedCents: BigInt
+  probabilities: JSON
+  months: JSON
+  stages: JSON
+  agents: JSON
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input ForecastSnapshotUpdateArgs {
+  where: ForecastSnapshotWhereUniqueInput!
+  data: ForecastSnapshotUpdateInput!
+}
+
 type AgentPayout {
   id: ID!
   payee: User
@@ -4863,6 +4979,8 @@ type Mutation {
   updateAuditEvents(data: [AuditEventUpdateArgs!]!): [AuditEvent]
   updateAmendment(where: AmendmentWhereUniqueInput!, data: AmendmentUpdateInput!): Amendment
   updateAmendments(data: [AmendmentUpdateArgs!]!): [Amendment]
+  updateForecastSnapshot(where: ForecastSnapshotWhereUniqueInput!, data: ForecastSnapshotUpdateInput!): ForecastSnapshot
+  updateForecastSnapshots(data: [ForecastSnapshotUpdateArgs!]!): [ForecastSnapshot]
   updateAgentPayout(where: AgentPayoutWhereUniqueInput!, data: AgentPayoutUpdateInput!): AgentPayout
   updateAgentPayouts(data: [AgentPayoutUpdateArgs!]!): [AgentPayout]
   updateAgentPayoutEntry(where: AgentPayoutEntryWhereUniqueInput!, data: AgentPayoutEntryUpdateInput!): AgentPayoutEntry
@@ -4939,6 +5057,7 @@ type Mutation {
   requestManagerApproval(actionType: String!, targetId: String!, amountCents: Int, reason: String!): AgencyJSON!
   decideManagerApproval(approvalId: ID!, decision: String!): AgencyJSON!
   generateAutoTasks: AgencyJSON!
+  takeForecastSnapshot(idempotencyKey: String!): AgencyJSON!
   setForecastProbabilities(probabilities: AgencyJSON!, idempotencyKey: String!): AgencyJSON!
   checkRefundStatus(refundId: ID!): AgencyJSON!
   refundInvoicePayment(paymentId: ID!, amountCents: Int!, reason: String!, approvalId: ID, idempotencyKey: String!): AgencyJSON!
@@ -5094,6 +5213,9 @@ type Query {
   amendment(where: AmendmentWhereUniqueInput!): Amendment
   amendments(where: AmendmentWhereInput! = {}, orderBy: [AmendmentOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: AmendmentWhereUniqueInput): [Amendment!]
   amendmentsCount(where: AmendmentWhereInput! = {}): Int
+  forecastSnapshot(where: ForecastSnapshotWhereUniqueInput!): ForecastSnapshot
+  forecastSnapshots(where: ForecastSnapshotWhereInput! = {}, orderBy: [ForecastSnapshotOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: ForecastSnapshotWhereUniqueInput): [ForecastSnapshot!]
+  forecastSnapshotsCount(where: ForecastSnapshotWhereInput! = {}): Int
   agentPayout(where: AgentPayoutWhereUniqueInput!): AgentPayout
   agentPayouts(where: AgentPayoutWhereInput! = {}, orderBy: [AgentPayoutOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: AgentPayoutWhereUniqueInput): [AgentPayout!]
   agentPayoutsCount(where: AgentPayoutWhereInput! = {}): Int

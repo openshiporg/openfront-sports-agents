@@ -6,6 +6,7 @@ import { RequestApprovalButton } from '../../components/ApprovalControls'
 import { CommandButton } from '../../components/CommandButton'
 import { platformQuery, money, day } from '../../lib/query'
 import { ScrollTabs } from '../../components/ScrollTabs'
+import { TakeSnapshot } from '../components/TakeSnapshot'
 import { ForecastProbabilities } from '../components/ForecastProbabilities'
 
 const TABS = [{ key: 'pipeline', label: 'Pipeline', href: '/dashboard/platform/endorsements' }, { key: 'deliverables', label: 'Deliverables', href: '/dashboard/platform/endorsements?tab=deliverables' }, { key: 'forecast', label: 'Forecast', href: '/dashboard/platform/endorsements?tab=forecast' }]
@@ -81,6 +82,18 @@ function Forecast({ fc }: { fc: any }) {
         {fc.stages.map((s: any) => <Row key={s.stage}><Cell className="capitalize">{s.stage} <span className="font-mono text-xs uppercase text-muted-foreground">{fc.probabilities[s.stage]}%</span></Cell><Cell muted className="tabular-nums">{s.deals} {s.deals === 1 ? 'deal' : 'deals'} · {money(s.grossCents, cur)}</Cell><Cell className="tabular-nums font-medium">{money(s.weightedCents, cur)}</Cell></Row>)}
         {fc.canEditProbabilities && <div className="border-t p-3"><ForecastProbabilities values={fc.probabilities} notes={fc.stageNotes} /></div>}
       </Section>
+      {fc.scope === 'agency' && (
+        <Section title="Forecast vs actual" hint="Month's forecast saved at the time">
+          {fc.history.length ? fc.history.map((h: any) => (
+            <div key={h.month} className="flex flex-col gap-1 border-b px-3 py-2.5 text-sm last:border-b-0">
+              <div className="flex items-baseline justify-between gap-3"><span className="font-medium">{monthLabel(h.month)}{h.inProgress && <span className="ml-2 font-mono text-xs uppercase text-muted-foreground">In progress</span>}</span><span className="tabular-nums">{money(h.actualCents, cur)} received</span></div>
+              <div className="flex items-baseline justify-between gap-3 text-xs text-muted-foreground"><span>Forecast {money(h.forecastWeightedCents, cur)} · saved {day(h.takenAt)}</span><span className={`tabular-nums ${!h.inProgress && h.varianceCents < 0 ? 'text-destructive' : ''}`}>{h.inProgress ? 'Open' : `${h.varianceCents >= 0 ? '+' : '−'}${money(Math.abs(h.varianceCents), cur)}`}</span></div>
+            </div>
+          )) : <Empty>No snapshots yet. Save this month's forecast to start the comparison.</Empty>}
+          {fc.history.length > 0 && <div className="border-t px-3 py-2 text-xs text-muted-foreground">Received is all endorsement commission received in that month. Forecast covers only what was still unreceived when it was saved, so a snapshot taken at the start of the month compares fairly.</div>}
+          {fc.canSnapshot && <div className="border-t p-3"><TakeSnapshot taken={fc.snapshotTaken} /></div>}
+        </Section>
+      )}
       <Section title="By agent" hint={fc.scope === 'mine' ? 'Your deals' : undefined}>
         {fc.agents.length ? fc.agents.map((a: any) => <Row key={a.ownerId ?? 'none'}><Cell>{a.ownerName}</Cell><Cell muted className="tabular-nums">{a.deals} {a.deals === 1 ? 'deal' : 'deals'} · {money(a.grossCents, cur)}</Cell><Cell className="tabular-nums font-medium">{money(a.weightedCents, cur)}</Cell></Row>) : <Empty>No open deals</Empty>}
       </Section>

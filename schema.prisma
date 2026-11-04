@@ -26,6 +26,7 @@ model User {
   interaction_user                 Interaction[]             @relation("Interaction_user")
   endorsementDeal_owner            EndorsementDeal[]         @relation("EndorsementDeal_owner")
   commissionLedgerEntry_payeeUser  CommissionLedgerEntry[]   @relation("CommissionLedgerEntry_payeeUser")
+  forecastSnapshot_takenBy         ForecastSnapshot[]        @relation("ForecastSnapshot_takenBy")
   agentPayout_payee                AgentPayout[]             @relation("AgentPayout_payee")
   agentPayout_recordedBy           AgentPayout[]             @relation("AgentPayout_recordedBy")
   agentPayout_voidedBy             AgentPayout[]             @relation("AgentPayout_voidedBy")
@@ -697,6 +698,29 @@ model Amendment {
   @@index([appliedById])
 }
 
+model ForecastSnapshot {
+  id                      String                      @id @default(cuid())
+  month                   String                      @unique @default("")
+  takenAt                 DateTime?                   @default(now())
+  takenBy                 User?                       @relation("ForecastSnapshot_takenBy", fields: [takenById], references: [id])
+  takenById               String?                     @map("takenBy")
+  source                  ForecastSnapshotSourceType? @default(manual)
+  currencyCode            String                      @default("USD")
+  dealCount               Int?                        @default(0)
+  grossCents              BigInt
+  weightedCents           BigInt
+  firstMonthGrossCents    BigInt
+  firstMonthWeightedCents BigInt
+  probabilities           Json?
+  months                  Json?
+  stages                  Json?
+  agents                  Json?
+  createdAt               DateTime                    @default(now())
+  updatedAt               DateTime                    @default(now()) @updatedAt
+
+  @@index([takenById])
+}
+
 model AgentPayout {
   id              String                 @id @default(cuid())
   payee           User?                  @relation("AgentPayout_payee", fields: [payeeId], references: [id])
@@ -1120,6 +1144,11 @@ enum AmendmentKindType {
   extend_deal_term
   move_deliverable
   add_deliverable
+}
+
+enum ForecastSnapshotSourceType {
+  manual
+  cron
 }
 
 enum AgentPayoutStatusType {

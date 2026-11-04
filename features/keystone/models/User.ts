@@ -87,6 +87,7 @@ export const User = list({
     interaction_user: rel("Interaction.user", true),
     endorsementDeal_owner: rel("EndorsementDeal.owner", true),
     commissionLedgerEntry_payeeUser: rel("CommissionLedgerEntry.payeeUser", true),
+    forecastSnapshot_takenBy: rel("ForecastSnapshot.takenBy", true),
     agentPayout_payee: rel("AgentPayout.payee", true),
     agentPayout_recordedBy: rel("AgentPayout.recordedBy", true),
     agentPayout_voidedBy: rel("AgentPayout.voidedBy", true),
