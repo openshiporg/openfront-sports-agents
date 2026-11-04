@@ -1,3 +1,4 @@
+import {DomainError} from './errors';
 /** Pure period reconciliation and CSV rules. All amounts are integer cents. */
 export type RPayment={id:string;orderId:string;amount:number;refundedAmount:number;currencyCode:string};
 export type RLedger={id:string;entryKey:string;entryType:string;amountCents:number;invoiceId:string|null;reversesId:string|null;payeeUserId:string|null};
@@ -34,9 +35,9 @@ export function reconcile(input:{payments:RPayment[];ledger:RLedger[];invoices:R
 
 export function parsePeriod(from:unknown,to:unknown){
  const f=new Date(String(from)+'T00:00:00.000Z'),t=new Date(String(to)+'T00:00:00.000Z');
- if(!/^\d{4}-\d{2}-\d{2}$/.test(String(from))||!/^\d{4}-\d{2}-\d{2}$/.test(String(to))||!Number.isFinite(f.getTime())||!Number.isFinite(t.getTime()))throw new Error('Dates must be YYYY-MM-DD');
- if(t<f)throw new Error('End date must not precede the start date');
- if((t.getTime()-f.getTime())/86400000>366)throw new Error('A period is at most one year');
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(String(from))||!/^\d{4}-\d{2}-\d{2}$/.test(String(to))||!Number.isFinite(f.getTime())||!Number.isFinite(t.getTime()))throw new DomainError('Dates must be YYYY-MM-DD');
+ if(t<f)throw new DomainError('End date must not precede the start date');
+ if((t.getTime()-f.getTime())/86400000>366)throw new DomainError('A period is at most one year');
  return {start:f,endExclusive:new Date(t.getTime()+86400000)};
 }
 

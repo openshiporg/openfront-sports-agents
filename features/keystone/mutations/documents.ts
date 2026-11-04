@@ -1,6 +1,7 @@
 import {command,audit,authorizeAthlete,lockTransactionKey} from '../lib/agencyCommand';
 import {validateUpload,documentStorageKey} from '../lib/documents';
 import {assertObjectStorageConfigured,objectStorageConfigured,signObjectRequest,verifyUploadedObject} from '../../integrations/storage';
+import {DomainError} from '../lib/errors';
 
 const meta=(d:any)=>({key:d.storageKey,contentType:d.mimeType,byteSize:d.byteSize,checksumSha256:d.sha256});
 const NOT_CONFIGURED='Document storage is not configured. Uploads and downloads are unavailable until an administrator sets the object storage connection.';
@@ -27,7 +28,7 @@ export const documentMutations={
  async finalizeDocumentUpload(_:unknown,a:any,c:any){
   need();
   const doc=await c.prisma.document.findUnique({where:{id:String(a.documentId||'')}});
-  if(!doc?.athleteId)throw new Error('Document not found');
+  if(!doc?.athleteId)throw new DomainError('Document not found');
   await c.prisma.$transaction((tx:any)=>authorizeAthlete(tx,c,doc.athleteId,'canManageAthletes'));
   if(doc.verifiedAt)return {documentId:doc.id,verified:true};
   await verifyUploadedObject(meta(doc));
@@ -42,7 +43,7 @@ export const documentMutations={
  async downloadDocument(_:unknown,a:any,c:any){
   need();
   const doc=await c.prisma.document.findUnique({where:{id:String(a.documentId||'')}});
-  if(!doc?.athleteId||!doc.verifiedAt)throw new Error('Verified document not found');
+  if(!doc?.athleteId||!doc.verifiedAt)throw new DomainError('Verified document not found');
   await c.prisma.$transaction(async(tx:any)=>{await authorizeAthlete(tx,c,doc.athleteId,'canManageAthletes');await audit(tx,c,'document.download_issued','Document',doc.id,null,{kind:doc.kind,version:doc.version,fileName:doc.fileName},String(a.idempotencyKey||'dl:'+doc.id+':'+Date.now()));});
   const signed=signObjectRequest('GET',meta(doc),300);
   return {fileName:doc.fileName,mimeType:doc.mimeType,byteSize:doc.byteSize,downloadUrl:signed.url,expiresAt:signed.expiresAt};

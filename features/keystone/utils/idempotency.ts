@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import {DomainError} from '../lib/errors';
 
 type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
 
@@ -61,7 +62,7 @@ export function assertIdempotencyRequest(attempt: any, request: IdempotencyReque
     attempt.requestPath !== request.requestPath ||
     storedFingerprint(attempt.requestParams) !== expectedFingerprint
   ) {
-    throw new Error("Idempotency key was already used with a different request");
+    throw new DomainError("Idempotency key was already used with a different request");
   }
 }
 
@@ -70,7 +71,7 @@ export async function findIdempotencyAttempt(
   request: IdempotencyRequest
 ): Promise<any | null> {
   const key = request.key.trim();
-  if (!key) throw new Error("Idempotency key is required");
+  if (!key) throw new DomainError("Idempotency key is required");
   const existing = await prisma.idempotencyKey.findUnique({ where: { idempotencyKey: key } });
   if (existing) assertIdempotencyRequest(existing, { ...request, key });
   return existing;
@@ -81,7 +82,7 @@ export async function getOrCreateIdempotencyAttempt(
   request: IdempotencyRequest
 ): Promise<{ attempt: any; replay: boolean }> {
   const key = request.key.trim();
-  if (!key) throw new Error("Idempotency key is required");
+  if (!key) throw new DomainError("Idempotency key is required");
   const normalizedParams = canonicalIdempotencyParams(request.requestParams);
   const data = {
     idempotencyKey: key,

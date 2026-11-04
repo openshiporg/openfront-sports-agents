@@ -1,76 +1,77 @@
 import {command,audit,transition} from '../lib/agencyCommand';
 import {validateContractTerms,validateContractYear,validateDealTerms,validateDeliverable,parseDate} from '../lib/terms';
+import {DomainError} from '../lib/errors';
 
 const DRAFT_CONTRACT=['negotiating'];
 const DRAFT_DEAL=['prospect','negotiating'];
 const LIVE_CONTRACT=['signed','active'];
 const LIVE_DEAL=['signed','active'];
-async function get(c:any,model:string,id:string,include:any={}){if(!c.session)throw new Error('Not authorized');const r=await c.prisma[model].findUnique({where:{id:String(id||'')},include});if(!r)throw new Error('Record not found');return r;}
-const reason=(a:any)=>{const r=String(a.reason||'').trim();if(!r||r.length>1000)throw new Error('A reason between 1 and 1000 characters is required');return r;};
+async function get(c:any,model:string,id:string,include:any={}){if(!c.session)throw new DomainError('Not authorized');const r=await c.prisma[model].findUnique({where:{id:String(id||'')},include});if(!r)throw new DomainError('Record not found');return r;}
+const reason=(a:any)=>{const r=String(a.reason||'').trim();if(!r||r.length>1000)throw new DomainError('A reason between 1 and 1000 characters is required');return r;};
 
 export const termsMutations={
  // Draft editors: only while the contract is still being negotiated.
  async editContractTerms(_:unknown,a:any,c:any){const row=await get(c,'playingContract',a.contractId);
   return command(c,'canManageContracts',row.athleteId,'editContractTerms',a,async tx=>{
-   const before=await tx.playingContract.findUnique({where:{id:row.id}});if(!DRAFT_CONTRACT.includes(before.status))throw new Error('Signed contracts change only by amendment');
-   const t=validateContractTerms(a);const swapped=await tx.playingContract.updateMany({where:{id:row.id,status:before.status},data:t});if(swapped.count!==1)throw new Error('Record changed concurrently');
+   const before=await tx.playingContract.findUnique({where:{id:row.id}});if(!DRAFT_CONTRACT.includes(before.status))throw new DomainError('Signed contracts change only by amendment');
+   const t=validateContractTerms(a);const swapped=await tx.playingContract.updateMany({where:{id:row.id,status:before.status},data:t});if(swapped.count!==1)throw new DomainError('Record changed concurrently');
    const after=await tx.playingContract.findUnique({where:{id:row.id}});await audit(tx,c,'contract.terms_edited','PlayingContract',row.id,before,after,a.idempotencyKey);return after;});},
  async saveContractYear(_:unknown,a:any,c:any){const row=await get(c,'playingContract',a.contractId);
   return command(c,'canManageContracts',row.athleteId,'saveContractYear',a,async tx=>{
-   const contract=await tx.playingContract.findUnique({where:{id:row.id}});if(!DRAFT_CONTRACT.includes(contract.status))throw new Error('Signed contracts change only by amendment');
+   const contract=await tx.playingContract.findUnique({where:{id:row.id}});if(!DRAFT_CONTRACT.includes(contract.status))throw new DomainError('Signed contracts change only by amendment');
    const y=validateContractYear(a,contract.startSeason,contract.endSeason);
-   const clash=await tx.contractYear.findFirst({where:{contractId:row.id,season:y.season,...(a.yearId?{id:{not:a.yearId}}:{})}});if(clash)throw new Error('That season already has a contract year');
+   const clash=await tx.contractYear.findFirst({where:{contractId:row.id,season:y.season,...(a.yearId?{id:{not:a.yearId}}:{})}});if(clash)throw new DomainError('That season already has a contract year');
    let before=null,saved;
-   if(a.yearId){before=await tx.contractYear.findFirst({where:{id:a.yearId,contractId:row.id}});if(!before)throw new Error('Contract year not found');saved=await tx.contractYear.update({where:{id:a.yearId},data:{...y,currencyCode:contract.currencyCode}});}
+   if(a.yearId){before=await tx.contractYear.findFirst({where:{id:a.yearId,contractId:row.id}});if(!before)throw new DomainError('Contract year not found');saved=await tx.contractYear.update({where:{id:a.yearId},data:{...y,currencyCode:contract.currencyCode}});}
    else saved=await tx.contractYear.create({data:{...y,contractId:row.id,currencyCode:contract.currencyCode}});
    await audit(tx,c,'contract.year_saved','ContractYear',saved.id,before,saved,a.idempotencyKey);return saved;});},
  async removeContractYear(_:unknown,a:any,c:any){const year=await get(c,'contractYear',a.yearId,{contract:true});
   return command(c,'canManageContracts',year.contract.athleteId,'removeContractYear',a,async tx=>{
-   const contract=await tx.playingContract.findUnique({where:{id:year.contractId}});if(!DRAFT_CONTRACT.includes(contract.status))throw new Error('Signed contracts change only by amendment');
-   if(await tx.scheduledPayment.count({where:{contractYearId:year.id}}))throw new Error('This year already has scheduled payments');
+   const contract=await tx.playingContract.findUnique({where:{id:year.contractId}});if(!DRAFT_CONTRACT.includes(contract.status))throw new DomainError('Signed contracts change only by amendment');
+   if(await tx.scheduledPayment.count({where:{contractYearId:year.id}}))throw new DomainError('This year already has scheduled payments');
    await tx.contractYear.delete({where:{id:year.id}});await audit(tx,c,'contract.year_removed','ContractYear',year.id,year,null,a.idempotencyKey);return {id:year.id};});},
  async editDealTerms(_:unknown,a:any,c:any){const row=await get(c,'endorsementDeal',a.dealId);
   return command(c,'canManageEndorsements',row.athleteId,'editDealTerms',a,async tx=>{
-   const before=await tx.endorsementDeal.findUnique({where:{id:row.id}});if(!DRAFT_DEAL.includes(before.status))throw new Error('Signed deals change only by amendment');
+   const before=await tx.endorsementDeal.findUnique({where:{id:row.id}});if(!DRAFT_DEAL.includes(before.status))throw new DomainError('Signed deals change only by amendment');
    const t=validateDealTerms(a);
-   const out=await tx.deliverable.count({where:{dealId:row.id,OR:[{dueAt:{lt:t.termStart}},{dueAt:{gt:t.termEnd}}]}});if(out)throw new Error('Move or remove deliverables that fall outside the new term first');
-   const swapped=await tx.endorsementDeal.updateMany({where:{id:row.id,status:before.status},data:t});if(swapped.count!==1)throw new Error('Record changed concurrently');
+   const out=await tx.deliverable.count({where:{dealId:row.id,OR:[{dueAt:{lt:t.termStart}},{dueAt:{gt:t.termEnd}}]}});if(out)throw new DomainError('Move or remove deliverables that fall outside the new term first');
+   const swapped=await tx.endorsementDeal.updateMany({where:{id:row.id,status:before.status},data:t});if(swapped.count!==1)throw new DomainError('Record changed concurrently');
    const after=await tx.endorsementDeal.findUnique({where:{id:row.id}});await audit(tx,c,'deal.terms_edited','EndorsementDeal',row.id,before,after,a.idempotencyKey);return after;});},
  async saveDeliverable(_:unknown,a:any,c:any){const deal=await get(c,'endorsementDeal',a.dealId);
   return command(c,'canManageEndorsements',deal.athleteId,'saveDeliverable',a,async tx=>{
-   const d=await tx.endorsementDeal.findUnique({where:{id:deal.id}});if(!DRAFT_DEAL.includes(d.status))throw new Error('Signed deals change only by amendment');
+   const d=await tx.endorsementDeal.findUnique({where:{id:deal.id}});if(!DRAFT_DEAL.includes(d.status))throw new DomainError('Signed deals change only by amendment');
    const v=validateDeliverable(a,d.termStart,d.termEnd);let before=null,saved;
-   if(a.deliverableId){before=await tx.deliverable.findFirst({where:{id:a.deliverableId,dealId:deal.id}});if(!before||before.status!=='scheduled')throw new Error('Only a scheduled deliverable can be edited');saved=await tx.deliverable.update({where:{id:before.id},data:v});}
+   if(a.deliverableId){before=await tx.deliverable.findFirst({where:{id:a.deliverableId,dealId:deal.id}});if(!before||before.status!=='scheduled')throw new DomainError('Only a scheduled deliverable can be edited');saved=await tx.deliverable.update({where:{id:before.id},data:v});}
    else saved=await tx.deliverable.create({data:{...v,dealId:deal.id,status:'scheduled'}});
    await audit(tx,c,'deal.deliverable_saved','Deliverable',saved.id,before,saved,a.idempotencyKey);return saved;});},
  async removeDeliverable(_:unknown,a:any,c:any){const del=await get(c,'deliverable',a.deliverableId,{deal:true});
   return command(c,'canManageEndorsements',del.deal.athleteId,'removeDeliverable',a,async tx=>{
-   const d=await tx.endorsementDeal.findUnique({where:{id:del.dealId}});if(!DRAFT_DEAL.includes(d.status))throw new Error('Signed deals change only by amendment');
-   if(del.status!=='scheduled')throw new Error('Only a scheduled deliverable can be removed');
+   const d=await tx.endorsementDeal.findUnique({where:{id:del.dealId}});if(!DRAFT_DEAL.includes(d.status))throw new DomainError('Signed deals change only by amendment');
+   if(del.status!=='scheduled')throw new DomainError('Only a scheduled deliverable can be removed');
    await tx.deliverable.delete({where:{id:del.id}});await audit(tx,c,'deal.deliverable_removed','Deliverable',del.id,del,null,a.idempotencyKey);return {id:del.id};});},
 
  // The only way to change a signed or active contract or deal. Always records an Amendment with before/after and a reason.
  async amendTerms(_:unknown,a:any,c:any){
   const why=reason(a);const kind=String(a.kind||'');
-  if(!c.session)throw new Error('Not authorized');
+  if(!c.session)throw new DomainError('Not authorized');
   if(kind==='reschedule_payment'){
-   const sp=await c.prisma.scheduledPayment.findUnique({where:{id:String(a.scheduledPaymentId||'')},include:{contractYear:true,endorsementDeal:true,incentive:true}});if(!sp)throw new Error('Record not found');
-   const contractId=sp.contractYear?.contractId||sp.incentive?.contractId||null,dealId=sp.endorsementDealId||null;if(!contractId&&!dealId)throw new Error('Payment has no source contract or deal');
+   const sp=await c.prisma.scheduledPayment.findUnique({where:{id:String(a.scheduledPaymentId||'')},include:{contractYear:true,endorsementDeal:true,incentive:true}});if(!sp)throw new DomainError('Record not found');
+   const contractId=sp.contractYear?.contractId||sp.incentive?.contractId||null,dealId=sp.endorsementDealId||null;if(!contractId&&!dealId)throw new DomainError('Payment has no source contract or deal');
    return command(c,contractId?'canManageContracts':'canManageEndorsements',sp.athleteId,'amendTerms',a,async tx=>{
-    const cur=await tx.scheduledPayment.findUnique({where:{id:sp.id}});if(!['scheduled','late'].includes(cur.status)||cur.invoiceId)throw new Error('Only an unreceived, uninvoiced payment can be rescheduled');
+    const cur=await tx.scheduledPayment.findUnique({where:{id:sp.id}});if(!['scheduled','late'].includes(cur.status)||cur.invoiceId)throw new DomainError('Only an unreceived, uninvoiced payment can be rescheduled');
     const src=contractId?await tx.playingContract.findUnique({where:{id:contractId}}):await tx.endorsementDeal.findUnique({where:{id:dealId!}});
-    if(!(contractId?LIVE_CONTRACT:LIVE_DEAL).includes(src.status))throw new Error('Use the draft editor before signing');
-    const dueAt=parseDate(a.dueAt,'New due date');if(dueAt.getTime()===new Date(cur.dueAt).getTime())throw new Error('The due date is unchanged');
+    if(!(contractId?LIVE_CONTRACT:LIVE_DEAL).includes(src.status))throw new DomainError('Use the draft editor before signing');
+    const dueAt=parseDate(a.dueAt,'New due date');if(dueAt.getTime()===new Date(cur.dueAt).getTime())throw new DomainError('The due date is unchanged');
     await tx.scheduledPayment.update({where:{id:cur.id},data:{dueAt,status:'scheduled'}});
     return record(tx,c,a,{athleteId:cur.athleteId,contractId,dealId,kind,why,before:{scheduledPaymentId:cur.id,dueAt:cur.dueAt,status:cur.status},after:{scheduledPaymentId:cur.id,dueAt,status:'scheduled'}});});
   }
   if(kind==='extend_deal_term'||kind==='add_deliverable'){
    const deal=await get(c,'endorsementDeal',a.dealId);
    return command(c,'canManageEndorsements',deal.athleteId,'amendTerms',a,async tx=>{
-    const cur=await tx.endorsementDeal.findUnique({where:{id:deal.id}});if(!LIVE_DEAL.includes(cur.status))throw new Error('Use the draft editor before signing');
+    const cur=await tx.endorsementDeal.findUnique({where:{id:deal.id}});if(!LIVE_DEAL.includes(cur.status))throw new DomainError('Use the draft editor before signing');
     if(kind==='extend_deal_term'){
-     const termEnd=parseDate(a.termEnd,'New term end');if(!cur.termEnd||termEnd<=cur.termEnd)throw new Error('An amendment can only extend the term');
-     if(cur.exclusivityCategory&&await tx.endorsementDeal.findFirst({where:{athleteId:cur.athleteId,id:{not:cur.id},exclusivityCategory:cur.exclusivityCategory,status:{in:['signed','active']},termStart:{lte:termEnd},termEnd:{gte:cur.termStart}}}))throw new Error('The extension would overlap another deal with the same exclusivity category');
+     const termEnd=parseDate(a.termEnd,'New term end');if(!cur.termEnd||termEnd<=cur.termEnd)throw new DomainError('An amendment can only extend the term');
+     if(cur.exclusivityCategory&&await tx.endorsementDeal.findFirst({where:{athleteId:cur.athleteId,id:{not:cur.id},exclusivityCategory:cur.exclusivityCategory,status:{in:['signed','active']},termStart:{lte:termEnd},termEnd:{gte:cur.termStart}}}))throw new DomainError('The extension would overlap another deal with the same exclusivity category');
      await tx.endorsementDeal.update({where:{id:cur.id},data:{termEnd}});
      return record(tx,c,a,{athleteId:cur.athleteId,dealId:cur.id,kind,why,before:{termEnd:cur.termEnd},after:{termEnd}});
     }
@@ -80,13 +81,13 @@ export const termsMutations={
   if(kind==='move_deliverable'){
    const del=await get(c,'deliverable',a.deliverableId,{deal:true});
    return command(c,'canManageEndorsements',del.deal.athleteId,'amendTerms',a,async tx=>{
-    const deal=await tx.endorsementDeal.findUnique({where:{id:del.dealId}});if(!LIVE_DEAL.includes(deal.status))throw new Error('Use the draft editor before signing');
-    const cur=await tx.deliverable.findUnique({where:{id:del.id}});if(!['scheduled','missed'].includes(cur.status))throw new Error('Only a scheduled or missed deliverable can be moved');
+    const deal=await tx.endorsementDeal.findUnique({where:{id:del.dealId}});if(!LIVE_DEAL.includes(deal.status))throw new DomainError('Use the draft editor before signing');
+    const cur=await tx.deliverable.findUnique({where:{id:del.id}});if(!['scheduled','missed'].includes(cur.status))throw new DomainError('Only a scheduled or missed deliverable can be moved');
     const v=validateDeliverable({kind:cur.kind,dueAt:a.dueAt},deal.termStart,deal.termEnd);
     await tx.deliverable.update({where:{id:cur.id},data:{dueAt:v.dueAt,status:'scheduled'}});
     return record(tx,c,a,{athleteId:deal.athleteId,dealId:deal.id,kind,why,before:{deliverableId:cur.id,dueAt:cur.dueAt,status:cur.status},after:{deliverableId:cur.id,dueAt:v.dueAt,status:'scheduled'}});});
   }
-  throw new Error('Unknown amendment kind');
+  throw new DomainError('Unknown amendment kind');
  },
 };
 async function record(tx:any,c:any,a:any,r:{athleteId:string;contractId?:string|null;dealId?:string|null;kind:string;why:string;before:any;after:any}){

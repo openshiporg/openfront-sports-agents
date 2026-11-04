@@ -1,11 +1,12 @@
 import {permissions} from '../access';
 import {command,audit,transition} from '../lib/agencyCommand';
 import {validateTermination,validateRenewal,validateLapse,OPEN_AGREEMENT} from '../lib/lifecycle';
+import {DomainError} from '../lib/errors';
 
 async function agreementFor(c:any,id:unknown){
- if(!c.session?.itemId||!permissions.canManageContracts({session:c.session}))throw new Error('Not authorized');
+ if(!c.session?.itemId||!permissions.canManageContracts({session:c.session}))throw new DomainError('Not authorized');
  const row=await c.prisma.representationAgreement.findUnique({where:{id:String(id||'')},select:{id:true,athleteId:true}});
- if(!row?.athleteId)throw new Error('Agreement not found');return row as {id:string;athleteId:string};
+ if(!row?.athleteId)throw new DomainError('Agreement not found');return row as {id:string;athleteId:string};
 }
 /** An athlete with no remaining open agreement is a former client. Open contracts and receivables stay as they are. */
 async function closeOut(tx:any,agreementId:string,athleteId:string,why:string,requestId:string,c:any){
@@ -37,9 +38,9 @@ export const lifecycleMutations={
   const row=await agreementFor(c,a.agreementId);
   return command(c,'canManageContracts',row.athleteId,'renewAgreement',a,async tx=>{
    const ag=await tx.representationAgreement.findUnique({where:{id:row.id}});
-   if(!OPEN_AGREEMENT.includes(ag.status))throw new Error('Only signed or active agreements can be renewed');
+   if(!OPEN_AGREEMENT.includes(ag.status))throw new DomainError('Only signed or active agreements can be renewed');
    const v=validateRenewal({now:new Date(),current:ag.expiresAt,next:a.expiresAt,reason:a.reason});
-   const sw=await tx.representationAgreement.updateMany({where:{id:ag.id,status:ag.status},data:{expiresAt:v.next}});if(sw.count!==1)throw new Error('Record changed concurrently');
+   const sw=await tx.representationAgreement.updateMany({where:{id:ag.id,status:ag.status},data:{expiresAt:v.next}});if(sw.count!==1)throw new DomainError('Record changed concurrently');
    await tx.task.updateMany({where:{autoKey:'agreement:'+ag.id,status:{in:['open','in_progress']}},data:{status:'cancelled'}});
    const after=await tx.representationAgreement.findUnique({where:{id:ag.id}});
    await audit(tx,c,'agreement.renewed','RepresentationAgreement',ag.id,{expiresAt:ag.expiresAt},{expiresAt:v.next,reason:v.reason},a.idempotencyKey);
@@ -51,7 +52,7 @@ export const lifecycleMutations={
   const row=await agreementFor(c,a.agreementId);
   return command(c,'canManageContracts',row.athleteId,'lapseAgreement',a,async tx=>{
    const ag=await tx.representationAgreement.findUnique({where:{id:row.id}});
-   if(!OPEN_AGREEMENT.includes(ag.status))throw new Error('Only signed or active agreements can lapse');
+   if(!OPEN_AGREEMENT.includes(ag.status))throw new DomainError('Only signed or active agreements can lapse');
    validateLapse({now:new Date(),expiresAt:ag.expiresAt});
    const done=await transition(tx,c,'representationAgreement',row.id,OPEN_AGREEMENT,'expired',a.idempotencyKey);
    const co=await closeOut(tx,row.id,row.athleteId,'expired',a.idempotencyKey,c);

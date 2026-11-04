@@ -3,6 +3,7 @@ import {lockTransactionKey} from '../lib/agencyCommand';
 import {applyInvoiceReceipt} from '../lib/invoiceReceipt';
 import {signInvoiceProof,verifyInvoiceProof} from '../lib/invoiceProof';
 import {createPayment,getPaymentStatus} from '../utils/paymentProviderAdapter';
+import {DomainError} from '../lib/errors';
 
 const STRIPE_CODE='pp_stripe_stripe';
 const EMAIL=/^[^\s@]{1,64}@[^\s@]{1,255}\.[^\s@]{2,}$/;
@@ -15,31 +16,31 @@ async function portalAthlete(c:any){
 }
 async function invoiceAccess(c:any,invoiceId:string,proof?:string|null){
  const invoice=await c.prisma.commissionInvoice.findUnique({where:{id:String(invoiceId||'')},include:{athlete:{select:{id:true,fullName:true,email:true}}}});
- if(!invoice)throw new Error('Invoice not found');
+ if(!invoice)throw new DomainError('Invoice not found');
  const owner=await portalAthlete(c);
- if(!(owner&&owner.id===invoice.athleteId)&&!verifyInvoiceProof(invoice.id,proof))throw new Error('Invoice not found');
- if(!['sent','partially_paid','paid'].includes(invoice.status))throw new Error('Invoice not found');
+ if(!(owner&&owner.id===invoice.athleteId)&&!verifyInvoiceProof(invoice.id,proof))throw new DomainError('Invoice not found');
+ if(!['sent','partially_paid','paid'].includes(invoice.status))throw new DomainError('Invoice not found');
  return invoice;
 }
 const invoiceView=(i:any)=>({id:i.id,number:i.number,status:i.status,totalCents:i.totalCents,paidCents:i.paidCents,balanceCents:i.totalCents-i.paidCents,currencyCode:i.currencyCode,dueAt:i.dueAt,athleteName:i.athlete?.fullName});
 
 export const portalQueries={
- async myAthleteSummary(_:unknown,a:any,c:any){const athlete=await portalAthlete(c);if(!athlete)throw new Error('Client profile not found');const [contracts,deals]=await Promise.all([c.prisma.playingContract.findMany({where:{athleteId:athlete.id},select:{id:true,status:true,startSeason:true,endSeason:true},take:100}),c.prisma.endorsementDeal.findMany({where:{athleteId:athlete.id},select:{id:true,status:true,termStart:true,termEnd:true},take:100})]);return {...athlete,contracts,deals};},
- async myDeliverables(_:unknown,a:any,c:any){const athlete=await portalAthlete(c);if(!athlete)throw new Error('Client profile not found');return c.prisma.deliverable.findMany({where:{deal:{athleteId:athlete.id}},select:{id:true,kind:true,status:true,dueAt:true,proofLink:true},take:100,orderBy:{dueAt:'asc'}});},
- async myInvoices(_:unknown,a:any,c:any){const athlete=await portalAthlete(c);if(!athlete)throw new Error('Client profile not found');return c.prisma.commissionInvoice.findMany({where:{athleteId:athlete.id,status:{in:['sent','partially_paid','paid']}},select:{id:true,number:true,status:true,totalCents:true,paidCents:true,currencyCode:true,dueAt:true},take:100,orderBy:{createdAt:'desc'}});},
+ async myAthleteSummary(_:unknown,a:any,c:any){const athlete=await portalAthlete(c);if(!athlete)throw new DomainError('Client profile not found');const [contracts,deals]=await Promise.all([c.prisma.playingContract.findMany({where:{athleteId:athlete.id},select:{id:true,status:true,startSeason:true,endSeason:true},take:100}),c.prisma.endorsementDeal.findMany({where:{athleteId:athlete.id},select:{id:true,status:true,termStart:true,termEnd:true},take:100})]);return {...athlete,contracts,deals};},
+ async myDeliverables(_:unknown,a:any,c:any){const athlete=await portalAthlete(c);if(!athlete)throw new DomainError('Client profile not found');return c.prisma.deliverable.findMany({where:{deal:{athleteId:athlete.id}},select:{id:true,kind:true,status:true,dueAt:true,proofLink:true},take:100,orderBy:{dueAt:'asc'}});},
+ async myInvoices(_:unknown,a:any,c:any){const athlete=await portalAthlete(c);if(!athlete)throw new DomainError('Client profile not found');return c.prisma.commissionInvoice.findMany({where:{athleteId:athlete.id,status:{in:['sent','partially_paid','paid']}},select:{id:true,number:true,status:true,totalCents:true,paidCents:true,currencyCode:true,dueAt:true},take:100,orderBy:{createdAt:'desc'}});},
  async agencyName(_:unknown,a:any,c:any){return (await c.prisma.agency.findFirst({select:{name:true}}))?.name||null;},
  async agencyRoster(_:unknown,a:any,c:any){
   return c.prisma.athlete.findMany({where:{isPublic:true,status:'client'},select:{id:true,fullName:true,preferredName:true,sport:true,league:true,position:true,image:true,team:{select:{name:true}}},orderBy:{fullName:'asc'},take:100});
  },
  async agencyAthlete(_:unknown,a:any,c:any){
   const row=await c.prisma.athlete.findFirst({where:{id:String(a.athleteId||''),isPublic:true,status:'client'},select:{id:true,fullName:true,preferredName:true,sport:true,league:true,position:true,image:true,team:{select:{name:true}}}});
-  if(!row)throw new Error('Athlete not found');return row;
+  if(!row)throw new DomainError('Athlete not found');return row;
  },
  async lookupInvoice(_:unknown,a:any,c:any){
   const email=clip(a.email,320).toLowerCase(),number=clip(a.number,64).toUpperCase();
   const invoice=email&&number?await c.prisma.commissionInvoice.findFirst({where:{number,status:{in:['sent','partially_paid','paid']}},include:{athlete:{select:{id:true,email:true,portalUser:{select:{email:true}}}}}}):null;
   const match=invoice&&[invoice.athlete?.email,invoice.athlete?.portalUser?.email].some((x:any)=>x&&String(x).toLowerCase()===email);
-  if(!invoice||!match)throw new Error('No invoice matches those details');
+  if(!invoice||!match)throw new DomainError('No invoice matches those details');
   return {invoiceId:invoice.id,proof:signInvoiceProof(invoice.id)};
  },
  async guestInvoice(_:unknown,a:any,c:any){
@@ -61,7 +62,7 @@ async function stripeProvider(c:any){
 export async function finalizeInvoicePayment(c:any,paymentId:string){
  const prisma=c.prisma;
  const payment=await prisma.payment.findUnique({where:{id:paymentId},include:{paymentProvider:true}});
- if(!payment||!payment.orderId)throw new Error('Payment not found');
+ if(!payment||!payment.orderId)throw new DomainError('Payment not found');
  if(payment.status==='succeeded')return payment;
  const provider=await prisma.paymentProvider.findUnique({where:{id:payment.paymentProviderId}});
  const observed=await getPaymentStatus({provider,paymentId:payment.providerPaymentId});
@@ -82,10 +83,10 @@ export async function finalizeInvoicePayment(c:any,paymentId:string){
 export const portalMutations={
  async submitInquiry(_:unknown,a:any,c:any){
   const key=clip(a.idempotencyKey,100),name=clip(a.name,120),email=clip(a.email,320).toLowerCase(),org=clip(a.organization,160),message=clip(a.message,2000);
-  if(!key||!name||!EMAIL.test(email)||!message)throw new Error('Name, a valid email and a message are required');
+  if(!key||!name||!EMAIL.test(email)||!message)throw new DomainError('Name, a valid email and a message are required');
   return c.prisma.$transaction(async(tx:any)=>{
    const athlete=await tx.athlete.findFirst({where:{id:String(a.athleteId||''),isPublic:true,status:'client'},select:{id:true,leadAgentId:true,fullName:true}});
-   if(!athlete)throw new Error('Athlete not found');
+   if(!athlete)throw new DomainError('Athlete not found');
    const autoKey='inquiry:'+crypto.createHash('sha256').update(key+':'+email).digest('hex').slice(0,40);
    if(await tx.task.findUnique({where:{autoKey}}))return {received:true};
    const contact=(await tx.contact.findFirst({where:{email,name}}))||await tx.contact.create({data:{name,org,email,role:'Brand inquiry'}});
@@ -96,15 +97,15 @@ export const portalMutations={
  },
  // Starts (or resumes) a card payment for the invoice balance; returns the Stripe client secret.
  async payCommissionInvoice(_:unknown,a:any,c:any){
-  const key=clip(a.idempotencyKey,100);if(!key)throw new Error('Idempotency key required');
+  const key=clip(a.idempotencyKey,100);if(!key)throw new DomainError('Idempotency key required');
   const invoice=await invoiceAccess(c,a.invoiceId,a.proof);
-  if(!['sent','partially_paid'].includes(invoice.status)||invoice.totalCents-invoice.paidCents<1)throw new Error('Invoice is not payable');
+  if(!['sent','partially_paid'].includes(invoice.status)||invoice.totalCents-invoice.paidCents<1)throw new DomainError('Invoice is not payable');
   const provider=await stripeProvider(c);
   const amount=invoice.totalCents-invoice.paidCents;
   const reserved=await c.prisma.$transaction(async(tx:any)=>{
    await lockTransactionKey(tx,'athlete:'+invoice.athleteId);
    const fresh=await tx.commissionInvoice.findUnique({where:{id:invoice.id}});
-   if(!['sent','partially_paid'].includes(fresh.status)||fresh.totalCents-fresh.paidCents!==amount)throw new Error('Invoice changed; reload and retry');
+   if(!['sent','partially_paid'].includes(fresh.status)||fresh.totalCents-fresh.paidCents!==amount)throw new DomainError('Invoice changed; reload and retry');
    const existing=await tx.payment.findFirst({where:{orderId:invoice.id,status:'pending',amount,paymentProviderId:provider.id},orderBy:{createdAt:'desc'}});
    if(existing)return existing;
    return tx.payment.create({data:{idempotencyKey:'invoice-pay:'+invoice.id+':'+key,amount,currencyCode:invoice.currencyCode,status:'pending',paymentMethod:'credit_card',paymentProviderId:provider.id,orderId:invoice.id,reservedAt:new Date(),providerPaymentId:'',data:{}}});
@@ -116,7 +117,7 @@ export const portalMutations={
  },
  async confirmCommissionPayment(_:unknown,a:any,c:any){
   const payment=await c.prisma.payment.findUnique({where:{id:String(a.paymentId||'')},select:{id:true,orderId:true}});
-  if(!payment?.orderId)throw new Error('Payment not found');
+  if(!payment?.orderId)throw new DomainError('Payment not found');
   await invoiceAccess(c,payment.orderId,a.proof);
   const done=await finalizeInvoicePayment(c,payment.id);
   const invoice=await c.prisma.commissionInvoice.findUnique({where:{id:payment.orderId},include:{athlete:{select:{fullName:true}}}});

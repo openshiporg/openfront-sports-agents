@@ -2,9 +2,10 @@ import {permissions} from '../access';
 import {audit} from '../lib/agencyCommand';
 import {getOrCreateIdempotencyAttempt,updateIdempotencyAttempt} from '../utils/idempotency';
 import {reconcile,parsePeriod,payoutCsv,type Finding} from '../lib/reconcile';
+import {DomainError} from '../lib/errors';
 
 function gate(c:any){
- if(!c.session?.itemId||!permissions.canManageCommissions({session:c.session})||!c.session.data?.role?.canViewAllClients)throw new Error('Not authorized');
+ if(!c.session?.itemId||!permissions.canManageCommissions({session:c.session})||!c.session.data?.role?.canViewAllClients)throw new DomainError('Not authorized');
 }
 const num=(v:any)=>Number(v);
 
@@ -38,11 +39,11 @@ export const reconcileQueries={
 export const reconcileMutations={
  /** Generates the CSV on the server and records who exported which period. Replays return the same file. */
  async exportAgentPayouts(_:unknown,a:any,c:any){
-  gate(c);if(!a.idempotencyKey?.trim())throw new Error('Idempotency key required');
+  gate(c);if(!a.idempotencyKey?.trim())throw new DomainError('Idempotency key required');
   const {start,endExclusive}=parsePeriod(a.from,a.to);
   return c.prisma.$transaction(async(tx:any)=>{
    const {attempt,replay}=await getOrCreateIdempotencyAttempt(tx,{key:a.idempotencyKey,requestPath:'exportAgentPayouts',requestParams:{from:a.from,to:a.to,actorId:c.session.itemId}});
-   if(replay){if(attempt.recoveryPoint==='completed')return attempt.responseBody;throw new Error('Command already processing');}
+   if(replay){if(attempt.recoveryPoint==='completed')return attempt.responseBody;throw new DomainError('Command already processing');}
    const entries=await tx.commissionLedgerEntry.findMany({where:{OR:[{entryType:'split_to_agent'},{entryType:'reversal',payeeUserId:{not:null}}],occurredAt:{gte:start,lt:endExclusive}},orderBy:[{occurredAt:'asc'},{entryKey:'asc'}],include:{payeeUser:{select:{name:true,email:true}},athlete:{select:{fullName:true}},invoice:{select:{number:true}}}});
    const csv=payoutCsv(entries.map((e:any)=>({occurredAt:e.occurredAt,agentName:e.payeeUser?.name||'Unassigned',agentEmail:e.payeeUser?.email||'',athlete:e.athlete?.fullName||'',invoiceNumber:e.invoice?.number||'',entryType:e.entryType,amountCents:num(e.amountCents),currencyCode:e.currencyCode,entryKey:e.entryKey})));
    const totalCents=entries.reduce((n:number,e:any)=>n+num(e.amountCents),0);

@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import {permissionNames, permissions} from '../access';
 import {agencyMutations} from './agency';
+import {DomainError} from '../lib/errors';
 
 const dt = (v: any) => (v ? new Date(v) : undefined);
 const days = (n: number) => new Date(Date.now() + n * 86400000);
@@ -8,7 +9,7 @@ const clean = (o: any) => Object.fromEntries(Object.entries(o).filter(([, v]) =>
 
 async function must(db: any, model: string, where: any, label: string) {
   const row = await db[model].findFirst({where});
-  if (!row) throw new Error(`${label} not found`);
+  if (!row) throw new DomainError(`${label} not found`);
   return row;
 }
 async function findOrCreate(db: any, model: string, where: any, data: any) {
@@ -156,7 +157,7 @@ const handlers: Record<string, Handler> = {
 };
 
 export default async function ensureOnboardingRecord(_root: unknown, {entity, data}: {entity: string; data: any}, context: any) {
-  if (!context.session?.itemId || !permissions.canManageOnboarding({session: context.session})) throw new Error('Not authorized');
+  if (!context.session?.itemId || !permissions.canManageOnboarding({session: context.session})) throw new DomainError('Not authorized');
   const handler = handlers[entity];
   if (!handler) throw new Error('Unsupported setup record');
   const record = await handler(context, data);

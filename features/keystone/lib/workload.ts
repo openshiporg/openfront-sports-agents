@@ -1,3 +1,4 @@
+import {DomainError} from './errors';
 /** Pure agent workload aggregation and prospect rules. */
 export const LEAGUES = ['NFL', 'NBA', 'WNBA', 'MLB', 'NHL', 'MLS', 'NWSL', 'NCAA', 'Other'];
 export type WAthlete = { id: string; leadAgentId: string | null; status: string; recruitingStage: string | null };
@@ -25,14 +26,14 @@ export function agentWorkload(agentIds: string[], athletes: WAthlete[], tasks: W
 }
 export function validateProspect(a: any) {
   const fullName = String(a.fullName ?? '').trim().replace(/\s+/g, ' ');
-  if (fullName.length < 2 || fullName.length > 120) throw new Error('Name must be 2 to 120 characters');
+  if (fullName.length < 2 || fullName.length > 120) throw new DomainError('Name must be 2 to 120 characters');
   const sport = String(a.sport ?? '').trim();
-  if (!sport || sport.length > 60) throw new Error('Sport is required');
-  if (!LEAGUES.includes(String(a.league))) throw new Error('Unknown league');
+  if (!sport || sport.length > 60) throw new DomainError('Sport is required');
+  if (!LEAGUES.includes(String(a.league))) throw new DomainError('Unknown league');
   const position = String(a.position ?? '').trim().slice(0, 60);
   let contactAllowedFrom: Date | null = null;
-  if (a.contactAllowedFrom) { contactAllowedFrom = new Date(a.contactAllowedFrom); if (!Number.isFinite(contactAllowedFrom.getTime())) throw new Error('Invalid contact window date'); }
+  if (a.contactAllowedFrom) { contactAllowedFrom = new Date(a.contactAllowedFrom); if (!Number.isFinite(contactAllowedFrom.getTime())) throw new DomainError('Invalid contact window date'); }
   const email = String(a.email ?? '').trim().slice(0, 200);
-  if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new Error('Invalid email');
+  if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new DomainError('Invalid email');
   return { fullName, sport, league: String(a.league), position, contactAllowedFrom, email };
 }
