@@ -15,5 +15,6 @@ export const CommissionLedgerEntry = domainList({
     approvedBy: rel("User.commissionLedgerEntry_approvedBy", false),
     occurredAt: timestamp(),
     currencyCode: currencyCode(),
+    payoutEntry: rel("AgentPayoutEntry.ledgerEntry", false),
     commissionLedgerEntry_reverses: rel("CommissionLedgerEntry.reverses", true),
 }, "canManageCommissions", 'athlete', true);

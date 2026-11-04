@@ -87,6 +87,8 @@ export const User = list({
     interaction_user: rel("Interaction.user", true),
     endorsementDeal_owner: rel("EndorsementDeal.owner", true),
     commissionLedgerEntry_payeeUser: rel("CommissionLedgerEntry.payeeUser", true),
+    agentPayout_payee: rel("AgentPayout.payee", true),
+    agentPayout_recordedBy: rel("AgentPayout.recordedBy", true),
     commissionLedgerEntry_preparedBy: rel("CommissionLedgerEntry.preparedBy", true),
     commissionLedgerEntry_approvedBy: rel("CommissionLedgerEntry.approvedBy", true),
     agentSplit_user: rel("AgentSplit.user", true),

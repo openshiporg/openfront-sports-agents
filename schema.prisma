@@ -26,6 +26,8 @@ model User {
   interaction_user                 Interaction[]             @relation("Interaction_user")
   endorsementDeal_owner            EndorsementDeal[]         @relation("EndorsementDeal_owner")
   commissionLedgerEntry_payeeUser  CommissionLedgerEntry[]   @relation("CommissionLedgerEntry_payeeUser")
+  agentPayout_payee                AgentPayout[]             @relation("AgentPayout_payee")
+  agentPayout_recordedBy           AgentPayout[]             @relation("AgentPayout_recordedBy")
   commissionLedgerEntry_preparedBy CommissionLedgerEntry[]   @relation("CommissionLedgerEntry_preparedBy")
   commissionLedgerEntry_approvedBy CommissionLedgerEntry[]   @relation("CommissionLedgerEntry_approvedBy")
   agentSplit_user                  AgentSplit[]              @relation("AgentSplit_user")
@@ -521,6 +523,7 @@ model CommissionLedgerEntry {
   approvedById                   String?                             @map("approvedBy")
   occurredAt                     DateTime?
   currencyCode                   String                              @default("USD")
+  payoutEntry                    AgentPayoutEntry?                   @relation("AgentPayoutEntry_ledgerEntry")
   commissionLedgerEntry_reverses CommissionLedgerEntry[]             @relation("CommissionLedgerEntry_reverses")
   createdAt                      DateTime                            @default(now())
   updatedAt                      DateTime                            @default(now()) @updatedAt
@@ -688,6 +691,39 @@ model Amendment {
   @@index([contractId])
   @@index([dealId])
   @@index([appliedById])
+}
+
+model AgentPayout {
+  id           String             @id @default(cuid())
+  payee        User?              @relation("AgentPayout_payee", fields: [payeeId], references: [id])
+  payeeId      String?            @map("payee")
+  reference    String             @default("")
+  method       String             @default("")
+  note         String             @default("")
+  paidOn       DateTime           @postgresql.Date
+  totalCents   BigInt
+  currencyCode String             @default("USD")
+  recordedBy   User?              @relation("AgentPayout_recordedBy", fields: [recordedById], references: [id])
+  recordedById String?            @map("recordedBy")
+  entries      AgentPayoutEntry[] @relation("AgentPayoutEntry_payout")
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @default(now()) @updatedAt
+
+  @@index([payeeId])
+  @@index([recordedById])
+}
+
+model AgentPayoutEntry {
+  id            String                 @id @default(cuid())
+  payout        AgentPayout?           @relation("AgentPayoutEntry_payout", fields: [payoutId], references: [id])
+  payoutId      String?                @map("payout")
+  ledgerEntry   CommissionLedgerEntry? @relation("AgentPayoutEntry_ledgerEntry", fields: [ledgerEntryId], references: [id])
+  ledgerEntryId String?                @unique @map("ledgerEntry")
+  amountCents   BigInt
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @default(now()) @updatedAt
+
+  @@index([payoutId])
 }
 
 model PaymentProvider {

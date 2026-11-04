@@ -3,6 +3,7 @@ import { PlatformPage, Section, Row, Cell, Empty, ErrorState } from '../../compo
 import { StatusLabel } from '../../components/StatusLabel'
 import { RequestApprovalButton } from '../../components/ApprovalControls'
 import { ExportPayouts } from '../components/ExportPayouts'
+import { SettlePayout } from '../components/SettlePayout'
 import { RefundPayment } from '../components/RefundPayment'
 import { CommandButton } from '../../components/CommandButton'
 import { platformQuery, moneyExact, day } from '../../lib/query'
@@ -29,6 +30,8 @@ export default async function CommissionsPage({ searchParams }: { searchParams: 
   } catch (e: any) { return <PlatformPage title="Commissions"><ErrorState message={e.message} /></PlatformPage> }
   let rec: any = null, recError = ''
   let aging: any = null, agingError = ''
+  let payables: any = null
+  if (tab === 'payouts') { try { payables = (await platformQuery(`{ agentPayables }`)).agentPayables } catch { payables = null } }
   if (tab === 'aging') { try { aging = (await platformQuery(`{ invoiceAging }`)).invoiceAging } catch (e: any) { agingError = e.message } }
   if (tab === 'reconcile') {
     try {
@@ -164,6 +167,29 @@ export default async function CommissionsPage({ searchParams }: { searchParams: 
               )}
             </>
           )}
+        </>
+      )}
+      {tab === 'payouts' && payables && (
+        <>
+          <Section title="Owed to agents" hint="Unsettled splits net of refunds">
+            {payables.payables.length ? payables.payables.map((a: any) => (
+              <div key={a.payeeUserId} className="flex flex-col gap-2 border-b px-3 py-2.5 text-sm last:border-b-0">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1"><div className="truncate font-medium">{a.name}</div><div className="text-xs text-muted-foreground">{a.entries} {a.entries === 1 ? 'entry' : 'entries'}{a.mixedCurrency ? ' · mixed currencies' : ''}</div></div>
+                  <span className="w-28 shrink-0 text-right tabular-nums">{moneyExact(a.netCents, a.currencyCode)}</span>
+                </div>
+                {a.netCents > 0 && !a.mixedCurrency ? <SettlePayout payeeUserId={a.payeeUserId} name={a.name} netCents={a.netCents} entries={a.entries} currency={a.currencyCode} /> : <div className="text-xs text-muted-foreground">Nothing payable yet</div>}
+              </div>
+            )) : <Empty>Nothing owed to agents</Empty>}
+          </Section>
+          <Section title="Recorded payments" hint={String(payables.recent.length)}>
+            {payables.recent.length ? payables.recent.map((p: any) => (
+              <div key={p.id} className="flex items-start justify-between gap-3 border-b px-3 py-2.5 text-sm last:border-b-0">
+                <div className="min-w-0 flex-1"><div className="truncate"><span className="mr-2 font-mono text-xs uppercase text-muted-foreground">Paid</span>{p.payee}</div><div className="truncate text-xs text-muted-foreground">{p.reference}{p.method ? ` · ${p.method}` : ''} · {p.paidOn} · {p.entries} entries</div></div>
+                <span className="w-28 shrink-0 text-right tabular-nums">{moneyExact(p.totalCents, p.currencyCode)}</span>
+              </div>
+            )) : <Empty>No payments recorded</Empty>}
+          </Section>
         </>
       )}
       {tab === 'payouts' && (
