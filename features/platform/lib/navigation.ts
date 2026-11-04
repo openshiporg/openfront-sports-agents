@@ -46,6 +46,7 @@ export const platformNavGroups: PlatformNavGroup[] = [
     id: 'operations',
     title: 'Operations',
     items: [
+      { title: 'Workload', href: '/dashboard/platform/workload', description: 'Clients, pipeline and tasks per agent.', icon: Users },
       { title: 'Calendar', href: '/dashboard/platform/calendar', description: 'Deliverables and payment dates across athletes.', icon: CalendarDays },
       { title: 'Tasks', href: '/dashboard/platform/tasks', description: 'Follow-ups and automatic reminders.', icon: ListChecks },
       { title: 'Certifications', href: '/dashboard/platform/certifications', description: 'Agent certifications and expiry.', icon: BadgeCheck },
