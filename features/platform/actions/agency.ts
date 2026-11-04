@@ -53,6 +53,7 @@ const OPERATIONS: Record<string, string> = {
   setContactDoNotContact: 'mutation($contactId: ID!, $doNotContact: Boolean!, $reason: String!, $idempotencyKey: String!) { setContactDoNotContact(contactId: $contactId, doNotContact: $doNotContact, reason: $reason, idempotencyKey: $idempotencyKey) }',
   voidAgentPayout: 'mutation($payoutId: ID!, $reason: String!, $idempotencyKey: String!) { voidAgentPayout(payoutId: $payoutId, reason: $reason, idempotencyKey: $idempotencyKey) }',
   recordAgentPayout: 'mutation($payeeUserId: ID!, $reference: String!, $paidOn: String!, $method: String, $note: String, $expectedCents: Int!, $idempotencyKey: String!) { recordAgentPayout(payeeUserId: $payeeUserId, reference: $reference, paidOn: $paidOn, method: $method, note: $note, expectedCents: $expectedCents, idempotencyKey: $idempotencyKey) }',
+  setForecastProbabilities: 'mutation($probabilities: AgencyJSON!, $idempotencyKey: String!) { setForecastProbabilities(probabilities: $probabilities, idempotencyKey: $idempotencyKey) }',
   runInvoiceDunning: 'mutation($idempotencyKey: String!) { runInvoiceDunning(idempotencyKey: $idempotencyKey) }',
   generateAutoTasks: 'mutation { generateAutoTasks }',
 }

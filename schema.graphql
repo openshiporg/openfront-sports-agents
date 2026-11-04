@@ -922,6 +922,7 @@ type Agency {
   currencyCode: String
   fiscalYearStart: Int
   refundApprovalThresholdCents: Int
+  forecastProbabilities: JSON
   createdAt: DateTime
   updatedAt: DateTime
 }
@@ -975,6 +976,7 @@ input AgencyUpdateInput {
   currencyCode: String
   fiscalYearStart: Int
   refundApprovalThresholdCents: Int
+  forecastProbabilities: JSON
   createdAt: DateTime
   updatedAt: DateTime
 }
@@ -991,6 +993,7 @@ input AgencyCreateInput {
   currencyCode: String
   fiscalYearStart: Int
   refundApprovalThresholdCents: Int
+  forecastProbabilities: JSON
   createdAt: DateTime
   updatedAt: DateTime
 }
@@ -4936,6 +4939,7 @@ type Mutation {
   requestManagerApproval(actionType: String!, targetId: String!, amountCents: Int, reason: String!): AgencyJSON!
   decideManagerApproval(approvalId: ID!, decision: String!): AgencyJSON!
   generateAutoTasks: AgencyJSON!
+  setForecastProbabilities(probabilities: AgencyJSON!, idempotencyKey: String!): AgencyJSON!
   checkRefundStatus(refundId: ID!): AgencyJSON!
   refundInvoicePayment(paymentId: ID!, amountCents: Int!, reason: String!, approvalId: ID, idempotencyKey: String!): AgencyJSON!
   logInteraction(athleteId: ID!, contactId: ID, brandId: ID, kind: String!, summary: String!, occurredAt: String, nextStepAt: String, acknowledgeContactWindow: Boolean, idempotencyKey: String!): AgencyJSON!
@@ -5125,6 +5129,7 @@ type Query {
   validateUserPasswordResetToken(email: String!, token: String!): ValidateUserPasswordResetTokenResult
   redirectToInit: Boolean
   checkEndorsementConflicts(athleteId: ID!, category: String!, start: String!, end: String!): AgencyJSON!
+  dealForecast: AgencyJSON!
   reconcileCommissions(from: String!, to: String!): AgencyJSON!
   invoiceAging: AgencyJSON!
   agentPayables: AgencyJSON!

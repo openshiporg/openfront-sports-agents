@@ -132,6 +132,7 @@ model Agency {
   currencyCode                    String   @default("USD")
   fiscalYearStart                 Int?     @default(1)
   refundApprovalThresholdCents    Int?     @default(0)
+  forecastProbabilities           Json?    @default("{\"prospect\":10,\"negotiating\":40,\"signed\":90,\"active\":100}")
   createdAt                       DateTime @default(now())
   updatedAt                       DateTime @default(now()) @updatedAt
 }

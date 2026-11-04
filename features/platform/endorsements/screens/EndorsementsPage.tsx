@@ -5,13 +5,21 @@ import { StatusLabel } from '../../components/StatusLabel'
 import { RequestApprovalButton } from '../../components/ApprovalControls'
 import { CommandButton } from '../../components/CommandButton'
 import { platformQuery, money, day } from '../../lib/query'
+import { ScrollTabs } from '../../components/ScrollTabs'
+import { ForecastProbabilities } from '../components/ForecastProbabilities'
 
+const TABS = [{ key: 'pipeline', label: 'Pipeline', href: '/dashboard/platform/endorsements' }, { key: 'deliverables', label: 'Deliverables', href: '/dashboard/platform/endorsements?tab=deliverables' }, { key: 'forecast', label: 'Forecast', href: '/dashboard/platform/endorsements?tab=forecast' }]
 const STATUSES = ['prospect', 'negotiating', 'signed', 'active', 'completed', 'terminated']
 
 export default async function EndorsementsPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
   const { tab } = await searchParams
-  const view = tab === 'deliverables' ? 'deliverables' : 'pipeline'
-  let data: any
+  const view = tab === 'deliverables' ? 'deliverables' : tab === 'forecast' ? 'forecast' : 'pipeline'
+  let data: any, fc: any, fcError = ''
+  if (view === 'forecast') {
+    try { fc = (await platformQuery(`{ dealForecast }`)).dealForecast } catch (e: any) { fcError = e.message }
+    if (fcError || !fc) return <PlatformPage title="Endorsements"><ErrorState message={fcError || 'Forecast unavailable'} /></PlatformPage>
+    return <PlatformPage title="Endorsements"><ScrollTabs items={TABS.map((t) => ({ href: t.href, label: t.label, active: t.key === view }))} /><Forecast fc={fc} /></PlatformPage>
+  }
   try {
     data = await platformQuery(`{ athletes(orderBy: { fullName: asc }, take: 300) { id name: fullName } brands(orderBy: { name: asc }, take: 300) { id name } endorsementDeals(orderBy: { termStart: asc }, take: 200) { id status termStart termEnd totalValueCents currencyCode exclusivityCategory athlete { id fullName } brand { name } owner { name } }
       deliverables(orderBy: { dueAt: asc }, take: 200) { id kind status dueAt completedAt proofLink deal { id exclusivityCategory athlete { fullName } brand { name } } } }`)
@@ -19,10 +27,7 @@ export default async function EndorsementsPage({ searchParams }: { searchParams:
   for (const d of data.endorsementDeals) d.blocked = ['prospect', 'negotiating', 'signed'].includes(d.status) && !!d.exclusivityCategory && data.endorsementDeals.some((o: any) => o.id !== d.id && o.athlete?.id === d.athlete?.id && o.exclusivityCategory === d.exclusivityCategory && ['signed', 'active'].includes(o.status) && o.termStart <= d.termEnd && o.termEnd >= d.termStart)
   return (
     <PlatformPage title="Endorsements">
-      <div className="inline-flex gap-1 rounded-lg bg-muted p-1">
-        <Link href="/dashboard/platform/endorsements" className={`rounded-md px-3 py-1.5 text-sm ${view === 'pipeline' ? 'bg-background font-medium shadow-sm' : 'text-muted-foreground'}`}>Pipeline</Link>
-        <Link href="/dashboard/platform/endorsements?tab=deliverables" className={`rounded-md px-3 py-1.5 text-sm ${view === 'deliverables' ? 'bg-background font-medium shadow-sm' : 'text-muted-foreground'}`}>Deliverables</Link>
-      </div>
+      <ScrollTabs items={TABS.map((t) => ({ href: t.href, label: t.label, active: t.key === view }))} />
       {view === 'pipeline' && <div className="flex justify-end"><DraftDeal athletes={data.athletes} brands={data.brands} /></div>}
       {view === 'pipeline' ? STATUSES.map((s) => {
         const rows = data.endorsementDeals.filter((d: any) => d.status === s)
@@ -51,5 +56,34 @@ export default async function EndorsementsPage({ searchParams }: { searchParams:
         </Section>
       )}
     </PlatformPage>
+  )
+}
+
+const monthLabel = (m: string) => new Date(m + '-01T00:00:00Z').toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' })
+
+function Forecast({ fc }: { fc: any }) {
+  const cur = fc.currency
+  const months = fc.months.filter((m: any) => m.grossCents > 0)
+  return (
+    <>
+      <Section title="Expected commission" hint={fc.scope === 'mine' ? 'Your deals' : 'Whole agency'}>
+        <Row><Cell muted>Weighted by stage</Cell><Cell className="tabular-nums font-medium">{money(fc.totals.weightedCents, cur)}</Cell></Row>
+        <Row><Cell muted>If every deal closes</Cell><Cell className="tabular-nums">{money(fc.totals.grossCents, cur)}</Cell></Row>
+        <Row><Cell muted>Deals counted</Cell><Cell className="tabular-nums">{fc.totals.deals}</Cell></Row>
+        <Row><Cell muted>Already scheduled / not yet scheduled</Cell><Cell className="tabular-nums">{money(fc.placement.scheduledCents, cur)} / {money(fc.placement.unscheduledCents, cur)}</Cell></Row>
+        {fc.excludedOtherCurrency > 0 && <Row><Cell muted>Left out: other currency</Cell><Cell className="tabular-nums">{fc.excludedOtherCurrency} {fc.excludedOtherCurrency === 1 ? 'deal' : 'deals'}</Cell></Row>}
+      </Section>
+      <Section title="By month" hint="Next 12 months">
+        {months.length ? months.map((m: any) => <Row key={m.month}><Cell>{monthLabel(m.month)}</Cell><Cell muted className="tabular-nums">{money(m.grossCents, cur)} total</Cell><Cell className="tabular-nums font-medium">{money(m.weightedCents, cur)}</Cell></Row>) : <Empty>No expected commission in the next 12 months</Empty>}
+        <div className="border-t px-3 py-2 text-xs text-muted-foreground">Scheduled payments fall in their due month; overdue ones in this month. Commission not yet scheduled falls in the deal's start month. Later months are in the totals above.</div>
+      </Section>
+      <Section title="By stage">
+        {fc.stages.map((s: any) => <Row key={s.stage}><Cell className="capitalize">{s.stage} <span className="font-mono text-xs uppercase text-muted-foreground">{fc.probabilities[s.stage]}%</span></Cell><Cell muted className="tabular-nums">{s.deals} {s.deals === 1 ? 'deal' : 'deals'} · {money(s.grossCents, cur)}</Cell><Cell className="tabular-nums font-medium">{money(s.weightedCents, cur)}</Cell></Row>)}
+        {fc.canEditProbabilities && <div className="border-t p-3"><ForecastProbabilities values={fc.probabilities} notes={fc.stageNotes} /></div>}
+      </Section>
+      <Section title="By agent" hint={fc.scope === 'mine' ? 'Your deals' : undefined}>
+        {fc.agents.length ? fc.agents.map((a: any) => <Row key={a.ownerId ?? 'none'}><Cell>{a.ownerName}</Cell><Cell muted className="tabular-nums">{a.deals} {a.deals === 1 ? 'deal' : 'deals'} · {money(a.grossCents, cur)}</Cell><Cell className="tabular-nums font-medium">{money(a.weightedCents, cur)}</Cell></Row>) : <Empty>No open deals</Empty>}
+      </Section>
+    </>
   )
 }
