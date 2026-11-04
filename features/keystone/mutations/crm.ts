@@ -1,6 +1,7 @@
 import {permissions} from '../access';
 import {command,audit,transition,lockTransactionKey} from '../lib/agencyCommand';
 import {contactWindowBreach} from '../lib/crm';
+import {dncBlocks} from '../lib/directory';
 import {getOrCreateIdempotencyAttempt,updateIdempotencyAttempt} from '../utils/idempotency';
 import {DomainError} from '../lib/errors';
 
@@ -15,10 +16,14 @@ export const crmMutations={
    if(!KINDS.includes(a.kind))throw new DomainError('Invalid interaction kind');
    const occurredAt=a.occurredAt?new Date(a.occurredAt):new Date();if(!Number.isFinite(occurredAt.getTime())||occurredAt.getTime()>Date.now()+86400000)throw new DomainError('Invalid date');
    let nextStepAt:Date|null=null;if(a.nextStepAt){nextStepAt=new Date(a.nextStepAt);if(!Number.isFinite(nextStepAt.getTime())||nextStepAt<occurredAt)throw new DomainError('Next step must follow the interaction');}
+   let contact:any=null;
+   if(a.contactId){contact=await tx.contact.findUnique({where:{id:String(a.contactId)},select:{id:true,name:true,doNotContact:true,doNotContactReason:true}});if(!contact)throw new DomainError('Contact not found');}
+   if(a.brandId&&!await tx.brand.findUnique({where:{id:String(a.brandId)},select:{id:true}}))throw new DomainError('Brand not found');
+   if(dncBlocks(a.kind,contact))throw new DomainError(contact.name+' is marked do not contact ('+(contact.doNotContactReason||'no reason recorded')+'). Record a note instead, or ask a manager to lift the flag');
    const ath=await tx.athlete.findUnique({where:{id:a.athleteId},select:{contactAllowedFrom:true}});
    const breach=contactWindowBreach(a.kind,occurredAt,ath?.contactAllowedFrom);
    if(breach&&a.acknowledgeContactWindow!==true)throw new DomainError('Contact window opens '+ath!.contactAllowedFrom!.toISOString().slice(0,10)+'; acknowledge that this contact happened before it opened to record it');
-   const row=await tx.interaction.create({data:{athleteId:a.athleteId,userId:c.session.itemId,kind:a.kind,summary,occurredAt,...(nextStepAt?{nextStepAt}:{})}});
+   const row=await tx.interaction.create({data:{athleteId:a.athleteId,userId:c.session.itemId,kind:a.kind,summary,occurredAt,...(contact?{contactId:contact.id}:{}),...(a.brandId?{brandId:String(a.brandId)}:{}),...(nextStepAt?{nextStepAt}:{})}});
    if(nextStepAt)await tx.task.create({data:{autoKey:'next-step:'+row.id,title:'Follow up: '+summary.slice(0,80),athleteId:a.athleteId,assigneeId:c.session.itemId,dueAt:nextStepAt,priority:'normal',status:'open'}});
    await audit(tx,c,breach?'interaction.logged_before_contact_window':'interaction.logged','Interaction',row.id,null,{...row,contactAllowedFrom:ath?.contactAllowedFrom??null},a.idempotencyKey);return row;
   });
@@ -44,6 +49,6 @@ export const crmMutations={
 };
 export const crmTypeDefs=`
  extend type Mutation {
-  logInteraction(athleteId:ID!,kind:String!,summary:String!,occurredAt:String,nextStepAt:String,acknowledgeContactWindow:Boolean,idempotencyKey:String!):AgencyJSON!
+  logInteraction(athleteId:ID!,contactId:ID,brandId:ID,kind:String!,summary:String!,occurredAt:String,nextStepAt:String,acknowledgeContactWindow:Boolean,idempotencyKey:String!):AgencyJSON!
   completeTask(taskId:ID!,idempotencyKey:String!):AgencyJSON!
  }`;

@@ -29,7 +29,7 @@ const QUERY = `query ClientDetail($id: ID!) {
     clientTrustAccount_athlete { id name currencyCode }
     clientTrustEntry_athlete(orderBy: { occurredAt: desc }, take: 40) { id entryType amountCents reference occurredAt }
     document_athlete(orderBy: { createdAt: desc }) { id kind version sha256 fileName byteSize verifiedAt createdAt }
-    interaction_athlete(orderBy: { occurredAt: desc }, take: 40) { id kind summary occurredAt }
+    interaction_athlete(orderBy: { occurredAt: desc }, take: 40) { id kind summary occurredAt contact { name } brand { name } }
   }
 }`
 
@@ -44,6 +44,8 @@ export default async function ClientDetailPage({ params, searchParams }: { param
   try { agents = (await platformQuery(`{ users(orderBy: { name: asc }, take: 200) { id name } }`)).users } catch { agents = [] }
   let checklist: any = null
   if (['prospect', 'recruiting'].includes(a.status)) { try { checklist = (await platformQuery(`query($id: ID!) { prospectChecklist(athleteId: $id) }`, { id })).prospectChecklist } catch { checklist = null } }
+  let contacts: any[] = []
+  try { contacts = (await platformQuery(`{ contacts(orderBy: { name: asc }, take: 500) { id name doNotContact } }`)).contacts } catch { contacts = [] }
   let canReassign = false
   try { canReassign = Boolean((await platformQuery(`{ authenticatedItem { ... on User { role { canViewAllClients } } } }`)).authenticatedItem?.role?.canViewAllClients) } catch { canReassign = false }
   const trust = a.clientTrustEntry_athlete.reduce((n: number, e: any) => n + Number(e.amountCents), 0)
@@ -142,9 +144,9 @@ export default async function ClientDetailPage({ params, searchParams }: { param
       )}
       {tab === 'timeline' && (
         <Section title="Interactions">
-          <LogInteraction athleteId={a.id} contactAllowedFrom={a.contactAllowedFrom} />
+          <LogInteraction athleteId={a.id} contactAllowedFrom={a.contactAllowedFrom} contacts={contacts} />
           {a.interaction_athlete.length ? a.interaction_athlete.map((i: any) => (
-            <Row key={i.id}><Cell className="font-mono text-xs uppercase">{i.kind}</Cell><Cell>{i.summary}</Cell><Cell muted>{day(i.occurredAt)}</Cell></Row>
+            <Row key={i.id}><Cell className="font-mono text-xs uppercase">{i.kind}</Cell><Cell>{i.summary}{(i.contact || i.brand) && <span className="block text-xs text-muted-foreground">{[i.contact?.name, i.brand?.name].filter(Boolean).join(' · ')}</span>}</Cell><Cell muted>{day(i.occurredAt)}</Cell></Row>
           )) : <Empty>No interactions</Empty>}
         </Section>
       )}

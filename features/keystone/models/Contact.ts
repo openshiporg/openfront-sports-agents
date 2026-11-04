@@ -7,7 +7,9 @@ export const Contact = domainList({
     email: text(),
     phone: text(),
     athletes: rel("Athlete.contact_athletes", true),
-    doNotContact: checkbox({defaultValue:false}),
+    doNotContact: checkbox({defaultValue:false,access:{create:()=>false,update:()=>false}}),
+    doNotContactReason: text({access:{create:()=>false,update:()=>false}}),
+    doNotContactAt: timestamp({access:{create:()=>false,update:()=>false}}),
     brand_contacts: rel("Brand.contacts", true),
     interaction_contact: rel("Interaction.contact", true),
 }, "canManageAthletes", undefined, false);

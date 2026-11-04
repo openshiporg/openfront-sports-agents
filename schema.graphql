@@ -1754,6 +1754,8 @@ type Contact {
   athletes(where: AthleteWhereInput! = {}, orderBy: [AthleteOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: AthleteWhereUniqueInput): [Athlete!]
   athletesCount(where: AthleteWhereInput! = {}): Int
   doNotContact: Boolean
+  doNotContactReason: String
+  doNotContactAt: DateTime
   brand_contacts(where: BrandWhereInput! = {}, orderBy: [BrandOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: BrandWhereUniqueInput): [Brand!]
   brand_contactsCount(where: BrandWhereInput! = {}): Int
   interaction_contact(where: InteractionWhereInput! = {}, orderBy: [InteractionOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: InteractionWhereUniqueInput): [Interaction!]
@@ -1778,6 +1780,8 @@ input ContactWhereInput {
   phone: StringFilter
   athletes: AthleteManyRelationFilter
   doNotContact: BooleanFilter
+  doNotContactReason: StringFilter
+  doNotContactAt: DateTimeNullableFilter
   brand_contacts: BrandManyRelationFilter
   interaction_contact: InteractionManyRelationFilter
   createdAt: DateTimeFilter
@@ -1798,6 +1802,8 @@ input ContactOrderByInput {
   email: OrderDirection
   phone: OrderDirection
   doNotContact: OrderDirection
+  doNotContactReason: OrderDirection
+  doNotContactAt: OrderDirection
   createdAt: OrderDirection
   updatedAt: OrderDirection
 }
@@ -1810,6 +1816,8 @@ input ContactUpdateInput {
   phone: String
   athletes: AthleteRelateToManyForUpdateInput
   doNotContact: Boolean
+  doNotContactReason: String
+  doNotContactAt: DateTime
   brand_contacts: BrandRelateToManyForUpdateInput
   interaction_contact: InteractionRelateToManyForUpdateInput
   createdAt: DateTime
@@ -1836,6 +1844,8 @@ input ContactCreateInput {
   phone: String
   athletes: AthleteRelateToManyForCreateInput
   doNotContact: Boolean
+  doNotContactReason: String
+  doNotContactAt: DateTime
   brand_contacts: BrandRelateToManyForCreateInput
   interaction_contact: InteractionRelateToManyForCreateInput
   createdAt: DateTime
@@ -4928,7 +4938,7 @@ type Mutation {
   generateAutoTasks: AgencyJSON!
   checkRefundStatus(refundId: ID!): AgencyJSON!
   refundInvoicePayment(paymentId: ID!, amountCents: Int!, reason: String!, approvalId: ID, idempotencyKey: String!): AgencyJSON!
-  logInteraction(athleteId: ID!, kind: String!, summary: String!, occurredAt: String, nextStepAt: String, acknowledgeContactWindow: Boolean, idempotencyKey: String!): AgencyJSON!
+  logInteraction(athleteId: ID!, contactId: ID, brandId: ID, kind: String!, summary: String!, occurredAt: String, nextStepAt: String, acknowledgeContactWindow: Boolean, idempotencyKey: String!): AgencyJSON!
   completeTask(taskId: ID!, idempotencyKey: String!): AgencyJSON!
   requestDocumentUpload(athleteId: ID!, kind: String!, fileName: String!, mimeType: String!, byteSize: Int!, sha256: String!, idempotencyKey: String!): AgencyJSON!
   finalizeDocumentUpload(documentId: ID!, idempotencyKey: String): AgencyJSON!
@@ -4953,6 +4963,9 @@ type Mutation {
   runInvoiceDunning(idempotencyKey: String!): AgencyJSON!
   voidAgentPayout(payoutId: ID!, reason: String!, idempotencyKey: String!): AgencyJSON!
   recordAgentPayout(payeeUserId: ID!, reference: String!, paidOn: String!, method: String, note: String, expectedCents: Int!, idempotencyKey: String!): AgencyJSON!
+  saveBrand(brandId: ID, name: String!, category: String, website: String, idempotencyKey: String!): AgencyJSON!
+  saveContact(contactId: ID, name: String!, org: String, role: String, email: String, phone: String, brandId: ID, idempotencyKey: String!): AgencyJSON!
+  setContactDoNotContact(contactId: ID!, doNotContact: Boolean!, reason: String!, idempotencyKey: String!): AgencyJSON!
   addAgentCertification(userId: ID, body: String!, number: String!, issuedAt: String!, expiresAt: String!, idempotencyKey: String!): AgencyJSON!
   renewAgentCertification(certificationId: ID!, expiresAt: String!, reason: String!, idempotencyKey: String!): AgencyJSON!
   convertProspectToClient(athleteId: ID!, idempotencyKey: String!): AgencyJSON!

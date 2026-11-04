@@ -254,6 +254,8 @@ model Contact {
   phone               String        @default("")
   athletes            Athlete[]     @relation("Athlete_contact_athletes")
   doNotContact        Boolean       @default(false)
+  doNotContactReason  String        @default("")
+  doNotContactAt      DateTime?
   brand_contacts      Brand[]       @relation("Brand_contacts")
   interaction_contact Interaction[] @relation("Interaction_contact")
   createdAt           DateTime      @default(now())
