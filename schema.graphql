@@ -2081,6 +2081,7 @@ type PlayingContract {
   document: Document
   commissionBps: Int
   representationAgreement: RepresentationAgreement
+  paymentTermsDays: Int
   currencyCode: String
   contractYear_contract(where: ContractYearWhereInput! = {}, orderBy: [ContractYearOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: ContractYearWhereUniqueInput): [ContractYear!]
   contractYear_contractCount(where: ContractYearWhereInput! = {}): Int
@@ -2138,6 +2139,7 @@ input PlayingContractWhereInput {
   document: DocumentWhereInput
   commissionBps: IntNullableFilter
   representationAgreement: RepresentationAgreementWhereInput
+  paymentTermsDays: IntNullableFilter
   currencyCode: StringFilter
   contractYear_contract: ContractYearManyRelationFilter
   incentive_contract: IncentiveManyRelationFilter
@@ -2186,6 +2188,7 @@ input PlayingContractOrderByInput {
   signingBonusCents: OrderDirection
   status: OrderDirection
   commissionBps: OrderDirection
+  paymentTermsDays: OrderDirection
   currencyCode: OrderDirection
   createdAt: OrderDirection
   updatedAt: OrderDirection
@@ -2206,6 +2209,7 @@ input PlayingContractUpdateInput {
   document: DocumentRelateToOneForUpdateInput
   commissionBps: Int
   representationAgreement: RepresentationAgreementRelateToOneForUpdateInput
+  paymentTermsDays: Int
   currencyCode: String
   contractYear_contract: ContractYearRelateToManyForUpdateInput
   incentive_contract: IncentiveRelateToManyForUpdateInput
@@ -2451,6 +2455,7 @@ type EndorsementDeal {
   territory: String
   document: Document
   paymentTerms: String
+  paymentTermsDays: Int
   currencyCode: String
   deliverable_deal(where: DeliverableWhereInput! = {}, orderBy: [DeliverableOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: DeliverableWhereUniqueInput): [Deliverable!]
   deliverable_dealCount(where: DeliverableWhereInput! = {}): Int
@@ -2498,6 +2503,7 @@ input EndorsementDealWhereInput {
   territory: StringFilter
   document: DocumentWhereInput
   paymentTerms: StringFilter
+  paymentTermsDays: IntNullableFilter
   currencyCode: StringFilter
   deliverable_deal: DeliverableManyRelationFilter
   scheduledPayment_endorsementDeal: ScheduledPaymentManyRelationFilter
@@ -2532,6 +2538,7 @@ input EndorsementDealOrderByInput {
   exclusivityCategory: OrderDirection
   territory: OrderDirection
   paymentTerms: OrderDirection
+  paymentTermsDays: OrderDirection
   currencyCode: OrderDirection
   createdAt: OrderDirection
   updatedAt: OrderDirection
@@ -2550,6 +2557,7 @@ input EndorsementDealUpdateInput {
   territory: String
   document: DocumentRelateToOneForUpdateInput
   paymentTerms: String
+  paymentTermsDays: Int
   currencyCode: String
   deliverable_deal: DeliverableRelateToManyForUpdateInput
   scheduledPayment_endorsementDeal: ScheduledPaymentRelateToManyForUpdateInput
@@ -3654,6 +3662,7 @@ enum AmendmentKindType {
   extend_deal_term
   move_deliverable
   add_deliverable
+  change_payment_terms
 }
 
 input AmendmentWhereUniqueInput {
@@ -5067,16 +5076,16 @@ type Mutation {
   requestDocumentUpload(athleteId: ID!, kind: String!, fileName: String!, mimeType: String!, byteSize: Int!, sha256: String!, idempotencyKey: String!): AgencyJSON!
   finalizeDocumentUpload(documentId: ID!, idempotencyKey: String): AgencyJSON!
   downloadDocument(documentId: ID!, idempotencyKey: String): AgencyJSON!
-  editContractTerms(contractId: ID!, contractType: String!, startSeason: String!, endSeason: String!, totalValueCents: Int!, guaranteedCents: Int!, signingBonusCents: Int!, idempotencyKey: String!): AgencyJSON!
+  editContractTerms(contractId: ID!, contractType: String!, startSeason: String!, endSeason: String!, totalValueCents: Int!, guaranteedCents: Int!, signingBonusCents: Int!, paymentTermsDays: Int, idempotencyKey: String!): AgencyJSON!
   saveContractYear(contractId: ID!, yearId: ID, season: String!, baseSalaryCents: Int!, rosterBonusCents: Int!, workoutBonusCents: Int!, guaranteedCents: Int!, paySchedule: String!, payPeriods: Int!, firstPaymentAt: String, idempotencyKey: String!): AgencyJSON!
   removeContractYear(yearId: ID!, idempotencyKey: String!): AgencyJSON!
-  editDealTerms(dealId: ID!, termStart: String!, termEnd: String!, totalValueCents: Int!, paymentTerms: String, exclusivityCategory: String, territory: String, idempotencyKey: String!): AgencyJSON!
+  editDealTerms(dealId: ID!, termStart: String!, termEnd: String!, totalValueCents: Int!, paymentTermsDays: Int, exclusivityCategory: String, territory: String, idempotencyKey: String!): AgencyJSON!
   saveDeliverable(dealId: ID!, deliverableId: ID, kind: String!, dueAt: String!, notes: String, idempotencyKey: String!): AgencyJSON!
   removeDeliverable(deliverableId: ID!, idempotencyKey: String!): AgencyJSON!
-  amendTerms(kind: String!, reason: String!, scheduledPaymentId: ID, dealId: ID, deliverableId: ID, dueAt: String, termEnd: String, deliverableKind: String, notes: String, idempotencyKey: String!): AgencyJSON!
+  amendTerms(kind: String!, reason: String!, scheduledPaymentId: ID, dealId: ID, contractId: ID, paymentTermsDays: Int, deliverableId: ID, dueAt: String, termEnd: String, deliverableKind: String, notes: String, idempotencyKey: String!): AgencyJSON!
   exportAgentPayouts(from: String!, to: String!, idempotencyKey: String!): AgencyJSON!
-  draftPlayingContract(athleteId: ID!, teamId: ID!, contractType: String!, startSeason: String!, endSeason: String!, totalValueCents: Int!, guaranteedCents: Int!, signingBonusCents: Int!, idempotencyKey: String!): AgencyJSON!
-  draftEndorsementDeal(athleteId: ID!, brandId: ID!, termStart: String!, termEnd: String!, totalValueCents: Int!, paymentTerms: String, exclusivityCategory: String, territory: String, idempotencyKey: String!): AgencyJSON!
+  draftPlayingContract(athleteId: ID!, teamId: ID!, contractType: String!, startSeason: String!, endSeason: String!, totalValueCents: Int!, guaranteedCents: Int!, signingBonusCents: Int!, paymentTermsDays: Int, idempotencyKey: String!): AgencyJSON!
+  draftEndorsementDeal(athleteId: ID!, brandId: ID!, termStart: String!, termEnd: String!, totalValueCents: Int!, paymentTermsDays: Int, exclusivityCategory: String, territory: String, idempotencyKey: String!): AgencyJSON!
   createProspect(fullName: String!, sport: String!, league: String!, position: String, email: String, contactAllowedFrom: String, leadAgentId: ID, idempotencyKey: String!): AgencyJSON!
   markProspectLost(athleteId: ID!, reason: String!, note: String, idempotencyKey: String!): AgencyJSON!
   reopenProspect(athleteId: ID!, note: String!, idempotencyKey: String!): AgencyJSON!

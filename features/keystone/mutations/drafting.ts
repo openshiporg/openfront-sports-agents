@@ -23,6 +23,6 @@ export const draftingMutations={
 };
 export const draftingTypeDefs=`
  extend type Mutation {
-  draftPlayingContract(athleteId:ID!,teamId:ID!,contractType:String!,startSeason:String!,endSeason:String!,totalValueCents:Int!,guaranteedCents:Int!,signingBonusCents:Int!,idempotencyKey:String!):AgencyJSON!
-  draftEndorsementDeal(athleteId:ID!,brandId:ID!,termStart:String!,termEnd:String!,totalValueCents:Int!,paymentTerms:String,exclusivityCategory:String,territory:String,idempotencyKey:String!):AgencyJSON!
+  draftPlayingContract(athleteId:ID!,teamId:ID!,contractType:String!,startSeason:String!,endSeason:String!,totalValueCents:Int!,guaranteedCents:Int!,signingBonusCents:Int!,paymentTermsDays:Int,idempotencyKey:String!):AgencyJSON!
+  draftEndorsementDeal(athleteId:ID!,brandId:ID!,termStart:String!,termEnd:String!,totalValueCents:Int!,paymentTermsDays:Int,exclusivityCategory:String,territory:String,idempotencyKey:String!):AgencyJSON!
  }`;

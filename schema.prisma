@@ -319,6 +319,7 @@ model PlayingContract {
   commissionBps             Int?                             @default(0)
   representationAgreement   RepresentationAgreement?         @relation("PlayingContract_representationAgreement", fields: [representationAgreementId], references: [id])
   representationAgreementId String?                          @map("representationAgreement")
+  paymentTermsDays          Int?
   currencyCode              String                           @default("USD")
   contractYear_contract     ContractYear[]                   @relation("ContractYear_contract")
   incentive_contract        Incentive[]                      @relation("Incentive_contract")
@@ -390,6 +391,7 @@ model EndorsementDeal {
   document                         Document?                  @relation("EndorsementDeal_document", fields: [documentId], references: [id])
   documentId                       String?                    @map("document")
   paymentTerms                     String                     @default("")
+  paymentTermsDays                 Int?
   currencyCode                     String                     @default("USD")
   deliverable_deal                 Deliverable[]              @relation("Deliverable_deal")
   scheduledPayment_endorsementDeal ScheduledPayment[]         @relation("ScheduledPayment_endorsementDeal")
@@ -1144,6 +1146,7 @@ enum AmendmentKindType {
   extend_deal_term
   move_deliverable
   add_deliverable
+  change_payment_terms
 }
 
 enum ForecastSnapshotSourceType {

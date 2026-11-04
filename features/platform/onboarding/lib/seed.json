@@ -999,7 +999,7 @@
         "commissionBps": 1500,
         "exclusivityCategory": "athletic footwear",
         "territory": "United States",
-        "paymentTerms": "Net 30 from invoice",
+        "paymentTermsDays": 30,
         "deliverables": [
           {
             "kind": "social_post",
@@ -1030,7 +1030,7 @@
         "commissionBps": 1500,
         "exclusivityCategory": "supplements",
         "territory": "United States",
-        "paymentTerms": "Net 30 from invoice",
+        "paymentTermsDays": 30,
         "deliverables": [
           {
             "kind": "social_post",
@@ -1051,7 +1051,7 @@
         "commissionBps": 1500,
         "exclusivityCategory": "energy drinks",
         "territory": "United States",
-        "paymentTerms": "Net 30 from invoice",
+        "paymentTermsDays": 30,
         "deliverables": [
           {
             "kind": "commercial",
@@ -1077,7 +1077,7 @@
         "commissionBps": 1500,
         "exclusivityCategory": "financial services",
         "territory": "United States",
-        "paymentTerms": "Net 30 from invoice",
+        "paymentTermsDays": 30,
         "deliverables": [
           {
             "kind": "appearance",
@@ -1103,7 +1103,7 @@
         "commissionBps": 1500,
         "exclusivityCategory": "headphones",
         "territory": "United States",
-        "paymentTerms": "Net 30 from invoice",
+        "paymentTermsDays": 30,
         "deliverables": [
           {
             "kind": "social_post",
@@ -1124,7 +1124,7 @@
         "commissionBps": 1500,
         "exclusivityCategory": "fitness",
         "territory": "United States",
-        "paymentTerms": "Net 30 from invoice",
+        "paymentTermsDays": 30,
         "deliverables": [
           {
             "kind": "social_post",
@@ -1150,7 +1150,7 @@
         "commissionBps": 1500,
         "exclusivityCategory": "bottled water",
         "territory": "United States",
-        "paymentTerms": "Net 30 from invoice",
+        "paymentTermsDays": 30,
         "deliverables": [
           {
             "kind": "appearance",
@@ -1171,7 +1171,7 @@
         "commissionBps": 1500,
         "exclusivityCategory": "insurance",
         "territory": "United States",
-        "paymentTerms": "Net 30 from invoice",
+        "paymentTermsDays": 30,
         "deliverables": [
           {
             "kind": "social_post",
@@ -1192,7 +1192,7 @@
         "commissionBps": 1500,
         "exclusivityCategory": "automotive",
         "territory": "United States",
-        "paymentTerms": "Net 30 from invoice",
+        "paymentTermsDays": 30,
         "deliverables": [
           {
             "kind": "commercial",
@@ -1213,7 +1213,7 @@
         "commissionBps": 1500,
         "exclusivityCategory": "energy drinks",
         "territory": "United States",
-        "paymentTerms": "Net 30 from invoice",
+        "paymentTermsDays": 30,
         "deliverables": [
           {
             "kind": "social_post",
@@ -1239,7 +1239,7 @@
         "commissionBps": 1500,
         "exclusivityCategory": "athletic footwear",
         "territory": "United States",
-        "paymentTerms": "Net 30 from invoice",
+        "paymentTermsDays": 30,
         "deliverables": [
           {
             "kind": "photo_shoot",
@@ -1260,7 +1260,7 @@
         "commissionBps": 1500,
         "exclusivityCategory": "athletic footwear",
         "territory": "United States",
-        "paymentTerms": "Net 30 from invoice",
+        "paymentTermsDays": 30,
         "deliverables": [
           {
             "kind": "social_post",
@@ -1280,7 +1280,7 @@
         "commissionBps": 1500,
         "exclusivityCategory": "audio",
         "territory": "United States",
-        "paymentTerms": "Net 30 from invoice",
+        "paymentTermsDays": 30,
         "deliverables": []
       },
       {
@@ -1294,7 +1294,7 @@
         "commissionBps": 1500,
         "exclusivityCategory": "hydration",
         "territory": "United States",
-        "paymentTerms": "Net 30 from invoice",
+        "paymentTermsDays": 30,
         "deliverables": [
           {
             "kind": "social_post",
@@ -1314,7 +1314,7 @@
         "commissionBps": 1500,
         "exclusivityCategory": "sports nutrition",
         "territory": "United States",
-        "paymentTerms": "Net 45 from invoice",
+        "paymentTermsDays": 45,
         "deliverables": [
           {
             "kind": "photo_shoot",
@@ -1334,7 +1334,7 @@
         "commissionBps": 1500,
         "exclusivityCategory": "insurance bundles",
         "territory": "United States",
-        "paymentTerms": "Net 30 from invoice",
+        "paymentTermsDays": 30,
         "deliverables": []
       }
     ],
@@ -1657,7 +1657,7 @@
         "commissionBps": 1500,
         "exclusivityCategory": "financial services",
         "territory": "United States",
-        "paymentTerms": "Net 30 from invoice",
+        "paymentTermsDays": 30,
         "deliverables": [
           {
             "kind": "appearance",

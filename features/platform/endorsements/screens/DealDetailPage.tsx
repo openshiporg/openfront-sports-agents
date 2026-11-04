@@ -5,13 +5,14 @@ import { CommandButton } from '../../components/CommandButton'
 import { AmendTerms } from '../../components/AmendTerms'
 import { SchedulePayments } from '../components/SchedulePayments'
 import { DealTermsForm, DeliverableForm } from '../components/DealTermsForm'
+import { termsLabel } from '@/features/keystone/lib/paymentTerms'
 import { platformQuery, money, moneyExact, day } from '../../lib/query'
 
 export default async function DealDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   let d: any
   try {
-    d = (await platformQuery(`query($id: ID!) { endorsementDeal(where: { id: $id }) { id status termStart termEnd totalValueCents currencyCode exclusivityCategory territory paymentTerms commissionBps athlete { id fullName } brand { name }
+    d = (await platformQuery(`query($id: ID!) { endorsementDeal(where: { id: $id }) { id status termStart termEnd totalValueCents currencyCode exclusivityCategory territory paymentTermsDays commissionBps athlete { id fullName } brand { name }
       deliverable_deal(orderBy: { dueAt: asc }) { id kind status dueAt notes }
       scheduledPayment_endorsementDeal(orderBy: { dueAt: asc }) { id dueAt grossCents status invoice { id } commissionInvoiceLine_scheduledPayment { id } }
       amendment_deal(orderBy: { createdAt: desc }, take: 20) { id kind reason createdAt appliedBy { name } } } }`, { id })).endorsementDeal
@@ -21,10 +22,11 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
   return (
     <PlatformPage title={`${d.athlete?.fullName} · ${d.brand?.name}`} crumbs={[{ label: 'Endorsements', href: '/dashboard/platform/endorsements' }, { label: d.athlete?.fullName }]} actions={<StatusLabel value={d.status} />}>
       <Section title="Terms">
-        {[['Term', `${day(d.termStart)} to ${day(d.termEnd)}`], ['Total value', money(d.totalValueCents, d.currencyCode)], ['Commission', `${(d.commissionBps / 100).toFixed(2)}%`], ['Exclusivity', d.exclusivityCategory || 'None'], ['Territory', d.territory || 'Not set'], ['Payment terms', d.paymentTerms || 'Not set']].map(([k, v]) => <Row key={k}><Cell muted>{k}</Cell><Cell>{v}</Cell></Row>)}
+        {[['Term', `${day(d.termStart)} to ${day(d.termEnd)}`], ['Total value', money(d.totalValueCents, d.currencyCode)], ['Commission', `${(d.commissionBps / 100).toFixed(2)}%`], ['Exclusivity', d.exclusivityCategory || 'None'], ['Territory', d.territory || 'Not set'], ['Payment terms', termsLabel(d.paymentTermsDays)]].map(([k, v]) => <Row key={k}><Cell muted>{k}</Cell><Cell>{v}</Cell></Row>)}
         <Row className="justify-end gap-2">
           {draft && <DealTermsForm deal={d} />}
           {live && <AmendTerms kind="extend_deal_term" ids={{ dealId: d.id }} label="Extend term" initial={d.termEnd} />}
+          {live && <AmendTerms kind="change_payment_terms" ids={{ dealId: d.id }} label="Change payment terms" initialDays={d.paymentTermsDays} />}
         </Row>
       </Section>
       <Section title="Deliverables" hint={String(d.deliverable_deal.length)}>

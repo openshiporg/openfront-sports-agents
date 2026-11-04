@@ -12,7 +12,9 @@ export const EndorsementDeal = domainList({
     exclusivityCategory: text(),
     territory: text(),
     document: rel("Document.endorsementDeal_document", false),
+    // Retired free text, kept only so the backfill is auditable. Invoices use paymentTermsDays.
     paymentTerms: text(),
+    paymentTermsDays: integer({validation:{min:0,max:120}}),
     currencyCode: currencyCode(),
     deliverable_deal: rel("Deliverable.deal", true),
     scheduledPayment_endorsementDeal: rel("ScheduledPayment.endorsementDeal", true),

@@ -5,7 +5,7 @@ export const Amendment = domainList({
     athlete: rel("Athlete.amendment_athlete", false),
     contract: rel("PlayingContract.amendment_contract", false),
     deal: rel("EndorsementDeal.amendment_deal", false),
-    kind: state(['reschedule_payment', 'extend_deal_term', 'move_deliverable', 'add_deliverable']),
+    kind: state(['reschedule_payment', 'extend_deal_term', 'move_deliverable', 'add_deliverable', 'change_payment_terms']),
     reason: text({validation:{isRequired:true}}),
     before: json(),
     after: json(),

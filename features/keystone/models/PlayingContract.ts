@@ -15,6 +15,7 @@ export const PlayingContract = domainList({
     document: rel("Document.playingContract_document", false),
     commissionBps: bps(0),
     representationAgreement: rel("RepresentationAgreement.playingContract_representationAgreement", false),
+    paymentTermsDays: integer({validation:{min:0,max:120}}),
     currencyCode: currencyCode(),
     contractYear_contract: rel("ContractYear.contract", true),
     incentive_contract: rel("Incentive.contract", true),

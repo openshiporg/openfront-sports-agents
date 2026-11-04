@@ -1,4 +1,5 @@
 import {DomainError} from './errors';
+import {parseTermsDays} from './paymentTerms';
 /** Pure term rules shared by the draft editors, amendments and schedule generation. */
 export const CONTRACT_TYPES=['rookie_scale','veteran','extension','two_way','minor_league','college_nil','other'];
 export const DELIVERABLE_KINDS=['social_post','appearance','photo_shoot','commercial','autograph_session','other'];
@@ -14,7 +15,7 @@ export function validateContractTerms(t:any){
   const totalValueCents=int(t.totalValueCents,'Total value'),guaranteedCents=int(t.guaranteedCents,'Guaranteed amount'),signingBonusCents=int(t.signingBonusCents,'Signing bonus');
   if(guaranteedCents>totalValueCents)throw new DomainError('Guaranteed amount cannot exceed total value');
   if(signingBonusCents>totalValueCents)throw new DomainError('Signing bonus cannot exceed total value');
-  return {contractType,startSeason,endSeason,totalValueCents,guaranteedCents,signingBonusCents};
+  return {contractType,startSeason,endSeason,totalValueCents,guaranteedCents,signingBonusCents,paymentTermsDays:parseTermsDays(t.paymentTermsDays)};
 }
 export function validateContractYear(y:any,startSeason:string,endSeason:string){
   const season=String(y.season||'');if(!/^\d{4}$/.test(season)||Number(season)<Number(startSeason)||Number(season)>Number(endSeason))throw new DomainError('Season must fall within the contract seasons');
@@ -39,7 +40,7 @@ export function validateDealTerms(t:any){
   const termStart=parseDate(t.termStart,'Term start'),termEnd=parseDate(t.termEnd,'Term end');
   if(termEnd<=termStart)throw new DomainError('Term end must follow term start');
   const totalValueCents=int(t.totalValueCents,'Total value');
-  return {termStart,termEnd,totalValueCents,paymentTerms:String(t.paymentTerms||'').trim().slice(0,300),exclusivityCategory:String(t.exclusivityCategory||'').trim().slice(0,100),territory:String(t.territory||'').trim().slice(0,100)};
+  return {termStart,termEnd,totalValueCents,paymentTermsDays:parseTermsDays(t.paymentTermsDays),exclusivityCategory:String(t.exclusivityCategory||'').trim().slice(0,100),territory:String(t.territory||'').trim().slice(0,100)};
 }
 export function validateDeliverable(d:any,termStart:Date|null,termEnd:Date|null){
   const kind=String(d.kind||'');if(!DELIVERABLE_KINDS.includes(kind))throw new DomainError('Unknown deliverable kind');

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { PaymentTermsField, daysArg } from './PaymentTermsField'
 import { useCommand, toCents } from './useCommand'
 
 type Opt = { id: string; name: string }
@@ -22,7 +23,7 @@ function DateField({ label, value, onChange }: { label: string; value?: Date; on
 export function DraftContract({ athletes, teams }: { athletes: Opt[]; teams: Opt[] }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
-  const [f, setF] = useState({ athleteId: '', teamId: '', contractType: 'veteran', startSeason: String(new Date().getFullYear()), endSeason: String(new Date().getFullYear() + 2), total: '', guaranteed: '0', bonus: '0' })
+  const [f, setF] = useState({ athleteId: '', teamId: '', contractType: 'veteran', startSeason: String(new Date().getFullYear()), endSeason: String(new Date().getFullYear() + 2), total: '', guaranteed: '0', bonus: '0', days: '' })
   const [local, setLocal] = useState('')
   const { run, pending, error } = useCommand('draftPlayingContract', () => setOpen(false))
   if (!open) return <Button size="sm" onClick={() => setOpen(true)}>Draft contract</Button>
@@ -31,7 +32,7 @@ export function DraftContract({ athletes, teams }: { athletes: Opt[]; teams: Opt
     e.preventDefault(); const total = toCents(f.total), g = toCents(f.guaranteed), b = toCents(f.bonus)
     if (!f.athleteId || !f.teamId) { setLocal('Choose an athlete and a team'); return }
     if (total === null || g === null || b === null) { setLocal('Enter amounts like 1500000.00'); return }
-    setLocal(''); run({ athleteId: f.athleteId, teamId: f.teamId, contractType: f.contractType, startSeason: f.startSeason, endSeason: f.endSeason, totalValueCents: total, guaranteedCents: g, signingBonusCents: b })
+    setLocal(''); run({ athleteId: f.athleteId, teamId: f.teamId, contractType: f.contractType, startSeason: f.startSeason, endSeason: f.endSeason, totalValueCents: total, guaranteedCents: g, signingBonusCents: b, paymentTermsDays: daysArg(f.days) })
   }}>
     <Pick label="Athlete" value={f.athleteId} onChange={v => setF({ ...f, athleteId: v })} options={athletes} />
     <Pick label="Team" value={f.teamId} onChange={v => setF({ ...f, teamId: v })} options={teams} />
@@ -40,6 +41,7 @@ export function DraftContract({ athletes, teams }: { athletes: Opt[]; teams: Opt
     <label className="text-sm">Total value<Input inputMode="decimal" value={f.total} onChange={set('total')} /></label>
     <label className="text-sm">Guaranteed<Input inputMode="decimal" value={f.guaranteed} onChange={set('guaranteed')} /></label>
     <label className="text-sm">Signing bonus<Input inputMode="decimal" value={f.bonus} onChange={set('bonus')} /></label>
+    <PaymentTermsField value={f.days} onChange={v => setF({ ...f, days: v })} />
     <div className="flex gap-2"><Button type="submit" size="sm" disabled={pending}>{pending ? 'Working' : 'Create draft'}</Button><Button type="button" variant="ghost" size="sm" onClick={() => setOpen(false)}>Cancel</Button></div>
     {(local || error) && <p role="alert" className="text-sm text-destructive">{local || error}</p>}
   </form>
@@ -47,7 +49,7 @@ export function DraftContract({ athletes, teams }: { athletes: Opt[]; teams: Opt
 
 export function DraftDeal({ athletes, brands }: { athletes: Opt[]; brands: Opt[] }) {
   const [open, setOpen] = useState(false)
-  const [f, setF] = useState({ athleteId: '', brandId: '', total: '', terms: '', category: '', territory: '' })
+  const [f, setF] = useState({ athleteId: '', brandId: '', total: '', days: '', category: '', territory: '' })
   const [start, setStart] = useState<Date>(); const [end, setEnd] = useState<Date>()
   const [local, setLocal] = useState('')
   const { run, pending, error } = useCommand('draftEndorsementDeal', () => setOpen(false))
@@ -57,13 +59,13 @@ export function DraftDeal({ athletes, brands }: { athletes: Opt[]; brands: Opt[]
     e.preventDefault(); const total = toCents(f.total)
     if (!f.athleteId || !f.brandId || !start || !end) { setLocal('Choose an athlete, a brand and both dates'); return }
     if (total === null) { setLocal('Enter an amount like 250000.00'); return }
-    setLocal(''); run({ athleteId: f.athleteId, brandId: f.brandId, termStart: utc(start), termEnd: utc(end), totalValueCents: total, paymentTerms: f.terms, exclusivityCategory: f.category, territory: f.territory })
+    setLocal(''); run({ athleteId: f.athleteId, brandId: f.brandId, termStart: utc(start), termEnd: utc(end), totalValueCents: total, paymentTermsDays: daysArg(f.days), exclusivityCategory: f.category, territory: f.territory })
   }}>
     <Pick label="Athlete" value={f.athleteId} onChange={v => setF({ ...f, athleteId: v })} options={athletes} />
     <Pick label="Brand" value={f.brandId} onChange={v => setF({ ...f, brandId: v })} options={brands} />
     <DateField label="Term start" value={start} onChange={setStart} /><DateField label="Term end" value={end} onChange={setEnd} />
     <label className="text-sm">Total value<Input inputMode="decimal" value={f.total} onChange={set('total')} /></label>
-    <label className="text-sm">Payment terms<Input maxLength={300} value={f.terms} onChange={set('terms')} /></label>
+    <PaymentTermsField value={f.days} onChange={v => setF({ ...f, days: v })} />
     <label className="text-sm">Exclusivity category<Input maxLength={100} value={f.category} onChange={set('category')} /></label>
     <label className="text-sm">Territory<Input maxLength={100} value={f.territory} onChange={set('territory')} /></label>
     <div className="flex gap-2"><Button type="submit" size="sm" disabled={pending}>{pending ? 'Working' : 'Create draft'}</Button><Button type="button" variant="ghost" size="sm" onClick={() => setOpen(false)}>Cancel</Button></div>

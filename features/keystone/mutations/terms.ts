@@ -1,4 +1,5 @@
 import {command,audit,transition} from '../lib/agencyCommand';
+import {parseTermsDays} from '../lib/paymentTerms';
 import {validateContractTerms,validateContractYear,validateDealTerms,validateDeliverable,parseDate} from '../lib/terms';
 import {DomainError} from '../lib/errors';
 
@@ -78,6 +79,17 @@ export const termsMutations={
     const v=validateDeliverable({kind:a.deliverableKind,dueAt:a.dueAt,notes:a.notes},cur.termStart,cur.termEnd);const made=await tx.deliverable.create({data:{...v,dealId:cur.id,status:'scheduled'}});
     return record(tx,c,a,{athleteId:cur.athleteId,dealId:cur.id,kind,why,before:null,after:{deliverableId:made.id,kind:v.kind,dueAt:v.dueAt}});});
   }
+  if(kind==='change_payment_terms'){
+   const days=parseTermsDays(a.paymentTermsDays);
+   const contractId=a.contractId?String(a.contractId):null,dealId=a.dealId?String(a.dealId):null;if(!!contractId===!!dealId)throw new DomainError('Choose a contract or a deal');
+   const row=contractId?await get(c,'playingContract',contractId):await get(c,'endorsementDeal',dealId!);
+   return command(c,contractId?'canManageContracts':'canManageEndorsements',row.athleteId,'amendTerms',a,async tx=>{
+    const model=contractId?'playingContract':'endorsementDeal';const cur=await tx[model].findUnique({where:{id:row.id}});
+    if(!(contractId?LIVE_CONTRACT:LIVE_DEAL).includes(cur.status))throw new DomainError('Use the draft editor before signing');
+    if((cur.paymentTermsDays??null)===days)throw new DomainError('The payment terms are unchanged');
+    await tx[model].update({where:{id:cur.id},data:{paymentTermsDays:days}});
+    return record(tx,c,a,{athleteId:cur.athleteId,contractId,dealId,kind,why,before:{paymentTermsDays:cur.paymentTermsDays??null},after:{paymentTermsDays:days}});});
+  }
   if(kind==='move_deliverable'){
    const del=await get(c,'deliverable',a.deliverableId,{deal:true});
    return command(c,'canManageEndorsements',del.deal.athleteId,'amendTerms',a,async tx=>{
@@ -96,11 +108,11 @@ async function record(tx:any,c:any,a:any,r:{athleteId:string;contractId?:string|
 }
 export const termsTypeDefs=`
  extend type Mutation {
-  editContractTerms(contractId:ID!,contractType:String!,startSeason:String!,endSeason:String!,totalValueCents:Int!,guaranteedCents:Int!,signingBonusCents:Int!,idempotencyKey:String!):AgencyJSON!
+  editContractTerms(contractId:ID!,contractType:String!,startSeason:String!,endSeason:String!,totalValueCents:Int!,guaranteedCents:Int!,signingBonusCents:Int!,paymentTermsDays:Int,idempotencyKey:String!):AgencyJSON!
   saveContractYear(contractId:ID!,yearId:ID,season:String!,baseSalaryCents:Int!,rosterBonusCents:Int!,workoutBonusCents:Int!,guaranteedCents:Int!,paySchedule:String!,payPeriods:Int!,firstPaymentAt:String,idempotencyKey:String!):AgencyJSON!
   removeContractYear(yearId:ID!,idempotencyKey:String!):AgencyJSON!
-  editDealTerms(dealId:ID!,termStart:String!,termEnd:String!,totalValueCents:Int!,paymentTerms:String,exclusivityCategory:String,territory:String,idempotencyKey:String!):AgencyJSON!
+  editDealTerms(dealId:ID!,termStart:String!,termEnd:String!,totalValueCents:Int!,paymentTermsDays:Int,exclusivityCategory:String,territory:String,idempotencyKey:String!):AgencyJSON!
   saveDeliverable(dealId:ID!,deliverableId:ID,kind:String!,dueAt:String!,notes:String,idempotencyKey:String!):AgencyJSON!
   removeDeliverable(deliverableId:ID!,idempotencyKey:String!):AgencyJSON!
-  amendTerms(kind:String!,reason:String!,scheduledPaymentId:ID,dealId:ID,deliverableId:ID,dueAt:String,termEnd:String,deliverableKind:String,notes:String,idempotencyKey:String!):AgencyJSON!
+  amendTerms(kind:String!,reason:String!,scheduledPaymentId:ID,dealId:ID,contractId:ID,paymentTermsDays:Int,deliverableId:ID,dueAt:String,termEnd:String,deliverableKind:String,notes:String,idempotencyKey:String!):AgencyJSON!
  }`;
