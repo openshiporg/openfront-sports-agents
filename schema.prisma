@@ -28,6 +28,7 @@ model User {
   commissionLedgerEntry_payeeUser  CommissionLedgerEntry[]   @relation("CommissionLedgerEntry_payeeUser")
   agentPayout_payee                AgentPayout[]             @relation("AgentPayout_payee")
   agentPayout_recordedBy           AgentPayout[]             @relation("AgentPayout_recordedBy")
+  agentPayout_voidedBy             AgentPayout[]             @relation("AgentPayout_voidedBy")
   commissionLedgerEntry_preparedBy CommissionLedgerEntry[]   @relation("CommissionLedgerEntry_preparedBy")
   commissionLedgerEntry_approvedBy CommissionLedgerEntry[]   @relation("CommissionLedgerEntry_approvedBy")
   agentSplit_user                  AgentSplit[]              @relation("AgentSplit_user")
@@ -694,23 +695,30 @@ model Amendment {
 }
 
 model AgentPayout {
-  id           String             @id @default(cuid())
-  payee        User?              @relation("AgentPayout_payee", fields: [payeeId], references: [id])
-  payeeId      String?            @map("payee")
-  reference    String             @default("")
-  method       String             @default("")
-  note         String             @default("")
-  paidOn       DateTime           @postgresql.Date
-  totalCents   BigInt
-  currencyCode String             @default("USD")
-  recordedBy   User?              @relation("AgentPayout_recordedBy", fields: [recordedById], references: [id])
-  recordedById String?            @map("recordedBy")
-  entries      AgentPayoutEntry[] @relation("AgentPayoutEntry_payout")
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @default(now()) @updatedAt
+  id              String                 @id @default(cuid())
+  payee           User?                  @relation("AgentPayout_payee", fields: [payeeId], references: [id])
+  payeeId         String?                @map("payee")
+  reference       String                 @default("")
+  method          String                 @default("")
+  note            String                 @default("")
+  paidOn          DateTime               @postgresql.Date
+  totalCents      BigInt
+  currencyCode    String                 @default("USD")
+  recordedBy      User?                  @relation("AgentPayout_recordedBy", fields: [recordedById], references: [id])
+  recordedById    String?                @map("recordedBy")
+  status          AgentPayoutStatusType? @default(paid)
+  voidedAt        DateTime?
+  voidReason      String                 @default("")
+  voidedBy        User?                  @relation("AgentPayout_voidedBy", fields: [voidedById], references: [id])
+  voidedById      String?                @map("voidedBy")
+  releasedEntries Json?
+  entries         AgentPayoutEntry[]     @relation("AgentPayoutEntry_payout")
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @default(now()) @updatedAt
 
   @@index([payeeId])
   @@index([recordedById])
+  @@index([voidedById])
 }
 
 model AgentPayoutEntry {
@@ -1109,6 +1117,11 @@ enum AmendmentKindType {
   extend_deal_term
   move_deliverable
   add_deliverable
+}
+
+enum AgentPayoutStatusType {
+  paid
+  voided
 }
 
 enum PaymentCollectionDescriptionType {

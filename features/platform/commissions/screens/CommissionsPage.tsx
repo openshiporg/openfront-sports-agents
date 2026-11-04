@@ -3,11 +3,14 @@ import { PlatformPage, Section, Row, Cell, Empty, ErrorState } from '../../compo
 import { StatusLabel } from '../../components/StatusLabel'
 import { RequestApprovalButton } from '../../components/ApprovalControls'
 import { ExportPayouts } from '../components/ExportPayouts'
+import { ScrollTabs } from '../../components/ScrollTabs'
+import { VoidPayout } from '../components/VoidPayout'
 import { SettlePayout } from '../components/SettlePayout'
 import { RefundPayment } from '../components/RefundPayment'
 import { CommandButton } from '../../components/CommandButton'
 import { platformQuery, moneyExact, day } from '../../lib/query'
 import { parsePeriod } from '@/features/keystone/lib/reconcile'
+import { plural } from '@/features/keystone/lib/payout'
 import { BUCKETS, BUCKET_LABEL } from '@/features/keystone/lib/aging'
 
 const TABS = ['payments', 'invoices', 'aging', 'ledger', 'payouts', 'reconcile'] as const
@@ -25,7 +28,6 @@ export default async function CommissionsPage({ searchParams }: { searchParams: 
       refunds(where: { status: { in: ["processing", "unknown"] } }, orderBy: { createdAt: asc }, take: 50) { id amount status reason order { number } }
       agencies(take: 1) { refundApprovalThresholdCents }
       commissionLedgerEntries(orderBy: { occurredAt: desc }, take: 150) { id entryType amountCents reason occurredAt reverses { id } reversalKey payeeUser { name } athlete { fullName } }
-      payouts: commissionLedgerEntries(where: { entryType: { equals: split_to_agent } }, take: 1000) { amountCents payeeUser { id name } }
     }`)
   } catch (e: any) { return <PlatformPage title="Commissions"><ErrorState message={e.message} /></PlatformPage> }
   let rec: any = null, recError = ''
@@ -37,16 +39,12 @@ export default async function CommissionsPage({ searchParams }: { searchParams: 
     try {
       parsePeriod(from, to); rec = (await platformQuery(`query($from: String!, $to: String!) { reconcileCommissions(from: $from, to: $to) }`, { from, to })).reconcileCommissions } catch (e: any) { recError = /Dates|End date|period/.test(e.message) ? e.message : 'Reconciliation could not run. Try a shorter period.' }
   }
-  const byAgent = new Map<string, { name: string; total: number; n: number }>()
-  for (const e of data.payouts) { const k = e.payeeUser?.id || 'x'; const cur = byAgent.get(k) || { name: e.payeeUser?.name || 'Unassigned', total: 0, n: 0 }; cur.total += Number(e.amountCents); cur.n++; byAgent.set(k, cur) }
   const received = data.scheduledPayments.filter((p: any) => p.status === 'received' && !p.invoice)
   const byAthlete = new Map<string, { id: string; name: string; ids: string[] }>()
   for (const p of received) { const k = p.athlete.id; const cur = byAthlete.get(k) || { id: k, name: p.athlete.fullName, ids: [] as string[] }; cur.ids.push(p.id); byAthlete.set(k, cur) }
   return (
     <PlatformPage title="Commissions">
-      <nav className="inline-flex max-w-full gap-1 overflow-x-auto rounded-lg bg-muted p-1">
-        {TABS.map((x) => <Link key={x} href={`/dashboard/platform/commissions?tab=${x}`} className={`rounded-md px-3 py-1.5 text-sm capitalize ${x === tab ? 'bg-background font-medium shadow-sm' : 'text-muted-foreground'}`}>{x}</Link>)}
-      </nav>
+      <ScrollTabs items={TABS.map((x) => ({ href: `/dashboard/platform/commissions?tab=${x}`, label: x, active: x === tab }))} />
       {tab === 'payments' && (
         <>
           {byAthlete.size > 0 && (
@@ -175,7 +173,7 @@ export default async function CommissionsPage({ searchParams }: { searchParams: 
             {payables.payables.length ? payables.payables.map((a: any) => (
               <div key={a.payeeUserId} className="flex flex-col gap-2 border-b px-3 py-2.5 text-sm last:border-b-0">
                 <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 flex-1"><div className="truncate font-medium">{a.name}</div><div className="text-xs text-muted-foreground">{a.entries} {a.entries === 1 ? 'entry' : 'entries'}{a.mixedCurrency ? ' · mixed currencies' : ''}</div></div>
+                  <div className="min-w-0 flex-1"><div className="truncate font-medium">{a.name}</div><div className="text-xs text-muted-foreground">{plural(a.entries, 'entry', 'entries')} · {moneyExact(a.allocatedCents)} allocated − {moneyExact(a.reversedCents)} reversed{a.settledCents ? ` − ${moneyExact(a.settledCents)} paid` : ''}{a.mixedCurrency ? ' · mixed currencies' : ''}</div></div>
                   <span className="w-28 shrink-0 text-right tabular-nums">{moneyExact(a.netCents, a.currencyCode)}</span>
                 </div>
                 {a.netCents > 0 && !a.mixedCurrency ? <SettlePayout payeeUserId={a.payeeUserId} name={a.name} netCents={a.netCents} entries={a.entries} currency={a.currencyCode} /> : <div className="text-xs text-muted-foreground">Nothing payable yet</div>}
@@ -184,17 +182,25 @@ export default async function CommissionsPage({ searchParams }: { searchParams: 
           </Section>
           <Section title="Recorded payments" hint={String(payables.recent.length)}>
             {payables.recent.length ? payables.recent.map((p: any) => (
-              <div key={p.id} className="flex items-start justify-between gap-3 border-b px-3 py-2.5 text-sm last:border-b-0">
-                <div className="min-w-0 flex-1"><div className="truncate"><span className="mr-2 font-mono text-xs uppercase text-muted-foreground">Paid</span>{p.payee}</div><div className="truncate text-xs text-muted-foreground">{p.reference}{p.method ? ` · ${p.method}` : ''} · {p.paidOn} · {p.entries} entries</div></div>
-                <span className="w-28 shrink-0 text-right tabular-nums">{moneyExact(p.totalCents, p.currencyCode)}</span>
+              <div key={p.id} className="flex flex-col gap-2 border-b px-3 py-2.5 text-sm last:border-b-0">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1"><div className="truncate"><span className={`mr-2 font-mono text-xs uppercase ${p.status === 'voided' ? 'text-destructive' : 'text-muted-foreground'}`}>{p.status === 'voided' ? 'Voided' : 'Paid'}</span>{p.payee}</div><div className="truncate text-xs text-muted-foreground">{p.reference}{p.method ? ` · ${p.method}` : ''} · {p.paidOn} · {plural(p.entries, 'entry', 'entries')}</div>{p.status === 'voided' && p.voidReason && <div className="text-xs text-muted-foreground">Reason: {p.voidReason}</div>}</div>
+                  <span className={`w-28 shrink-0 text-right tabular-nums ${p.status === 'voided' ? 'text-muted-foreground line-through' : ''}`}>{moneyExact(p.totalCents, p.currencyCode)}</span>
+                </div>
+                {p.status !== 'voided' && <VoidPayout payoutId={p.id} label={`${p.reference} (${moneyExact(p.totalCents, p.currencyCode)})`} />}
               </div>
             )) : <Empty>No payments recorded</Empty>}
           </Section>
         </>
       )}
-      {tab === 'payouts' && (
-        <Section title="Agent payout report" hint="Allocated from received invoice payments">
-          {byAgent.size ? [...byAgent.values()].map((a) => <Row key={a.name}><Cell className="font-medium">{a.name}</Cell><Cell muted>{a.n} allocations</Cell><Cell className="tabular-nums">{moneyExact(a.total)}</Cell></Row>) : <Empty>No payouts yet</Empty>}
+      {tab === 'payouts' && payables && (
+        <Section title="Agent statement" hint="Allocated − reversed − paid = owed">
+          {payables.report.length ? payables.report.map((a: any) => (
+            <div key={a.payeeUserId} className="flex items-start justify-between gap-3 border-b px-3 py-2.5 text-sm last:border-b-0">
+              <div className="min-w-0 flex-1"><div className="truncate font-medium">{a.name}</div><div className="text-xs text-muted-foreground">{plural(a.allocations, 'allocation')} · {moneyExact(a.allocatedCents)} allocated − {moneyExact(a.reversedCents)} reversed − {moneyExact(a.settledCents)} paid</div></div>
+              <span className="w-28 shrink-0 text-right tabular-nums">{moneyExact(a.owedCents)}</span>
+            </div>
+          )) : <Empty>No payouts yet</Empty>}
         </Section>
       )}
     </PlatformPage>

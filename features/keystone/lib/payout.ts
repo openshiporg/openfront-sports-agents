@@ -26,3 +26,23 @@ export function checkSettlement(owed: ReturnType<typeof netOwed>, expectedCents:
   if (owed.netCents <= 0) throw new DomainError('The unsettled balance is not positive, so there is nothing to pay');
   if (owed.netCents !== expectedCents) throw new DomainError('The amount owed changed since you loaded this page; reload and check it again');
 }
+
+export type StatementEntry = { amountCents: number; entryType: 'split_to_agent' | 'reversal'; settled: boolean };
+/** Per-agent reconciliation: owed = allocated - reversed - settled. Settled is the net of entries already paid out. */
+export function agentStatement(entries: StatementEntry[]) {
+  let allocatedCents = 0, reversedCents = 0, settledCents = 0, allocations = 0, reversals = 0;
+  for (const e of entries) {
+    if (e.entryType === 'split_to_agent') { allocatedCents += e.amountCents; allocations++; } else { reversedCents += -e.amountCents; reversals++; }
+    if (e.settled) settledCents += e.amountCents;
+  }
+  return { allocations, reversals, allocatedCents, reversedCents, settledCents, owedCents: allocatedCents - reversedCents - settledCents };
+}
+export const plural = (n: number, one: string, many = one + 's') => `${n} ${n === 1 ? one : many}`;
+
+export function validateVoid(i: { payoutId?: string; reason?: string }) {
+  if (!i.payoutId) throw new DomainError('Choose the payment to void');
+  const reason = (i.reason ?? '').trim();
+  if (reason.length < 5) throw new DomainError('A reason of at least 5 characters is required to void a payment');
+  if (reason.length > 500) throw new DomainError('Reason is too long');
+  return { payoutId: i.payoutId, reason };
+}

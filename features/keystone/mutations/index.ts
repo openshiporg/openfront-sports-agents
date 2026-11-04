@@ -13,7 +13,7 @@ import {termsTypeDefs,termsMutations} from './terms';
 import {conversionTypeDefs,conversionQueries,conversionMutations} from './conversion';
 import {lifecycleTypeDefs,lifecycleMutations} from './lifecycle';
 import {certificationTypeDefs,certificationMutations} from './certifications';
-import {payoutTypeDefs,payoutQueries,payoutMutations} from './payouts';
+import {payoutTypeDefs,payoutQueries,payoutMutations,voidMutations} from './payouts';
 import {agingTypeDefs,agingQueries,agingMutations} from './aging';
 import {prospectTypeDefs,prospectMutations,lostMutations} from './prospects';
 import {draftingTypeDefs,draftingMutations} from './drafting';
@@ -36,7 +36,7 @@ export function extendGraphqlSchema(baseSchema: GraphQLSchema) {
       Query: userFacingAll({ 
         redirectToInit, ...agencyQueries, ...portalQueries,...reconcileQueries,...conversionQueries,...agingQueries,...payoutQueries,
       }),
-      Mutation: userFacingAll({...agencyMutations,...refundMutations,...crmMutations,...documentMutations,...termsMutations,...reconcileMutations,...draftingMutations,...prospectMutations,...lifecycleMutations,...agingMutations,...payoutMutations,...certificationMutations,...conversionMutations,...lostMutations,...portalMutations,ensureOnboardingRecord,updateActiveUser,requestManagerApproval,decideManagerApproval}),
+      Mutation: userFacingAll({...agencyMutations,...refundMutations,...crmMutations,...documentMutations,...termsMutations,...reconcileMutations,...draftingMutations,...prospectMutations,...lifecycleMutations,...agingMutations,...payoutMutations,...voidMutations,...certificationMutations,...conversionMutations,...lostMutations,...portalMutations,ensureOnboardingRecord,updateActiveUser,requestManagerApproval,decideManagerApproval}),
     },
   });
 }

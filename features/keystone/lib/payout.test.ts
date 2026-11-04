@@ -21,3 +21,25 @@ test('settlement refuses empty, mixed, non-positive and changed balances', () =>
   assert.throws(() => checkSettlement(netOwed([e('a', 5000)]), 4000), /changed/)
   assert.doesNotThrow(() => checkSettlement(netOwed([e('a', 5000)]), 5000))
 })
+import { agentStatement, plural } from './payout'
+test('statement: owed = allocated - reversed - settled', () => {
+  const s = (amountCents: number, entryType: any, settled = false) => ({ amountCents, entryType, settled })
+  const r = agentStatement([s(6000, 'split_to_agent', true), s(-1000, 'reversal', true), s(2500, 'split_to_agent'), s(-700, 'reversal'), s(4000, 'split_to_agent')])
+  assert.deepEqual(r, { allocations: 3, reversals: 2, allocatedCents: 12500, reversedCents: 1700, settledCents: 5000, owedCents: 5800 })
+  assert.equal(r.owedCents, r.allocatedCents - r.reversedCents - r.settledCents)
+  assert.deepEqual(agentStatement([]), { allocations: 0, reversals: 0, allocatedCents: 0, reversedCents: 0, settledCents: 0, owedCents: 0 })
+})
+test('owed from the statement equals the unsettled net used for payment', () => {
+  const rows = [{ id: 'a', amountCents: 6000, t: 'split_to_agent', st: true }, { id: 'b', amountCents: -1000, t: 'reversal', st: false }, { id: 'c', amountCents: 2500, t: 'split_to_agent', st: false }]
+  const st = agentStatement(rows.map((r) => ({ amountCents: r.amountCents, entryType: r.t as any, settled: r.st })))
+  const unsettled = netOwed(rows.filter((r) => !r.st).map((r) => ({ id: r.id, amountCents: r.amountCents, occurredAt: null, currencyCode: 'USD' })))
+  assert.equal(st.owedCents, unsettled.netCents)
+})
+test('plural', () => { assert.equal(plural(1, 'allocation'), '1 allocation'); assert.equal(plural(0, 'allocation'), '0 allocations'); assert.equal(plural(2, 'entry', 'entries'), '2 entries'); assert.equal(plural(1, 'entry', 'entries'), '1 entry') })
+import { validateVoid } from './payout'
+test('void validation', () => {
+  assert.throws(() => validateVoid({ reason: 'bank bounced' }), /Choose the payment/)
+  assert.throws(() => validateVoid({ payoutId: 'p', reason: ' no ' }), /at least 5/)
+  assert.throws(() => validateVoid({ payoutId: 'p', reason: 'x'.repeat(501) }), /too long/)
+  assert.deepEqual(validateVoid({ payoutId: 'p', reason: '  Wire bounced  ' }), { payoutId: 'p', reason: 'Wire bounced' })
+})

@@ -27,6 +27,8 @@ type User {
   agentPayout_payeeCount(where: AgentPayoutWhereInput! = {}): Int
   agentPayout_recordedBy(where: AgentPayoutWhereInput! = {}, orderBy: [AgentPayoutOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: AgentPayoutWhereUniqueInput): [AgentPayout!]
   agentPayout_recordedByCount(where: AgentPayoutWhereInput! = {}): Int
+  agentPayout_voidedBy(where: AgentPayoutWhereInput! = {}, orderBy: [AgentPayoutOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: AgentPayoutWhereUniqueInput): [AgentPayout!]
+  agentPayout_voidedByCount(where: AgentPayoutWhereInput! = {}): Int
   commissionLedgerEntry_preparedBy(where: CommissionLedgerEntryWhereInput! = {}, orderBy: [CommissionLedgerEntryOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: CommissionLedgerEntryWhereUniqueInput): [CommissionLedgerEntry!]
   commissionLedgerEntry_preparedByCount(where: CommissionLedgerEntryWhereInput! = {}): Int
   commissionLedgerEntry_approvedBy(where: CommissionLedgerEntryWhereInput! = {}, orderBy: [CommissionLedgerEntryOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: CommissionLedgerEntryWhereUniqueInput): [CommissionLedgerEntry!]
@@ -87,6 +89,7 @@ input UserWhereInput {
   commissionLedgerEntry_payeeUser: CommissionLedgerEntryManyRelationFilter
   agentPayout_payee: AgentPayoutManyRelationFilter
   agentPayout_recordedBy: AgentPayoutManyRelationFilter
+  agentPayout_voidedBy: AgentPayoutManyRelationFilter
   commissionLedgerEntry_preparedBy: CommissionLedgerEntryManyRelationFilter
   commissionLedgerEntry_approvedBy: CommissionLedgerEntryManyRelationFilter
   agentSplit_user: AgentSplitManyRelationFilter
@@ -290,6 +293,7 @@ input UserUpdateInput {
   commissionLedgerEntry_payeeUser: CommissionLedgerEntryRelateToManyForUpdateInput
   agentPayout_payee: AgentPayoutRelateToManyForUpdateInput
   agentPayout_recordedBy: AgentPayoutRelateToManyForUpdateInput
+  agentPayout_voidedBy: AgentPayoutRelateToManyForUpdateInput
   commissionLedgerEntry_preparedBy: CommissionLedgerEntryRelateToManyForUpdateInput
   commissionLedgerEntry_approvedBy: CommissionLedgerEntryRelateToManyForUpdateInput
   agentSplit_user: AgentSplitRelateToManyForUpdateInput
@@ -417,6 +421,7 @@ input UserCreateInput {
   commissionLedgerEntry_payeeUser: CommissionLedgerEntryRelateToManyForCreateInput
   agentPayout_payee: AgentPayoutRelateToManyForCreateInput
   agentPayout_recordedBy: AgentPayoutRelateToManyForCreateInput
+  agentPayout_voidedBy: AgentPayoutRelateToManyForCreateInput
   commissionLedgerEntry_preparedBy: CommissionLedgerEntryRelateToManyForCreateInput
   commissionLedgerEntry_approvedBy: CommissionLedgerEntryRelateToManyForCreateInput
   agentSplit_user: AgentSplitRelateToManyForCreateInput
@@ -3679,10 +3684,20 @@ type AgentPayout {
   totalCents: BigInt
   currencyCode: String
   recordedBy: User
+  status: AgentPayoutStatusType
+  voidedAt: DateTime
+  voidReason: String
+  voidedBy: User
+  releasedEntries: JSON
   entries(where: AgentPayoutEntryWhereInput! = {}, orderBy: [AgentPayoutEntryOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: AgentPayoutEntryWhereUniqueInput): [AgentPayoutEntry!]
   entriesCount(where: AgentPayoutEntryWhereInput! = {}): Int
   createdAt: DateTime
   updatedAt: DateTime
+}
+
+enum AgentPayoutStatusType {
+  paid
+  voided
 }
 
 input AgentPayoutWhereUniqueInput {
@@ -3702,6 +3717,10 @@ input AgentPayoutWhereInput {
   totalCents: BigIntFilter
   currencyCode: StringFilter
   recordedBy: UserWhereInput
+  status: AgentPayoutStatusTypeNullableFilter
+  voidedAt: DateTimeNullableFilter
+  voidReason: StringFilter
+  voidedBy: UserWhereInput
   entries: AgentPayoutEntryManyRelationFilter
   createdAt: DateTimeFilter
   updatedAt: DateTimeFilter
@@ -3718,6 +3737,13 @@ input CalendarDayFilter {
   not: CalendarDayFilter
 }
 
+input AgentPayoutStatusTypeNullableFilter {
+  equals: AgentPayoutStatusType
+  in: [AgentPayoutStatusType!]
+  notIn: [AgentPayoutStatusType!]
+  not: AgentPayoutStatusTypeNullableFilter
+}
+
 input AgentPayoutEntryManyRelationFilter {
   every: AgentPayoutEntryWhereInput
   some: AgentPayoutEntryWhereInput
@@ -3732,6 +3758,9 @@ input AgentPayoutOrderByInput {
   paidOn: OrderDirection
   totalCents: OrderDirection
   currencyCode: OrderDirection
+  status: OrderDirection
+  voidedAt: OrderDirection
+  voidReason: OrderDirection
   createdAt: OrderDirection
   updatedAt: OrderDirection
 }
@@ -3745,6 +3774,11 @@ input AgentPayoutUpdateInput {
   totalCents: BigInt
   currencyCode: String
   recordedBy: UserRelateToOneForUpdateInput
+  status: AgentPayoutStatusType
+  voidedAt: DateTime
+  voidReason: String
+  voidedBy: UserRelateToOneForUpdateInput
+  releasedEntries: JSON
   entries: AgentPayoutEntryRelateToManyForUpdateInput
   createdAt: DateTime
   updatedAt: DateTime
@@ -4917,6 +4951,7 @@ type Mutation {
   renewAgreement(agreementId: ID!, expiresAt: String!, reason: String!, idempotencyKey: String!): AgencyJSON!
   lapseAgreement(agreementId: ID!, idempotencyKey: String!): AgencyJSON!
   runInvoiceDunning(idempotencyKey: String!): AgencyJSON!
+  voidAgentPayout(payoutId: ID!, reason: String!, idempotencyKey: String!): AgencyJSON!
   recordAgentPayout(payeeUserId: ID!, reference: String!, paidOn: String!, method: String, note: String, expectedCents: Int!, idempotencyKey: String!): AgencyJSON!
   addAgentCertification(userId: ID, body: String!, number: String!, issuedAt: String!, expiresAt: String!, idempotencyKey: String!): AgencyJSON!
   renewAgentCertification(certificationId: ID!, expiresAt: String!, reason: String!, idempotencyKey: String!): AgencyJSON!

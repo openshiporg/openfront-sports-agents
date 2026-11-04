@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ScrollTabs } from '../../components/ScrollTabs'
 import { DocumentUpload } from '../components/DocumentUpload'
 import { DownloadDocument } from '../components/DownloadDocument'
 import { objectStorageConfigured } from '@/features/integrations/storage'
@@ -48,11 +49,7 @@ export default async function ClientDetailPage({ params, searchParams }: { param
   const trust = a.clientTrustEntry_athlete.reduce((n: number, e: any) => n + Number(e.amountCents), 0)
   return (
     <PlatformPage title={a.fullName} crumbs={[{ label: 'Clients', href: '/dashboard/platform/clients' }, { label: a.fullName }]} actions={<StatusLabel value={a.status} />}>
-      <nav className="inline-flex max-w-full gap-1 overflow-x-auto rounded-lg bg-muted p-1">
-        {TABS.map((t) => (
-          <Link key={t} href={`/dashboard/platform/clients/${id}?tab=${t}`} className={`whitespace-nowrap rounded-md px-3 py-1.5 text-sm capitalize ${t === tab ? 'bg-background font-medium shadow-sm' : 'text-muted-foreground'}`}>{t}</Link>
-        ))}
-      </nav>
+      <ScrollTabs items={TABS.map((t) => ({ href: `/dashboard/platform/clients/${id}?tab=${t}`, label: t, active: t === tab }))} />
 
       {tab === 'overview' && (
         <Section title="Profile">
