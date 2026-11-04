@@ -2,14 +2,18 @@ import Link from 'next/link'
 import { PlatformPage, Section, Row, Cell, Empty, ErrorState } from '../../components/Section'
 import { StatusLabel } from '../../components/StatusLabel'
 import { RequestApprovalButton } from '../../components/ApprovalControls'
+import { ExportPayouts } from '../components/ExportPayouts'
 import { RefundPayment } from '../components/RefundPayment'
 import { CommandButton } from '../../components/CommandButton'
 import { platformQuery, moneyExact, day } from '../../lib/query'
+import { parsePeriod } from '@/features/keystone/lib/reconcile'
 
-const TABS = ['payments', 'invoices', 'ledger', 'payouts'] as const
+const TABS = ['payments', 'invoices', 'ledger', 'payouts', 'reconcile'] as const
 
-export default async function CommissionsPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
-  const { tab: t } = await searchParams
+export default async function CommissionsPage({ searchParams }: { searchParams: Promise<{ tab?: string; from?: string; to?: string }> }) {
+  const { tab: t, from: qf, to: qt } = await searchParams
+  const today = new Date().toISOString().slice(0, 10)
+  const from = qf || today.slice(0, 8) + '01', to = qt || today
   const tab = (TABS as readonly string[]).includes(t || '') ? t! : 'payments'
   let data: any
   try {
@@ -22,6 +26,11 @@ export default async function CommissionsPage({ searchParams }: { searchParams: 
       payouts: commissionLedgerEntries(where: { entryType: { equals: split_to_agent } }, take: 1000) { amountCents payeeUser { id name } }
     }`)
   } catch (e: any) { return <PlatformPage title="Commissions"><ErrorState message={e.message} /></PlatformPage> }
+  let rec: any = null, recError = ''
+  if (tab === 'reconcile') {
+    try {
+      parsePeriod(from, to); rec = (await platformQuery(`query($from: String!, $to: String!) { reconcileCommissions(from: $from, to: $to) }`, { from, to })).reconcileCommissions } catch (e: any) { recError = /Dates|End date|period/.test(e.message) ? e.message : 'Reconciliation could not run. Try a shorter period.' }
+  }
   const byAgent = new Map<string, { name: string; total: number; n: number }>()
   for (const e of data.payouts) { const k = e.payeeUser?.id || 'x'; const cur = byAgent.get(k) || { name: e.payeeUser?.name || 'Unassigned', total: 0, n: 0 }; cur.total += Number(e.amountCents); cur.n++; byAgent.set(k, cur) }
   const received = data.scheduledPayments.filter((p: any) => p.status === 'received' && !p.invoice)
@@ -92,6 +101,38 @@ export default async function CommissionsPage({ searchParams }: { searchParams: 
             </Row>
           )) : <Empty>No ledger entries</Empty>}
         </Section>
+      )}
+      {tab === 'reconcile' && (
+        <>
+          <form method="get" className="flex flex-wrap items-end gap-3">
+            <input type="hidden" name="tab" value="reconcile" />
+            <label className="text-sm">From<input type="date" name="from" defaultValue={from} className="mt-1 block rounded-md border bg-background px-3 py-2 text-sm" /></label>
+            <label className="text-sm">To<input type="date" name="to" defaultValue={to} className="mt-1 block rounded-md border bg-background px-3 py-2 text-sm" /></label>
+            <button type="submit" className="rounded-md border px-3 py-2 text-sm">Run reconciliation</button>
+          </form>
+          {recError ? <ErrorState message={recError} /> : rec && (
+            <>
+              <Section title="Period summary" hint={`${rec.from} to ${rec.to}`}>
+                <Row><Cell muted>Provider payments</Cell><Cell className="tabular-nums">{rec.counts.payments}</Cell></Row>
+                <Row><Cell muted>Provider net of refunds</Cell><Cell className="tabular-nums">{moneyExact(rec.providerNetCents)}</Cell></Row>
+                <Row><Cell muted>Invoices checked</Cell><Cell className="tabular-nums">{rec.counts.invoices}</Cell></Row>
+                <Row><Cell muted>Ledger entries checked</Cell><Cell className="tabular-nums">{rec.counts.ledgerEntries}</Cell></Row>
+                <Row><Cell className="font-mono text-xs uppercase">{rec.findings.length ? `${rec.findings.length} differences` : 'Balanced'}</Cell><ExportPayouts from={from} to={to} /></Row>
+              </Section>
+              {rec.findings.length > 0 && (
+                <Section title="Differences" hint="Actual minus expected">
+                  {rec.findings.map((f: any, i: number) => (
+                    <Row key={i}>
+                      <Cell className="font-mono text-xs uppercase">{f.kind.replaceAll('_', ' ')}</Cell>
+                      <Cell muted>{f.ref} · {f.note}</Cell>
+                      <Cell className="tabular-nums">{moneyExact(f.differenceCents)}</Cell>
+                    </Row>
+                  ))}
+                </Section>
+              )}
+            </>
+          )}
+        </>
       )}
       {tab === 'payouts' && (
         <Section title="Agent payout report" hint="Allocated from received invoice payments">

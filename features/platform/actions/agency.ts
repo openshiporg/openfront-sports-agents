@@ -34,6 +34,7 @@ const OPERATIONS: Record<string, string> = {
   saveDeliverable: 'mutation($dealId: ID!, $deliverableId: ID, $kind: String!, $dueAt: String!, $notes: String, $idempotencyKey: String!) { saveDeliverable(dealId: $dealId, deliverableId: $deliverableId, kind: $kind, dueAt: $dueAt, notes: $notes, idempotencyKey: $idempotencyKey) }',
   removeDeliverable: 'mutation($deliverableId: ID!, $idempotencyKey: String!) { removeDeliverable(deliverableId: $deliverableId, idempotencyKey: $idempotencyKey) }',
   amendTerms: 'mutation($kind: String!, $reason: String!, $scheduledPaymentId: ID, $dealId: ID, $deliverableId: ID, $dueAt: String, $termEnd: String, $deliverableKind: String, $notes: String, $idempotencyKey: String!) { amendTerms(kind: $kind, reason: $reason, scheduledPaymentId: $scheduledPaymentId, dealId: $dealId, deliverableId: $deliverableId, dueAt: $dueAt, termEnd: $termEnd, deliverableKind: $deliverableKind, notes: $notes, idempotencyKey: $idempotencyKey) }',
+  exportAgentPayouts: 'mutation($from: String!, $to: String!, $idempotencyKey: String!) { exportAgentPayouts(from: $from, to: $to, idempotencyKey: $idempotencyKey) }',
   generateAutoTasks: 'mutation { generateAutoTasks }',
 }
 

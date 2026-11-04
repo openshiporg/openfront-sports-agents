@@ -4687,6 +4687,7 @@ type Mutation {
   saveDeliverable(dealId: ID!, deliverableId: ID, kind: String!, dueAt: String!, notes: String, idempotencyKey: String!): AgencyJSON!
   removeDeliverable(deliverableId: ID!, idempotencyKey: String!): AgencyJSON!
   amendTerms(kind: String!, reason: String!, scheduledPaymentId: ID, dealId: ID, deliverableId: ID, dueAt: String, termEnd: String, deliverableKind: String, notes: String, idempotencyKey: String!): AgencyJSON!
+  exportAgentPayouts(from: String!, to: String!, idempotencyKey: String!): AgencyJSON!
   submitInquiry(athleteId: ID!, name: String!, email: String!, organization: String, message: String!, idempotencyKey: String!): AgencyJSON!
   payCommissionInvoice(invoiceId: ID!, proof: String, idempotencyKey: String!): AgencyJSON!
   confirmCommissionPayment(paymentId: ID!, proof: String): AgencyJSON!
@@ -4836,6 +4837,7 @@ type Query {
   validateUserPasswordResetToken(email: String!, token: String!): ValidateUserPasswordResetTokenResult
   redirectToInit: Boolean
   checkEndorsementConflicts(athleteId: ID!, category: String!, start: String!, end: String!): AgencyJSON!
+  reconcileCommissions(from: String!, to: String!): AgencyJSON!
   myAthleteSummary: AgencyJSON!
   myDeliverables: AgencyJSON!
   myInvoices: AgencyJSON!
