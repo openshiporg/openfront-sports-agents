@@ -4734,6 +4734,7 @@ type Mutation {
   terminateAgreement(agreementId: ID!, noticeGivenAt: String!, reason: String!, idempotencyKey: String!): AgencyJSON!
   renewAgreement(agreementId: ID!, expiresAt: String!, reason: String!, idempotencyKey: String!): AgencyJSON!
   lapseAgreement(agreementId: ID!, idempotencyKey: String!): AgencyJSON!
+  runInvoiceDunning(idempotencyKey: String!): AgencyJSON!
   addAgentCertification(userId: ID, body: String!, number: String!, issuedAt: String!, expiresAt: String!, idempotencyKey: String!): AgencyJSON!
   renewAgentCertification(certificationId: ID!, expiresAt: String!, reason: String!, idempotencyKey: String!): AgencyJSON!
   convertProspectToClient(athleteId: ID!, idempotencyKey: String!): AgencyJSON!
@@ -4887,6 +4888,7 @@ type Query {
   redirectToInit: Boolean
   checkEndorsementConflicts(athleteId: ID!, category: String!, start: String!, end: String!): AgencyJSON!
   reconcileCommissions(from: String!, to: String!): AgencyJSON!
+  invoiceAging: AgencyJSON!
   prospectChecklist(athleteId: ID!): AgencyJSON!
   myAthleteSummary: AgencyJSON!
   myDeliverables: AgencyJSON!

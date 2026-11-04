@@ -7,8 +7,9 @@ import { RefundPayment } from '../components/RefundPayment'
 import { CommandButton } from '../../components/CommandButton'
 import { platformQuery, moneyExact, day } from '../../lib/query'
 import { parsePeriod } from '@/features/keystone/lib/reconcile'
+import { BUCKETS, BUCKET_LABEL } from '@/features/keystone/lib/aging'
 
-const TABS = ['payments', 'invoices', 'ledger', 'payouts', 'reconcile'] as const
+const TABS = ['payments', 'invoices', 'aging', 'ledger', 'payouts', 'reconcile'] as const
 
 export default async function CommissionsPage({ searchParams }: { searchParams: Promise<{ tab?: string; from?: string; to?: string }> }) {
   const { tab: t, from: qf, to: qt } = await searchParams
@@ -27,6 +28,8 @@ export default async function CommissionsPage({ searchParams }: { searchParams: 
     }`)
   } catch (e: any) { return <PlatformPage title="Commissions"><ErrorState message={e.message} /></PlatformPage> }
   let rec: any = null, recError = ''
+  let aging: any = null, agingError = ''
+  if (tab === 'aging') { try { aging = (await platformQuery(`{ invoiceAging }`)).invoiceAging } catch (e: any) { agingError = e.message } }
   if (tab === 'reconcile') {
     try {
       parsePeriod(from, to); rec = (await platformQuery(`query($from: String!, $to: String!) { reconcileCommissions(from: $from, to: $to) }`, { from, to })).reconcileCommissions } catch (e: any) { recError = /Dates|End date|period/.test(e.message) ? e.message : 'Reconciliation could not run. Try a shorter period.' }
@@ -88,6 +91,35 @@ export default async function CommissionsPage({ searchParams }: { searchParams: 
             </Row>
           )) : <Empty>No invoices</Empty>}
         </Section>
+        </>
+      )}
+      {tab === 'aging' && (
+        <>
+          {agingError && <ErrorState message={agingError} />}
+          {aging && (
+            <>
+              <Section title="Receivables by days past due" hint={`${moneyExact(aging.overdueCents)} overdue of ${moneyExact(aging.openCents)} open`}>
+                {BUCKETS.map((b) => (
+                  <div key={b} className="flex items-start justify-between gap-3 border-b px-3 py-2.5 text-sm last:border-b-0">
+                    <div className="min-w-0 flex-1"><div className="truncate">{BUCKET_LABEL[b]}</div><div className="text-xs text-muted-foreground">{aging.totals[b].count} {aging.totals[b].count === 1 ? 'invoice' : 'invoices'}</div></div>
+                    <span className={`w-28 shrink-0 text-right tabular-nums ${b !== 'not_due' && aging.totals[b].cents ? 'text-destructive' : ''}`}>{moneyExact(aging.totals[b].cents)}</span>
+                  </div>
+                ))}
+                {aging.canRunDunning && <div className="flex flex-col gap-2 px-3 py-3"><p className="text-sm text-muted-foreground">Creates one collection task per overdue invoice at 1, 31, 61 and 91 days, assigned to the lead agent. Running it again adds nothing new.</p><div><CommandButton operation="runInvoiceDunning" args={{}} label="Run dunning" /></div></div>}
+              </Section>
+              <Section title="Open invoices" hint={String(aging.rows.length)}>
+                {aging.rows.length ? aging.rows.map((r: any) => (
+                  <div key={r.id} className="flex items-start justify-between gap-3 border-b px-3 py-2.5 text-sm last:border-b-0">
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate"><span className={`mr-2 font-mono text-xs uppercase ${r.days > 0 ? 'text-destructive' : 'text-muted-foreground'}`}>{r.days > 0 ? `${r.days} days late` : 'Not due'}</span>{r.number}</div>
+                      <div className="truncate text-xs text-muted-foreground">{r.athleteName} · due {day(r.dueAt)}</div>
+                    </div>
+                    <span className="w-28 shrink-0 text-right tabular-nums">{moneyExact(r.balanceCents, r.currencyCode)}</span>
+                  </div>
+                )) : <Empty>No open invoices</Empty>}
+              </Section>
+            </>
+          )}
         </>
       )}
       {tab === 'ledger' && (
