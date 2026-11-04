@@ -1,3 +1,4 @@
+import { IncentiveEarned } from '../components/IncentiveEarned'
 import { notFound } from 'next/navigation'
 import { PlatformPage, Section, Row, Cell, Empty, ErrorState } from '../../components/Section'
 import { StatusLabel } from '../../components/StatusLabel'
@@ -10,7 +11,7 @@ export default async function ContractDetailPage({ params }: { params: Promise<{
   try {
     c = (await platformQuery(`query($id: ID!) { playingContract(where: { id: $id }) { id status contractType league startSeason endSeason signedAt totalValueCents guaranteedCents signingBonusCents commissionBps currencyCode athlete { id fullName } team { name } representationAgreement { scope status capBps }
       contractYear_contract(orderBy: { season: asc }) { id season baseSalaryCents guaranteedCents rosterBonusCents workoutBonusCents payPeriods paySchedule }
-      incentive_contract { id description amountCents likelyToBeEarned status } } }`, { id })).playingContract
+      incentive_contract { id description amountCents likelyToBeEarned status evidence earnedAt } } }`, { id })).playingContract
   } catch (e: any) { return <PlatformPage title="Contract"><ErrorState message={e.message} /></PlatformPage> }
   if (!c) notFound()
   return (
@@ -34,7 +35,7 @@ export default async function ContractDetailPage({ params }: { params: Promise<{
       </Section>
       <Section title="Incentives">
         {c.incentive_contract.length ? c.incentive_contract.map((i: any) => (
-          <Row key={i.id}><Cell><StatusLabel value={i.status} className="mr-2" />{i.description}</Cell><Cell muted>{i.likelyToBeEarned ? 'Likely' : 'Unlikely'}</Cell><Cell className="tabular-nums">{money(i.amountCents, c.currencyCode)}</Cell></Row>
+          <Row key={i.id}><Cell><StatusLabel value={i.status} className="mr-2" />{i.description}</Cell><Cell muted>{i.likelyToBeEarned ? 'Likely' : 'Unlikely'}</Cell><Cell className="tabular-nums">{money(i.amountCents, c.currencyCode)}</Cell>{i.evidence && <Cell muted>{i.evidence}</Cell>}{i.status === 'pending' && ['signed', 'active'].includes(c.status) && <IncentiveEarned incentiveId={i.id} />}</Row>
         )) : <Empty>No incentives</Empty>}
       </Section>
     </PlatformPage>

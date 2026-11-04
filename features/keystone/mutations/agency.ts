@@ -18,6 +18,16 @@ export const agencyMutations = {
  if(agreement.playingCommissionBps>agreement.capBps)throw new Error('Union commission cap exceeded');
  return transition(tx,c,'playingContract',row.id,['negotiating'],'signed',a.idempotencyKey,{signedAt:new Date(),commissionBps:agreement.playingCommissionBps});
  });},
+ async recordIncentiveEarned(_:unknown,a:any,c:any){const row=await locate(c,'incentive',a.incentiveId,{contract:true});return command(c,'canManageContracts',row.contract.athleteId,'recordIncentiveEarned',a,async tx=>{
+ const incentive=await tx.incentive.findUnique({where:{id:row.id},include:{contract:true}});const contract=incentive.contract;
+ if(!['signed','active'].includes(contract.status))throw new Error('Signed or active contract required');
+ if(!a.evidence?.trim()||a.evidence.length>2000)throw new Error('Evidence between 1 and 2000 characters required');
+ const dueAt=new Date(a.dueAt);if(!Number.isFinite(dueAt.getTime()))throw new Error('Valid payment due date required');
+ if(!Number.isSafeInteger(incentive.amountCents)||incentive.amountCents<1||incentive.currencyCode!==contract.currencyCode)throw new Error('Positive incentive in contract currency required');
+ const earned=await transition(tx,c,'incentive',row.id,['pending'],'earned',a.idempotencyKey,{earnedAt:new Date(),evidence:a.evidence.trim()});
+ const payment=await tx.scheduledPayment.create({data:{sourceKey:'incentive:'+row.id,incentiveId:row.id,athleteId:contract.athleteId,dueAt,grossCents:incentive.amountCents,commissionBps:contract.commissionBps,currencyCode:contract.currencyCode,status:'scheduled'}});
+ await audit(tx,c,'incentive.payment_scheduled','ScheduledPayment',payment.id,null,payment,a.idempotencyKey);return {incentive:earned,payment};
+ });},
  async generatePaymentSchedule(_:unknown,a:any,c:any){if(Boolean(a.contractId)===Boolean(a.dealId))throw new Error('Choose contract or endorsement');const row=await locate(c,a.contractId?'playingContract':'endorsementDeal',a.contractId||a.dealId);return command(c,'canManageCommissions',row.athleteId,'generatePaymentSchedule',a,async tx=>{
  const current=await tx[a.contractId?'playingContract':'endorsementDeal'].findUnique({where:{id:row.id}});if(!['signed','active'].includes(current.status))throw new Error('Signed source required');
  const periods=a.contractId?await tx.contractYear.findMany({where:{contractId:row.id}}):[{id:row.id,baseSalaryCents:current.totalValueCents,payPeriods:1,season:new Date(current.termStart||Date.now()).getUTCFullYear().toString()}];
@@ -107,6 +117,7 @@ export const agencyTypeDefs = `
  extend type Mutation {
  signRepresentationAgreement(agreementId:ID!,idempotencyKey:String!):AgencyJSON!
  recordContractSigned(contractId:ID!,idempotencyKey:String!):AgencyJSON!
+ recordIncentiveEarned(incentiveId:ID!,evidence:String!,dueAt:String!,idempotencyKey:String!):AgencyJSON!
  generatePaymentSchedule(contractId:ID,dealId:ID,idempotencyKey:String!):AgencyJSON!
  markPaymentReceived(scheduledPaymentId:ID!,idempotencyKey:String!):AgencyJSON!
  draftCommissionInvoice(athleteId:ID!,scheduledPaymentIds:[ID!]!,idempotencyKey:String!):AgencyJSON!

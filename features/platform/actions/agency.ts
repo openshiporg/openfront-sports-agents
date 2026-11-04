@@ -17,6 +17,7 @@ const OPERATIONS: Record<string, string> = {
   activateEndorsementDeal: 'mutation($dealId: ID!, $idempotencyKey: String!) { activateEndorsementDeal(dealId: $dealId, idempotencyKey: $idempotencyKey) }',
   signRepresentationAgreement: 'mutation($agreementId: ID!, $idempotencyKey: String!) { signRepresentationAgreement(agreementId: $agreementId, idempotencyKey: $idempotencyKey) }',
   recordContractSigned: 'mutation($contractId: ID!, $idempotencyKey: String!) { recordContractSigned(contractId: $contractId, idempotencyKey: $idempotencyKey) }',
+  recordIncentiveEarned: 'mutation($incentiveId: ID!, $evidence: String!, $dueAt: String!, $idempotencyKey: String!) { recordIncentiveEarned(incentiveId: $incentiveId, evidence: $evidence, dueAt: $dueAt, idempotencyKey: $idempotencyKey) }',
   generatePaymentSchedule: 'mutation($contractId: ID, $dealId: ID, $idempotencyKey: String!) { generatePaymentSchedule(contractId: $contractId, dealId: $dealId, idempotencyKey: $idempotencyKey) }',
   generateAutoTasks: 'mutation { generateAutoTasks }',
 }
