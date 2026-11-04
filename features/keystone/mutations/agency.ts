@@ -1,4 +1,5 @@
 import {permissions} from '../access';
+import {invoiceTermsDays,dueFrom} from '../lib/paymentTerms';
 import {command,audit,transition,humanCode,authorizeAthlete} from '../lib/agencyCommand';
 import {applyInvoiceReceipt} from '../lib/invoiceReceipt';
 import {consumeManagerApproval} from '../utils/managerApproval';
@@ -57,8 +58,8 @@ export const agencyMutations = {
  });},
  async draftCommissionInvoice(_:unknown,a:any,c:any){return command(c,'canManageCommissions',a.athleteId,'draftCommissionInvoice',a,async tx=>{
  if(!a.scheduledPaymentIds?.length||new Set(a.scheduledPaymentIds).size!==a.scheduledPaymentIds.length)throw new DomainError('Unique scheduled payments required');
- const rows=await tx.scheduledPayment.findMany({where:{id:{in:a.scheduledPaymentIds},athleteId:a.athleteId,status:'received',invoiceId:null}});if(rows.length!==a.scheduledPaymentIds.length||new Set(rows.map((r:any)=>r.currencyCode)).size!==1)throw new DomainError('Received uninvoiced payments in one currency required');
- const invoice=await tx.commissionInvoice.create({data:{athleteId:a.athleteId,number:humanCode('INV'),totalCents:rows.reduce((n:number,r:any)=>n+r.commissionCents,0),currencyCode:rows[0].currencyCode,status:'draft',issuedAt:new Date(),dueAt:new Date(Date.now()+30*86400000)}});
+ const rows=await tx.scheduledPayment.findMany({where:{id:{in:a.scheduledPaymentIds},athleteId:a.athleteId,status:'received',invoiceId:null},include:{endorsementDeal:{select:{paymentTerms:true}}}});if(rows.length!==a.scheduledPaymentIds.length||new Set(rows.map((r:any)=>r.currencyCode)).size!==1)throw new DomainError('Received uninvoiced payments in one currency required');
+ const invoice=await tx.commissionInvoice.create({data:{athleteId:a.athleteId,number:humanCode('INV'),totalCents:rows.reduce((n:number,r:any)=>n+r.commissionCents,0),currencyCode:rows[0].currencyCode,status:'draft',issuedAt:new Date(),dueAt:dueFrom(new Date(),invoiceTermsDays(rows.map((r:any)=>r.endorsementDeal?.paymentTerms)))}});
  for(const row of rows){await tx.commissionInvoiceLine.create({data:{invoiceId:invoice.id,scheduledPaymentId:row.id,description:'Commission on payment due '+new Date(row.dueAt).toISOString().slice(0,10),grossCents:row.grossCents,commissionBps:row.commissionBps,commissionCents:row.commissionCents,unitPriceCents:row.commissionCents,quantity:1,currencyCode:row.currencyCode}});await tx.scheduledPayment.update({where:{id:row.id},data:{invoiceId:invoice.id}});}
  await audit(tx,c,'invoice.created','CommissionInvoice',invoice.id,null,invoice,a.idempotencyKey);return invoice;
  });},
