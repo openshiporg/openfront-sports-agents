@@ -11,3 +11,5 @@ test('trust cannot go negative',()=>{assert.equal(trustBalance(BigInt(100),-BigI
 test('reversal exact and once',()=>{assert.equal(exactReversal(BigInt(123),false,false),-BigInt(123));assert.throws(()=>exactReversal(BigInt(123),true,false));assert.throws(()=>exactReversal(BigInt(123),false,true));});
 test('schedules preserve total including remainder',()=>assert.deepEqual(installmentAmounts(100,3),[34,33,33]));
 test('exclusive terms include boundary date',()=>assert.equal(overlaps(new Date('2027-01-01'),new Date('2027-02-01'),new Date('2027-02-01'),new Date('2027-03-01')),true));
+import {proportionalShare} from './commission';
+test('cumulative proportional refunds sum exactly to the original',()=>{for(const whole of [1,7,100,333,100001]){let prev=0,total=0;const steps=[Math.floor(whole/3),Math.floor(whole/3),whole-2*Math.floor(whole/3)];let cum=0;for(const s of steps){cum+=s;const next=proportionalShare(cum,77,whole);total+=next-prev;prev=next;}assert.equal(total,77);}assert.throws(()=>proportionalShare(10,1,0));assert.throws(()=>proportionalShare(11,1,10));});

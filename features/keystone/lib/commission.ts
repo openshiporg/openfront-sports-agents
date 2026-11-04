@@ -16,3 +16,8 @@ export function trustBalance(balance:bigint, amount:bigint) {const next=balance+
 export function exactReversal(amount:bigint, isReversal:boolean, alreadyReversed:boolean){if(isReversal||alreadyReversed)throw new Error('Entry cannot be reversed twice');return -amount;}
 export function installmentAmounts(total:number, periods:number) {if(!Number.isSafeInteger(total)||total<0||!Number.isInteger(periods)||periods<1||periods>366)throw new Error('Invalid payment schedule');return Array.from({length:periods},(_,i)=>Math.floor(total/periods)+(i<total%periods?1:0));}
 export function overlaps(aStart:Date,aEnd:Date,bStart:Date,bEnd:Date) {if([aStart,aEnd,bStart,bEnd].some(d=>!Number.isFinite(d.getTime()))||aEnd<aStart||bEnd<bStart)throw new Error('Invalid term');return aStart<=bEnd&&bStart<=aEnd;}
+/** Cumulative proportional share: floors only, so partial refunds never over-reverse and the full refund equals the original exactly. */
+export function proportionalShare(total:number, part:number, whole:number){
+  if(![total,part,whole].every(Number.isSafeInteger)||total<0||part<0||whole<1||total>whole)throw new Error('Invalid proportion');
+  return Number((BigInt(total)*BigInt(part))/BigInt(whole));
+}

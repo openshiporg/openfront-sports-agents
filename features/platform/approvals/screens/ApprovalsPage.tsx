@@ -22,6 +22,7 @@ export default async function ApprovalsPage() {
       {a.status === 'requested' && canDecide && a.requestedBy?.id !== me.id ? <DecideButtons approvalId={a.id} /> : null}
       {a.status === 'requested' && a.requestedBy?.id === me?.id ? <Cell muted>Needs another approver</Cell> : null}
       {a.status === 'approved' && a.requestedBy?.id === me?.id && a.actionType === 'exclusivity_override' ? <UseApprovalButton operation="activateEndorsementDeal" args={{ dealId: a.targetId, approvalId: a.id }} label="Activate deal" /> : null}
+      {a.status === 'approved' && a.requestedBy?.id === me?.id && a.actionType === 'refund_payment' ? <UseApprovalButton operation="refundInvoicePayment" args={{ paymentId: a.targetId, amountCents: a.amountCents, approvalId: a.id, reason: a.reason }} label="Refund to card" /> : null}
       {a.status === 'approved' && a.requestedBy?.id === me?.id && a.actionType === 'commission_writeoff' ? <UseApprovalButton operation="writeOffCommissionInvoice" args={{ invoiceId: a.targetId, approvalId: a.id, reason: a.reason }} label="Write off" /> : null}
     </Row>
   )

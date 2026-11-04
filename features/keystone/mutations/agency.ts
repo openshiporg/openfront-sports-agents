@@ -70,7 +70,7 @@ export const agencyMutations = {
  return applyInvoiceReceipt(tx,c,row.id,a.amountCents,a.reference,'receipt:'+a.idempotencyKey,a.idempotencyKey);
  });},
  async reverseLedgerEntry(_:unknown,a:any,c:any){const row=await locate(c,'commissionLedgerEntry',a.entryId);return command(c,'canManageCommissions',row.athleteId,'reverseLedgerEntry',a,async tx=>{
- const original=await tx.commissionLedgerEntry.findUnique({where:{id:row.id}});const reversed=await tx.commissionLedgerEntry.findUnique({where:{reversalKey:row.id}});if(!a.reason?.trim())throw new Error('Reversal reason required');
+ const original=await tx.commissionLedgerEntry.findUnique({where:{id:row.id}});const reversed=await tx.commissionLedgerEntry.findUnique({where:{reversalKey:row.id}});if(!a.reason?.trim())throw new Error('Reversal reason required');if(await tx.commissionLedgerEntry.findFirst({where:{reversesId:row.id,entryType:'reversal'}}))throw new Error('Entry already has refund or reversal postings');
  const amount=exactReversal(original.amountCents,original.entryType==='reversal',Boolean(reversed));if(original.entryType==='accrual'&&original.scheduledPaymentId&&(await tx.scheduledPayment.findUnique({where:{id:original.scheduledPaymentId}})).invoiceId)throw new Error('Void the invoice before reversing its accrual');
  const reverseOne=(e:any,amt:bigint)=>tx.commissionLedgerEntry.create({data:{entryKey:'reversal:'+e.id,reversalKey:e.id,reversesId:e.id,athleteId:e.athleteId,invoiceId:e.invoiceId,scheduledPaymentId:e.scheduledPaymentId,payeeUserId:e.payeeUserId,entryType:'reversal',amountCents:amt,reason:a.reason,preparedById:c.session.itemId,occurredAt:new Date(),currencyCode:e.currencyCode}});
  const result=await reverseOne(original,amount);

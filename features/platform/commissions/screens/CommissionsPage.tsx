@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { PlatformPage, Section, Row, Cell, Empty, ErrorState } from '../../components/Section'
 import { StatusLabel } from '../../components/StatusLabel'
 import { RequestApprovalButton } from '../../components/ApprovalControls'
+import { RefundPayment } from '../components/RefundPayment'
 import { CommandButton } from '../../components/CommandButton'
 import { platformQuery, moneyExact, day } from '../../lib/query'
 
@@ -14,7 +15,8 @@ export default async function CommissionsPage({ searchParams }: { searchParams: 
   try {
     data = await platformQuery(`{
       scheduledPayments(orderBy: { dueAt: asc }, take: 300) { id status dueAt grossCents commissionBps commissionCents invoice { id } athlete { id fullName } }
-      commissionInvoices(orderBy: { createdAt: desc }, take: 100) { id number status totalCents paidCents currencyCode athlete { fullName } }
+      commissionInvoices(orderBy: { createdAt: desc }, take: 100) { id number status totalCents paidCents currencyCode athlete { fullName } payment_order(where: { status: { in: ["succeeded", "partially_refunded"] } }) { id amount refundedAmount cardBrand cardLast4 } }
+      agencies(take: 1) { refundApprovalThresholdCents }
       commissionLedgerEntries(orderBy: { occurredAt: desc }, take: 150) { id entryType amountCents reason occurredAt reverses { id } reversalKey payeeUser { name } athlete { fullName } }
       payouts: commissionLedgerEntries(where: { entryType: { equals: split_to_agent } }, take: 1000) { amountCents payeeUser { id name } }
     }`)
@@ -60,7 +62,7 @@ export default async function CommissionsPage({ searchParams }: { searchParams: 
               {i.status === 'draft' && <CommandButton operation="sendCommissionInvoice" args={{ invoiceId: i.id }} label="Send" />}
               {['sent', 'partially_paid'].includes(i.status) && <CommandButton operation="recordInvoicePayment" args={{ invoiceId: i.id, amountCents: i.totalCents - i.paidCents, reference: 'Payment received' }} label="Record payment" />}
               {['sent', 'partially_paid'].includes(i.status) && <RequestApprovalButton actionType="commission_writeoff" targetId={i.id} amountCents={i.totalCents - i.paidCents} label="Write off" />}
-              {['sent', 'partially_paid'].includes(i.status) && <RequestApprovalButton actionType="commission_writeoff" targetId={i.id} amountCents={i.totalCents - i.paidCents} label="Write off" />}
+              {i.payment_order.filter((p: any) => p.amount - p.refundedAmount > 0).map((p: any) => <RefundPayment key={p.id} paymentId={p.id} remainingCents={p.amount - p.refundedAmount} thresholdCents={data.agencies[0]?.refundApprovalThresholdCents ?? 0} label={`Refund ${p.cardBrand || 'card'} ${p.cardLast4}`.trim()} />)}
             </Row>
           )) : <Empty>No invoices</Empty>}
         </Section>
