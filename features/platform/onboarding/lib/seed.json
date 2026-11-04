@@ -1268,6 +1268,74 @@
             "status": "scheduled"
           }
         ]
+      },
+      {
+        "athlete": "Cole Brannigan",
+        "brand": "Streamline Audio",
+        "ownerEmail": "dana@meridiansports.example",
+        "status": "prospect",
+        "termStartInDays": 75,
+        "termEndInDays": 440,
+        "totalValueCents": 85000000,
+        "commissionBps": 1500,
+        "exclusivityCategory": "audio",
+        "territory": "United States",
+        "paymentTerms": "Net 30 from invoice",
+        "deliverables": []
+      },
+      {
+        "athlete": "Mateo Silva",
+        "brand": "Coastal Water",
+        "ownerEmail": "elena@meridiansports.example",
+        "status": "negotiating",
+        "termStartInDays": 45,
+        "termEndInDays": 410,
+        "totalValueCents": 45000000,
+        "commissionBps": 1500,
+        "exclusivityCategory": "hydration",
+        "territory": "United States",
+        "paymentTerms": "Net 30 from invoice",
+        "deliverables": [
+          {
+            "kind": "social_post",
+            "dueInDays": 60,
+            "status": "scheduled"
+          }
+        ]
+      },
+      {
+        "athlete": "Devin Park",
+        "brand": "Peak Nutrition",
+        "ownerEmail": "marcus@meridiansports.example",
+        "status": "signed",
+        "termStartInDays": 35,
+        "termEndInDays": 400,
+        "totalValueCents": 60000000,
+        "commissionBps": 1500,
+        "exclusivityCategory": "sports nutrition",
+        "territory": "United States",
+        "paymentTerms": "Net 45 from invoice",
+        "deliverables": [
+          {
+            "kind": "photo_shoot",
+            "dueInDays": 50,
+            "status": "scheduled"
+          }
+        ]
+      },
+      {
+        "athlete": "Kayla Moreno",
+        "brand": "Harbor Insurance",
+        "ownerEmail": "marcus@meridiansports.example",
+        "status": "negotiating",
+        "termStartInDays": 110,
+        "termEndInDays": 475,
+        "totalValueCents": 30000000,
+        "commissionBps": 1500,
+        "exclusivityCategory": "insurance bundles",
+        "territory": "United States",
+        "paymentTerms": "Net 30 from invoice",
+        "deliverables": []
       }
     ],
     "splits": [
