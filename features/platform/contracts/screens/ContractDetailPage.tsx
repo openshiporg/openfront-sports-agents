@@ -47,7 +47,7 @@ export default async function ContractDetailPage({ params }: { params: Promise<{
       {['signed', 'active'].includes(c.status) && (
         <Section title="Payment dates" hint="Changes are recorded as amendments">
           {c.contractYear_contract.flatMap((y: any) => y.scheduledPayment_contractYear).filter((p: any) => ['scheduled', 'late'].includes(p.status) && !p.invoice).slice(0, 12).map((p: any) => (
-            <Row key={p.id}><Cell muted>{day(p.dueAt)}</Cell><Cell className="tabular-nums">{moneyExact(p.grossCents, c.currencyCode)}</Cell><AmendTerms kind="reschedule_payment" ids={{ scheduledPaymentId: p.id }} label="Move date" initial={p.dueAt} />{['signed', 'active'].includes(c.status) && <AmendTerms kind="waive_payment" ids={{ scheduledPaymentId: p.id }} label="Waive" />}</Row>
+            <Row key={p.id}><Cell muted>{day(p.dueAt)}</Cell><Cell className="tabular-nums">{moneyExact(p.grossCents, c.currencyCode)}</Cell><AmendTerms kind="reschedule_payment" ids={{ scheduledPaymentId: p.id }} label="Move date" initial={p.dueAt} />{['signed', 'active'].includes(c.status) && <AmendTerms kind="waive_payment" ids={{ scheduledPaymentId: p.id }} label="Waive" gross={Number(p.grossCents)} currency={c.currencyCode} />}</Row>
           ))}
         </Section>
       )}

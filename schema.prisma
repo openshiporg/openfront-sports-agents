@@ -443,6 +443,7 @@ model ScheduledPayment {
   commissionBps                          Int?                        @default(0)
   commissionCents                        Int?                        @default(0)
   remainder                              Int?                        @default(0)
+  waivedCents                            Int?                        @default(0)
   receivedAt                             DateTime?
   status                                 ScheduledPaymentStatusType? @default(scheduled)
   currencyCode                           String                      @default("USD")

@@ -11,6 +11,8 @@ export const ScheduledPayment = domainList({
     commissionBps: bps(0),
     commissionCents: cents(),
     remainder: integer({defaultValue:0}),
+    // Part of the original instalment given up by amendment. Original amount = grossCents + waivedCents.
+    waivedCents: cents(),
     receivedAt: timestamp(),
     status: state(['scheduled', 'received', 'late', 'waived']),
     currencyCode: currencyCode(),

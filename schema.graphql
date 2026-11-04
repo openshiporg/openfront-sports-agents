@@ -2692,6 +2692,7 @@ type ScheduledPayment {
   commissionBps: Int
   commissionCents: Int
   remainder: Int
+  waivedCents: Int
   receivedAt: DateTime
   status: ScheduledPaymentStatusType
   currencyCode: String
@@ -2731,6 +2732,7 @@ input ScheduledPaymentWhereInput {
   commissionBps: IntNullableFilter
   commissionCents: IntNullableFilter
   remainder: IntNullableFilter
+  waivedCents: IntNullableFilter
   receivedAt: DateTimeNullableFilter
   status: ScheduledPaymentStatusTypeNullableFilter
   currencyCode: StringFilter
@@ -2762,6 +2764,7 @@ input ScheduledPaymentOrderByInput {
   commissionBps: OrderDirection
   commissionCents: OrderDirection
   remainder: OrderDirection
+  waivedCents: OrderDirection
   receivedAt: OrderDirection
   status: OrderDirection
   currencyCode: OrderDirection
@@ -2780,6 +2783,7 @@ input ScheduledPaymentUpdateInput {
   commissionBps: Int
   commissionCents: Int
   remainder: Int
+  waivedCents: Int
   receivedAt: DateTime
   status: ScheduledPaymentStatusType
   currencyCode: String
@@ -5084,7 +5088,7 @@ type Mutation {
   editDealTerms(dealId: ID!, termStart: String!, termEnd: String!, totalValueCents: Int!, paymentTermsDays: Int, exclusivityCategory: String, territory: String, idempotencyKey: String!): AgencyJSON!
   saveDeliverable(dealId: ID!, deliverableId: ID, kind: String!, dueAt: String!, notes: String, idempotencyKey: String!): AgencyJSON!
   removeDeliverable(deliverableId: ID!, idempotencyKey: String!): AgencyJSON!
-  amendTerms(kind: String!, reason: String!, scheduledPaymentId: ID, dealId: ID, contractId: ID, paymentTermsDays: Int, deliverableId: ID, dueAt: String, termEnd: String, deliverableKind: String, notes: String, idempotencyKey: String!): AgencyJSON!
+  amendTerms(kind: String!, reason: String!, scheduledPaymentId: ID, dealId: ID, contractId: ID, paymentTermsDays: Int, amountCents: Int, deliverableId: ID, dueAt: String, termEnd: String, deliverableKind: String, notes: String, idempotencyKey: String!): AgencyJSON!
   exportAgentPayouts(from: String!, to: String!, idempotencyKey: String!): AgencyJSON!
   draftPlayingContract(athleteId: ID!, teamId: ID!, contractType: String!, startSeason: String!, endSeason: String!, totalValueCents: Int!, guaranteedCents: Int!, signingBonusCents: Int!, paymentTermsDays: Int, idempotencyKey: String!): AgencyJSON!
   draftEndorsementDeal(athleteId: ID!, brandId: ID!, termStart: String!, termEnd: String!, totalValueCents: Int!, paymentTermsDays: Int, exclusivityCategory: String, territory: String, idempotencyKey: String!): AgencyJSON!

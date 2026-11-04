@@ -33,8 +33,8 @@ export const dealScheduleMutations={
    const next=buildSchedule({pattern:a.pattern,totalCents:Number(d.totalValueCents||0),termStart:d.termStart,termEnd:d.termEnd,firstDueOn:a.firstDueOn,count:a.count,milestones:a.milestones});
    const old=await tx.scheduledPayment.findMany({where:{endorsementDealId:d.id},orderBy:[{dueAt:'asc'},{sourceKey:'asc'}],
     include:{commissionInvoiceLine_scheduledPayment:{select:{id:true}},commissionLedgerEntry_scheduledPayment:{select:{id:true}}}});
-   if(old.some((p:any)=>!['scheduled','late'].includes(p.status)||p.invoiceId||p.commissionInvoiceLine_scheduledPayment.length||p.commissionLedgerEntry_scheduledPayment.length))
-    throw new DomainError('Payments have already started for this deal, so the schedule is locked. Move individual dates with an amendment.');
+   if(old.some((p:any)=>!['scheduled','late'].includes(p.status)||Number(p.waivedCents||0)>0||p.invoiceId||p.commissionInvoiceLine_scheduledPayment.length||p.commissionLedgerEntry_scheduledPayment.length))
+    throw new DomainError('Payments have already started or been adjusted for this deal, so the schedule is locked. Move individual dates with an amendment.');
    const before=old.map((p:any)=>({dueOn:dayOf(p.dueAt)!,grossCents:Number(p.grossCents||0)}));
    if(before.length&&sameSchedule(before,next))throw new DomainError('Nothing changed');
    if(old.length)await tx.scheduledPayment.deleteMany({where:{id:{in:old.map((p:any)=>p.id)}}});

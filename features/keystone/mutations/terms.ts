@@ -1,4 +1,5 @@
 import {command,audit,transition} from '../lib/agencyCommand';
+import {commission} from '../lib/commission';
 import {parseTermsDays} from '../lib/paymentTerms';
 import {validateContractTerms,validateContractYear,validateDealTerms,validateDeliverable,parseDate} from '../lib/terms';
 import {DomainError} from '../lib/errors';
@@ -88,6 +89,14 @@ export const termsMutations={
     const src=contractId?await tx.playingContract.findUnique({where:{id:contractId}}):await tx.endorsementDeal.findUnique({where:{id:dealId!}});
     if(!(contractId?LIVE_CONTRACT:LIVE_DEAL).includes(src.status))throw new DomainError('Only a signed or active record has payments to waive');
     if(await tx.commissionInvoiceLine.count({where:{scheduledPaymentId:cur.id}})||await tx.commissionLedgerEntry.count({where:{scheduledPaymentId:cur.id}}))throw new DomainError('Commission has already been recorded against this payment');
+    const gross=Number(cur.grossCents||0),partial=a.amountCents!==undefined&&a.amountCents!==null&&String(a.amountCents).trim()!=='';
+    if(partial){
+     const amt=Number(a.amountCents);if(!Number.isSafeInteger(amt)||amt<=0)throw new DomainError('The amount to waive must be above zero');
+     if(amt>=gross)throw new DomainError('That is the whole instalment; leave the amount blank to waive all of it');
+     const left=gross-amt,before={scheduledPaymentId:cur.id,grossCents:gross,commissionCents:commission(gross,Number(cur.commissionBps||0)).commissionCents,waivedCents:Number(cur.waivedCents||0)};
+     const swapped=await tx.scheduledPayment.updateMany({where:{id:cur.id,status:cur.status,grossCents:cur.grossCents},data:{grossCents:left,waivedCents:Number(cur.waivedCents||0)+amt}});if(swapped.count!==1)throw new DomainError('Record changed concurrently');
+     return record(tx,c,a,{athleteId:cur.athleteId,contractId,dealId,kind,why,before,after:{scheduledPaymentId:cur.id,grossCents:left,commissionCents:commission(left,Number(cur.commissionBps||0)).commissionCents,waivedCents:Number(cur.waivedCents||0)+amt,amountWaivedCents:amt}});
+    }
     await tx.scheduledPayment.update({where:{id:cur.id},data:{status:'waived'}});
     const closed=await tx.task.updateMany({where:{autoKey:'payment:'+cur.id,status:{in:['open','in_progress']}},data:{status:'cancelled'}});
     return record(tx,c,a,{athleteId:cur.athleteId,contractId,dealId,kind,why,before:{scheduledPaymentId:cur.id,status:cur.status,dueAt:cur.dueAt,grossCents:cur.grossCents,commissionBps:cur.commissionBps},after:{scheduledPaymentId:cur.id,status:'waived',tasksCancelled:closed.count}});});
@@ -136,5 +145,5 @@ export const termsTypeDefs=`
   editDealTerms(dealId:ID!,termStart:String!,termEnd:String!,totalValueCents:Int!,paymentTermsDays:Int,exclusivityCategory:String,territory:String,idempotencyKey:String!):AgencyJSON!
   saveDeliverable(dealId:ID!,deliverableId:ID,kind:String!,dueAt:String!,notes:String,idempotencyKey:String!):AgencyJSON!
   removeDeliverable(deliverableId:ID!,idempotencyKey:String!):AgencyJSON!
-  amendTerms(kind:String!,reason:String!,scheduledPaymentId:ID,dealId:ID,contractId:ID,paymentTermsDays:Int,deliverableId:ID,dueAt:String,termEnd:String,deliverableKind:String,notes:String,idempotencyKey:String!):AgencyJSON!
+  amendTerms(kind:String!,reason:String!,scheduledPaymentId:ID,dealId:ID,contractId:ID,paymentTermsDays:Int,amountCents:Int,deliverableId:ID,dueAt:String,termEnd:String,deliverableKind:String,notes:String,idempotencyKey:String!):AgencyJSON!
  }`;

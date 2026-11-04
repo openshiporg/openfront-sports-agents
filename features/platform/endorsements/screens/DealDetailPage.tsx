@@ -14,7 +14,7 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
   try {
     d = (await platformQuery(`query($id: ID!) { endorsementDeal(where: { id: $id }) { id status termStart termEnd totalValueCents currencyCode exclusivityCategory territory paymentTermsDays commissionBps athlete { id fullName } brand { name }
       deliverable_deal(orderBy: { dueAt: asc }) { id kind status dueAt notes }
-      scheduledPayment_endorsementDeal(orderBy: { dueAt: asc }) { id dueAt grossCents status invoice { id } commissionInvoiceLine_scheduledPayment { id } }
+      scheduledPayment_endorsementDeal(orderBy: { dueAt: asc }) { id dueAt grossCents waivedCents status invoice { id } commissionInvoiceLine_scheduledPayment { id } }
       amendment_deal(orderBy: { createdAt: desc }, take: 20) { id kind reason createdAt appliedBy { name } } } }`, { id })).endorsementDeal
   } catch (e: any) { return <PlatformPage title="Endorsement"><ErrorState message={e.message} /></PlatformPage> }
   if (!d) notFound()
@@ -42,9 +42,9 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
       {(live || d.scheduledPayment_endorsementDeal.length > 0) && (
         <Section title="Payment schedule" hint={String(d.scheduledPayment_endorsementDeal.length)}>
           {d.scheduledPayment_endorsementDeal.length ? d.scheduledPayment_endorsementDeal.map((p: any) => (
-            <Row key={p.id}><Cell><StatusLabel value={p.status} className="mr-2" />{day(p.dueAt)}</Cell><Cell className="tabular-nums">{moneyExact(p.grossCents, d.currencyCode)}</Cell>{live && ['scheduled', 'late'].includes(p.status) && !p.invoice && <><AmendTerms kind="reschedule_payment" ids={{ scheduledPaymentId: p.id }} label="Move date" initial={p.dueAt} /><AmendTerms kind="waive_payment" ids={{ scheduledPaymentId: p.id }} label="Waive" /></>}</Row>
+            <Row key={p.id}><Cell><StatusLabel value={p.status} className="mr-2" />{day(p.dueAt)}</Cell><Cell className="tabular-nums">{moneyExact(p.grossCents, d.currencyCode)}{p.waivedCents > 0 && <span className="block text-xs text-muted-foreground">{moneyExact(p.waivedCents, d.currencyCode)} waived</span>}</Cell>{live && ['scheduled', 'late'].includes(p.status) && !p.invoice && <><AmendTerms kind="reschedule_payment" ids={{ scheduledPaymentId: p.id }} label="Move date" initial={p.dueAt} /><AmendTerms kind="waive_payment" ids={{ scheduledPaymentId: p.id }} label="Waive" gross={Number(p.grossCents)} currency={d.currencyCode} /></>}</Row>
           )) : <Empty>No payment schedule yet. Until one is set, no commission is expected from this deal.</Empty>}
-          {live && <div className="border-t p-3"><SchedulePayments dealId={d.id} totalCents={Number(d.totalValueCents || 0)} termStart={d.termStart} termEnd={d.termEnd} currency={d.currencyCode} hasSchedule={d.scheduledPayment_endorsementDeal.length > 0} locked={d.scheduledPayment_endorsementDeal.some((p: any) => !['scheduled', 'late'].includes(p.status) || p.invoice || p.commissionInvoiceLine_scheduledPayment.length > 0)} /></div>}
+          {live && <div className="border-t p-3"><SchedulePayments dealId={d.id} totalCents={Number(d.totalValueCents || 0)} termStart={d.termStart} termEnd={d.termEnd} currency={d.currencyCode} hasSchedule={d.scheduledPayment_endorsementDeal.length > 0} locked={d.scheduledPayment_endorsementDeal.some((p: any) => !['scheduled', 'late'].includes(p.status) || p.invoice || p.waivedCents > 0 || p.commissionInvoiceLine_scheduledPayment.length > 0)} /></div>}
         </Section>
       )}
       <Section title="Amendments" hint={String(d.amendment_deal.length)}>
