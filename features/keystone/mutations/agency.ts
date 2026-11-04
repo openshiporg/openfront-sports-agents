@@ -5,6 +5,15 @@ import {consumeManagerApproval} from '../utils/managerApproval';
 import {commission,allocateCommission,installmentAmounts,trustBalance,exactReversal} from '../lib/commission';
 async function locate(context:any,model:string,id:string,include:any={}){if(!context.session)throw new Error('Not authorized');const row=await context.prisma[model].findUnique({where:{id},include});if(!row)throw new Error('Record not found');return row;}
 export const agencyMutations = {
+ async draftRepresentationAgreement(_:unknown,a:any,c:any){return command(c,'canManageContracts',a.athleteId,'draftRepresentationAgreement',a,async tx=>{
+ const agency=await tx.agency.findFirst({orderBy:{createdAt:'asc'}});if(!agency)throw new Error('Agency settings required');
+ if(!Number.isSafeInteger(a.capBps)||a.capBps<0||a.capBps>10000)throw new Error('Union cap must be between 0 and 10000 basis points');
+ for(const rate of [agency.defaultPlayingCommissionBps,agency.defaultEndorsementCommissionBps])if(!Number.isSafeInteger(rate)||rate<0||rate>10000)throw new Error('Invalid agency default rate');
+ if(agency.defaultPlayingCommissionBps>a.capBps)throw new Error('Agency playing rate exceeds union cap; update settings or cap');
+ if(await tx.representationAgreement.findFirst({where:{athleteId:a.athleteId,status:{in:['draft','sent','signed','filed_with_union','active']}}}))throw new Error('Open representation agreement already exists');
+ const result=await tx.representationAgreement.create({data:{athleteId:a.athleteId,agentId:c.session.itemId,scope:'both',status:'draft',playingCommissionBps:agency.defaultPlayingCommissionBps,marketingCommissionBps:agency.defaultEndorsementCommissionBps,capBps:a.capBps,effectiveAt:new Date()}});
+ await audit(tx,c,'agreement.drafted','RepresentationAgreement',result.id,null,result,a.idempotencyKey);return result;
+ });},
  async signRepresentationAgreement(_:unknown,a:any,c:any){const row=await locate(c,'representationAgreement',a.agreementId);return command(c,'canManageContracts',row.athleteId,'signRepresentationAgreement',a,async tx=>{
  const agreement=await tx.representationAgreement.findUnique({where:{id:row.id}});
  if(agreement.playingCommissionBps>agreement.capBps)throw new Error('Playing commission exceeds union cap');
@@ -115,6 +124,7 @@ export const agencyTypeDefs = `
  scalar AgencyJSON
  extend type Query { checkEndorsementConflicts(athleteId:ID!,category:String!,start:String!,end:String!):AgencyJSON! }
  extend type Mutation {
+ draftRepresentationAgreement(athleteId:ID!,capBps:Int!,idempotencyKey:String!):AgencyJSON!
  signRepresentationAgreement(agreementId:ID!,idempotencyKey:String!):AgencyJSON!
  recordContractSigned(contractId:ID!,idempotencyKey:String!):AgencyJSON!
  recordIncentiveEarned(incentiveId:ID!,evidence:String!,dueAt:String!,idempotencyKey:String!):AgencyJSON!

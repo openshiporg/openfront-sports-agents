@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { DraftAgreement } from '../components/DraftAgreement'
 import { notFound } from 'next/navigation'
 import { PlatformPage, Section, Row, Cell, Empty, ErrorState } from '../../components/Section'
 import { StatusLabel } from '../../components/StatusLabel'
@@ -49,6 +50,7 @@ export default async function ClientDetailPage({ params, searchParams }: { param
       )}
       {tab === 'agreements' && (
         <Section title="Representation agreements">
+          {!a.representationAgreement_athlete.some((r: any) => ['draft', 'sent', 'signed', 'filed_with_union', 'active'].includes(r.status)) && <DraftAgreement athleteId={a.id} />}
           {a.representationAgreement_athlete.length ? a.representationAgreement_athlete.map((r: any) => (
             <Row key={r.id}>
               <Cell><StatusLabel value={r.status} className="mr-2" />{r.scope}</Cell>

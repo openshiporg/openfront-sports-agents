@@ -15,6 +15,7 @@ const OPERATIONS: Record<string, string> = {
   postTrustEntry: 'mutation($accountId: ID!, $entryType: String!, $amountCents: Int!, $reference: String!, $invoiceId: ID, $reversesId: ID, $idempotencyKey: String!) { postTrustEntry(accountId: $accountId, entryType: $entryType, amountCents: $amountCents, reference: $reference, invoiceId: $invoiceId, reversesId: $reversesId, idempotencyKey: $idempotencyKey) }',
   completeDeliverable: 'mutation($deliverableId: ID!, $proofLink: String!, $idempotencyKey: String!) { completeDeliverable(deliverableId: $deliverableId, proofLink: $proofLink, idempotencyKey: $idempotencyKey) }',
   activateEndorsementDeal: 'mutation($dealId: ID!, $idempotencyKey: String!) { activateEndorsementDeal(dealId: $dealId, idempotencyKey: $idempotencyKey) }',
+  draftRepresentationAgreement: 'mutation($athleteId: ID!, $capBps: Int!, $idempotencyKey: String!) { draftRepresentationAgreement(athleteId: $athleteId, capBps: $capBps, idempotencyKey: $idempotencyKey) }',
   signRepresentationAgreement: 'mutation($agreementId: ID!, $idempotencyKey: String!) { signRepresentationAgreement(agreementId: $agreementId, idempotencyKey: $idempotencyKey) }',
   recordContractSigned: 'mutation($contractId: ID!, $idempotencyKey: String!) { recordContractSigned(contractId: $contractId, idempotencyKey: $idempotencyKey) }',
   recordIncentiveEarned: 'mutation($incentiveId: ID!, $evidence: String!, $dueAt: String!, $idempotencyKey: String!) { recordIncentiveEarned(incentiveId: $incentiveId, evidence: $evidence, dueAt: $dueAt, idempotencyKey: $idempotencyKey) }',

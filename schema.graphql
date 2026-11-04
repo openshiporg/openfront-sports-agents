@@ -4651,8 +4651,10 @@ type Mutation {
   createInitialUser(data: CreateInitialUserInput!): UserAuthenticationWithPasswordSuccess!
   sendUserPasswordResetLink(email: String!): Boolean!
   redeemUserPasswordResetToken(email: String!, token: String!, password: String!): RedeemUserPasswordResetTokenResult
+  draftRepresentationAgreement(athleteId: ID!, capBps: Int!, idempotencyKey: String!): AgencyJSON!
   signRepresentationAgreement(agreementId: ID!, idempotencyKey: String!): AgencyJSON!
   recordContractSigned(contractId: ID!, idempotencyKey: String!): AgencyJSON!
+  recordIncentiveEarned(incentiveId: ID!, evidence: String!, dueAt: String!, idempotencyKey: String!): AgencyJSON!
   generatePaymentSchedule(contractId: ID, dealId: ID, idempotencyKey: String!): AgencyJSON!
   markPaymentReceived(scheduledPaymentId: ID!, idempotencyKey: String!): AgencyJSON!
   draftCommissionInvoice(athleteId: ID!, scheduledPaymentIds: [ID!]!, idempotencyKey: String!): AgencyJSON!
