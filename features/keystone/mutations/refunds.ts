@@ -2,7 +2,7 @@ import {permissions} from '../access';
 import {lockTransactionKey,audit,transition,authorizeAthlete} from '../lib/agencyCommand';
 import {proportionalShare} from '../lib/commission';
 import {consumeManagerApproval} from '../utils/managerApproval';
-import {refundPayment} from '../utils/paymentProviderAdapter';
+import {refundPayment,getPaymentStatus} from '../utils/paymentProviderAdapter';
 
 const clip=(v:unknown,n:number)=>String(v??'').trim().slice(0,n);
 const IN_FLIGHT=['processing','unknown'];
@@ -58,7 +58,7 @@ async function finalize(c:any,refundId:string,providerRefundId:string,data:any,r
   const receipt=await tx.commissionLedgerEntry.findUnique({where:{entryKey:'receipt:payment:'+payment.id}});
   if(receipt){
    const whole=Number(-receipt.amountCents);
-   const mk=(entryKey:string,src:any,amount:bigint,why:string)=>tx.commissionLedgerEntry.create({data:{entryKey,athleteId:src.athleteId,invoiceId:src.invoiceId,payeeUserId:src.payeeUserId,reversesId:src.id,entryType:'reversal',amountCents:amount,reason:why,preparedById:c.session.itemId,...(refund.approvedById?{approvedById:refund.approvedById}:{}),occurredAt:new Date(),currencyCode:src.currencyCode}});
+   const mk=(entryKey:string,src:any,amount:bigint,why:string)=>tx.commissionLedgerEntry.create({data:{entryKey,athleteId:src.athleteId,invoiceId:src.invoiceId,payeeUserId:src.payeeUserId,reversesId:src.id,entryType:'reversal',amountCents:amount,reason:why,preparedById:c.session?.itemId||refund.requestedById,...(refund.approvedById?{approvedById:refund.approvedById}:{}),occurredAt:new Date(),currencyCode:src.currencyCode}});
    await mk('refund:'+refund.id,receipt,BigInt(refund.amount),'Card refund: '+refund.reason);
    const splits=await tx.commissionLedgerEntry.findMany({where:{entryType:'split_to_agent',entryKey:{startsWith:'split:'+receipt.id+':'}}});
    for(const s of splits){const orig=Number(s.amountCents);const delta=proportionalShare(after,orig,whole)-proportionalShare(before,orig,whole);if(delta>0)await mk('refund:'+refund.id+':'+s.payeeUserId,s,-BigInt(delta),'Card refund allocation');}
@@ -68,7 +68,48 @@ async function finalize(c:any,refundId:string,providerRefundId:string,data:any,r
  },{timeout:60000,maxWait:15000});
 }
 
+
+const FAILED=['failed','canceled','cancelled'];
+/** Maps one provider observation onto a refund row. Used by the command, the webhook and manual check, so all three converge on the same rules. */
+export async function settleProviderRefund(c:any,refund:any,result:any,requestId:string):Promise<string>{
+ const db=c.prisma;const pid=String(result?.id||'');
+ const cur=String(result?.data?.currency||result?.currency||refund.currencyCode).toUpperCase();
+ if(Number(result?.amount)!==refund.amount||cur!==refund.currencyCode.toUpperCase()){await db.refund.updateMany({where:{id:refund.id,status:{in:IN_FLIGHT}},data:{status:'unknown',...(pid?{providerRefundId:pid}:{})}});throw new Error('Provider refund differs from the request; reconciliation required');}
+ if(FAILED.includes(result.status)){await db.refund.updateMany({where:{id:refund.id,status:{in:IN_FLIGHT}},data:{status:'failed',providerRefundId:pid,providerData:result.data??{}}});return 'failed';}
+ if(result.status!=='succeeded'){await db.refund.updateMany({where:{id:refund.id,status:{in:IN_FLIGHT}},data:{status:'processing',providerRefundId:pid}});return 'processing';}
+ const done=await finalize(c,refund.id,pid,result.data??result,requestId);return done.status;
+}
+/** Webhook entry: correlate a provider refund object to our row by provider id, else by the idempotency metadata we sent. */
+export async function applyRefundWebhook(c:any,provider:any,resource:any,eventId:string){
+ const db=c.prisma;const key=String(resource?.metadata?.restaurantRefundKey||'');
+ const refund=await db.refund.findFirst({where:{OR:[{providerRefundId:String(resource.id)},...(key?[{idempotencyKey:key}]:[])]},include:{payment:true}});
+ if(!refund)return null;
+ if(refund.payment?.paymentProviderId!==provider.id||refund.payment?.providerPaymentId!==String(resource.payment_intent||''))throw new Error('Refund does not belong to this provider payment');
+ if(refund.status==='succeeded'||refund.status==='failed')return refund;
+ await settleProviderRefund(c,refund,{id:resource.id,status:resource.status,amount:resource.amount,data:resource},'webhook:'+eventId);
+ return refund;
+}
+
 export const refundMutations={
+
+ // Manual reconcile: ask the provider what happened to a refund we could not settle.
+ async checkRefundStatus(_:unknown,a:any,c:any){
+  if(!c.session?.itemId||!permissions.canIssueRefunds({session:c.session}))throw new Error('Not authorized');
+  const refund=await c.prisma.refund.findUnique({where:{id:String(a.refundId||'')},include:{payment:{include:{paymentProvider:true}}}});
+  if(!refund?.payment)throw new Error('Refund not found');
+  const inv=await c.prisma.commissionInvoice.findUnique({where:{id:refund.orderId}});
+  await authorizeAthlete(c.prisma,c,inv.athleteId,'canIssueRefunds');
+  if(!IN_FLIGHT.includes(refund.status))return {id:refund.id,status:refund.status};
+  const seen=await getPaymentStatus({provider:refund.payment.paymentProvider,paymentId:refund.payment.providerPaymentId});
+  const hit=(seen.refunds||[]).find((r:any)=>r.id===refund.providerRefundId||r.metadata?.restaurantRefundKey===refund.idempotencyKey);
+  if(!hit){
+   await c.prisma.$transaction((tx:any)=>audit(tx,c,'refund.checked','Payment',refund.paymentId,null,{refundId:refund.id,found:false,listComplete:seen.refundsComplete},String(a.requestId||refund.id)));
+   return {id:refund.id,status:refund.status,note:'The provider has no record of this refund. Retry the original refund request to resume it.'};
+  }
+  const status=await settleProviderRefund(c,refund,{id:hit.id,status:hit.status,amount:hit.amount,data:hit},'check:'+refund.id+':'+hit.status);
+  await c.prisma.$transaction((tx:any)=>audit(tx,c,'refund.checked','Payment',refund.paymentId,{status:refund.status},{status,providerRefundId:hit.id},'check:'+refund.id));
+  return {id:refund.id,status};
+ },
  // Original-tender card refund. Provider call is outside both transactions; the refund row's key makes retries resume, never duplicate.
  async refundInvoicePayment(_:unknown,a:any,c:any){
   if(!c.session?.itemId||!permissions.canIssueRefunds({session:c.session}))throw new Error('Not authorized');
@@ -81,13 +122,9 @@ export const refundMutations={
   let result:any;
   try{result=await refundPayment({provider:payment.paymentProvider,paymentId:payment.providerPaymentId,amount:refund.amount,currency:refund.currencyCode,idempotencyKey:key,refundId:refund.providerRefundId||undefined});}
   catch(e:any){await c.prisma.refund.updateMany({where:{id:refund.id,status:{in:IN_FLIGHT}},data:{status:'unknown'}});throw new Error('Provider outcome unknown; retry the same request to reconcile');}
-  const cur=String(result?.data?.currency||refund.currencyCode).toUpperCase();
-  if(Number(result?.amount)!==refund.amount||cur!==refund.currencyCode.toUpperCase()){await c.prisma.refund.updateMany({where:{id:refund.id,status:{in:IN_FLIGHT}},data:{status:'unknown',providerRefundId:String(result?.id||'')}});throw new Error('Provider refund differs from the request; reconciliation required');}
-  if(['failed','canceled','cancelled'].includes(result.status)){await c.prisma.refund.updateMany({where:{id:refund.id,status:{in:IN_FLIGHT}},data:{status:'failed',providerRefundId:String(result.id||''),providerData:result.data??{}}});throw new Error('Provider declined the refund');}
-  if(result.status!=='succeeded'){await c.prisma.refund.updateMany({where:{id:refund.id,status:'processing'},data:{providerRefundId:String(result.id||'')}});return {id:refund.id,status:'processing'};}
-  const done=await finalize(c,refund.id,String(result.id),result.data??{},idem);
-  return {id:done.id,status:done.status};
+  const status=await settleProviderRefund(c,refund,result,idem);
+  return {id:refund.id,status};
  },
 };
 export const refundTypeDefs=`
- extend type Mutation { refundInvoicePayment(paymentId:ID!,amountCents:Int!,reason:String!,approvalId:ID,idempotencyKey:String!):AgencyJSON! }`;
+ extend type Mutation { checkRefundStatus(refundId:ID!):AgencyJSON!\n  refundInvoicePayment(paymentId:ID!,amountCents:Int!,reason:String!,approvalId:ID,idempotencyKey:String!):AgencyJSON! }`;

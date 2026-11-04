@@ -16,6 +16,7 @@ export default async function CommissionsPage({ searchParams }: { searchParams: 
     data = await platformQuery(`{
       scheduledPayments(orderBy: { dueAt: asc }, take: 300) { id status dueAt grossCents commissionBps commissionCents invoice { id } athlete { id fullName } }
       commissionInvoices(orderBy: { createdAt: desc }, take: 100) { id number status totalCents paidCents currencyCode athlete { fullName } payment_order(where: { status: { in: ["succeeded", "partially_refunded"] } }) { id amount refundedAmount cardBrand cardLast4 } }
+      refunds(where: { status: { in: ["processing", "unknown"] } }, orderBy: { createdAt: asc }, take: 50) { id amount status reason order { number } }
       agencies(take: 1) { refundApprovalThresholdCents }
       commissionLedgerEntries(orderBy: { occurredAt: desc }, take: 150) { id entryType amountCents reason occurredAt reverses { id } reversalKey payeeUser { name } athlete { fullName } }
       payouts: commissionLedgerEntries(where: { entryType: { equals: split_to_agent } }, take: 1000) { amountCents payeeUser { id name } }
@@ -53,6 +54,18 @@ export default async function CommissionsPage({ searchParams }: { searchParams: 
         </>
       )}
       {tab === 'invoices' && (
+        <>
+        {data.refunds.length > 0 && (
+          <Section title="Refunds awaiting provider" hint={String(data.refunds.length)}>
+            {data.refunds.map((r: any) => (
+              <Row key={r.id}>
+                <Cell className="font-medium"><StatusLabel value={r.status} className="mr-2" />{r.order?.number} · {moneyExact(r.amount)}</Cell>
+                <Cell muted>{r.reason}</Cell>
+                <CommandButton operation="checkRefundStatus" args={{ refundId: r.id }} label="Check status" />
+              </Row>
+            ))}
+          </Section>
+        )}
         <Section title="Commission invoices" hint={String(data.commissionInvoices.length)}>
           {data.commissionInvoices.length ? data.commissionInvoices.map((i: any) => (
             <Row key={i.id}>
@@ -66,6 +79,7 @@ export default async function CommissionsPage({ searchParams }: { searchParams: 
             </Row>
           )) : <Empty>No invoices</Empty>}
         </Section>
+        </>
       )}
       {tab === 'ledger' && (
         <Section title="Commission ledger" hint="Append-only">
