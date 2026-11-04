@@ -7,6 +7,7 @@ import { DraftAgreement } from '../components/DraftAgreement'
 import { notFound } from 'next/navigation'
 import { PlatformPage, Section, Row, Cell, Empty, ErrorState } from '../../components/Section'
 import { StatusLabel } from '../../components/StatusLabel'
+import { ReassignAgent } from '../components/ReassignAgent'
 import { CommandButton } from '../../components/CommandButton'
 import { platformQuery, money, moneyExact, day } from '../../lib/query'
 
@@ -15,7 +16,7 @@ const TABS = ['overview', 'agreements', 'contracts', 'endorsements', 'payments',
 const QUERY = `query ClientDetail($id: ID!) {
   athlete(where: { id: $id }) {
     id fullName preferredName sport league position status email phone recruitingStage representationStartedAt marketabilityNotes socialHandles followerCounts contactAllowedFrom
-    team { name } leadAgent { name } supportStaff { name }
+    team { name } leadAgent { id name } supportStaff { name }
     representationAgreement_athlete(orderBy: { createdAt: desc }) { id scope status playingCommissionBps marketingCommissionBps capBps effectiveAt expiresAt }
     playingContract_athlete(orderBy: { createdAt: desc }) { id status startSeason endSeason totalValueCents commissionBps team { name } }
     endorsementDeal_athlete(orderBy: { createdAt: desc }) { id status termStart termEnd totalValueCents commissionBps exclusivityCategory brand { name } }
@@ -36,6 +37,10 @@ export default async function ClientDetailPage({ params, searchParams }: { param
   let a: any
   try { a = (await platformQuery(QUERY, { id })).athlete } catch (e: any) { return <PlatformPage title="Client"><ErrorState message={e.message} /></PlatformPage> }
   if (!a) notFound()
+  let agents: { id: string; name: string }[] = []
+  try { agents = (await platformQuery(`{ users(orderBy: { name: asc }, take: 200) { id name } }`)).users } catch { agents = [] }
+  let canReassign = false
+  try { canReassign = Boolean((await platformQuery(`{ authenticatedItem { ... on User { role { canViewAllClients } } } }`)).authenticatedItem?.role?.canViewAllClients) } catch { canReassign = false }
   const trust = a.clientTrustEntry_athlete.reduce((n: number, e: any) => n + Number(e.amountCents), 0)
   return (
     <PlatformPage title={a.fullName} crumbs={[{ label: 'Clients', href: '/dashboard/platform/clients' }, { label: a.fullName }]} actions={<StatusLabel value={a.status} />}>
@@ -50,6 +55,7 @@ export default async function ClientDetailPage({ params, searchParams }: { param
           {[['Sport', `${a.sport} · ${a.league}`], ['Position', a.position], ['Team', a.team?.name], ['Lead agent', a.leadAgent?.name], ['Support', a.supportStaff.map((s: any) => s.name).join(', ')], ['Email', a.email], ['Phone', a.phone], ['Recruiting stage', a.recruitingStage], ['Represented since', day(a.representationStartedAt)], ['Notes', a.marketabilityNotes]].filter(([, v]) => v).map(([k, v]) => (
             <Row key={k as string}><Cell muted>{k}</Cell><Cell>{v}</Cell></Row>
           ))}
+          {canReassign && agents.length > 0 && <Row className="justify-end"><ReassignAgent athleteId={a.id} currentId={a.leadAgent?.id} agents={agents} /></Row>}
         </Section>
       )}
       {tab === 'agreements' && (

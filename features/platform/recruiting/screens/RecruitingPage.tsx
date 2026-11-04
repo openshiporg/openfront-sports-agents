@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { PlatformPage, Section, Row, Cell, Empty, ErrorState } from '../../components/Section'
 import { StatusLabel } from '../../components/StatusLabel'
 import { CommandButton } from '../../components/CommandButton'
+import { AddProspect } from '../components/AddProspect'
 import { platformQuery, day } from '../../lib/query'
 
 const STAGES = ['identified', 'contacted', 'meeting', 'pitched', 'verbal', 'signed', 'lost']
@@ -9,11 +10,11 @@ const STAGES = ['identified', 'contacted', 'meeting', 'pitched', 'verbal', 'sign
 export default async function RecruitingPage() {
   let data: any
   try {
-    data = await platformQuery(`{ athletes(where: { status: { in: [prospect, recruiting] } }, orderBy: { fullName: asc }, take: 200) { id fullName sport league status recruitingStage contactAllowedFrom leadAgent { name } interaction_athlete(orderBy: { occurredAt: desc }, take: 1) { kind summary occurredAt } } }`)
+    data = await platformQuery(`{ users(orderBy: { name: asc }, take: 200) { id name } athletes(where: { status: { in: [prospect, recruiting] } }, orderBy: { fullName: asc }, take: 200) { id fullName sport league status recruitingStage contactAllowedFrom leadAgent { name } interaction_athlete(orderBy: { occurredAt: desc }, take: 1) { kind summary occurredAt } } }`)
   } catch (e: any) { return <PlatformPage title="Recruiting"><ErrorState message={e.message} /></PlatformPage> }
   const now = Date.now()
   return (
-    <PlatformPage title="Recruiting">
+    <PlatformPage title="Recruiting" actions={<AddProspect agents={data.users} />}>
       {STAGES.map((stage) => {
         const rows = data.athletes.filter((a: any) => a.recruitingStage === stage)
         return (
