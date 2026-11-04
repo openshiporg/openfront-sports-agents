@@ -46,3 +46,16 @@ export function validateVoid(i: { payoutId?: string; reason?: string }) {
   if (reason.length > 500) throw new DomainError('Reason is too long');
   return { payoutId: i.payoutId, reason };
 }
+
+type Stmt = { allocations: number; reversals: number; allocatedCents: number; reversedCents: number; settledCents: number };
+/** Explanation of an owed figure. Zero terms are left out, so the breakdown only appears where it explains a difference. */
+export function breakdownParts(s: Stmt, money: (c: number) => string): string[] {
+  if (!s.reversedCents && !s.settledCents) return [];
+  const parts = [`${money(s.allocatedCents)} allocated`];
+  if (s.reversedCents) parts.push(`${money(s.reversedCents)} reversed`);
+  if (s.settledCents) parts.push(`${money(s.settledCents)} paid`);
+  return parts;
+}
+export const breakdownText = (s: Stmt, money: (c: number) => string) => breakdownParts(s, money).join(' − ');
+/** "6 allocations, 1 reversal" for the entries behind a figure. */
+export const entriesText = (allocations: number, reversals: number) => [allocations && plural(allocations, 'allocation'), reversals && plural(reversals, 'reversal')].filter(Boolean).join(', ') || 'no entries';

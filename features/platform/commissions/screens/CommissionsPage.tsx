@@ -10,7 +10,7 @@ import { RefundPayment } from '../components/RefundPayment'
 import { CommandButton } from '../../components/CommandButton'
 import { platformQuery, moneyExact, day } from '../../lib/query'
 import { parsePeriod } from '@/features/keystone/lib/reconcile'
-import { plural } from '@/features/keystone/lib/payout'
+import { plural, breakdownText, entriesText } from '@/features/keystone/lib/payout'
 import { BUCKETS, BUCKET_LABEL } from '@/features/keystone/lib/aging'
 
 const TABS = ['payments', 'invoices', 'aging', 'ledger', 'payouts', 'reconcile'] as const
@@ -173,7 +173,7 @@ export default async function CommissionsPage({ searchParams }: { searchParams: 
             {payables.payables.length ? payables.payables.map((a: any) => (
               <div key={a.payeeUserId} className="flex flex-col gap-2 border-b px-3 py-2.5 text-sm last:border-b-0">
                 <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 flex-1"><div className="truncate font-medium">{a.name}</div><div className="text-xs text-muted-foreground">{plural(a.entries, 'entry', 'entries')} · {moneyExact(a.allocatedCents)} allocated − {moneyExact(a.reversedCents)} reversed{a.settledCents ? ` − ${moneyExact(a.settledCents)} paid` : ''}{a.mixedCurrency ? ' · mixed currencies' : ''}</div></div>
+                  <div className="min-w-0 flex-1"><div className="truncate font-medium">{a.name}</div><div className="text-xs text-muted-foreground">{plural(a.entries, 'unpaid entry', 'unpaid entries')} ({entriesText(a.openAllocations, a.openReversals)}){a.reversedCents || a.settledCents ? ` · ${breakdownText(a, moneyExact)}` : ''}{a.mixedCurrency ? ' · mixed currencies' : ''}</div></div>
                   <span className="w-28 shrink-0 text-right tabular-nums">{moneyExact(a.netCents, a.currencyCode)}</span>
                 </div>
                 {a.netCents > 0 && !a.mixedCurrency ? <SettlePayout payeeUserId={a.payeeUserId} name={a.name} netCents={a.netCents} entries={a.entries} currency={a.currencyCode} /> : <div className="text-xs text-muted-foreground">Nothing payable yet</div>}
@@ -197,7 +197,7 @@ export default async function CommissionsPage({ searchParams }: { searchParams: 
         <Section title="Agent statement" hint="Allocated − reversed − paid = owed">
           {payables.report.length ? payables.report.map((a: any) => (
             <div key={a.payeeUserId} className="flex items-start justify-between gap-3 border-b px-3 py-2.5 text-sm last:border-b-0">
-              <div className="min-w-0 flex-1"><div className="truncate font-medium">{a.name}</div><div className="text-xs text-muted-foreground">{plural(a.allocations, 'allocation')} · {moneyExact(a.allocatedCents)} allocated − {moneyExact(a.reversedCents)} reversed − {moneyExact(a.settledCents)} paid</div></div>
+              <div className="min-w-0 flex-1"><div className="truncate font-medium">{a.name}</div><div className="text-xs text-muted-foreground">{plural(a.allocations + a.reversals, 'entry', 'entries')} in total ({entriesText(a.allocations, a.reversals)}){a.reversedCents || a.settledCents ? ` · ${breakdownText(a, moneyExact)}` : ''}</div></div>
               <span className="w-28 shrink-0 text-right tabular-nums">{moneyExact(a.owedCents)}</span>
             </div>
           )) : <Empty>No payouts yet</Empty>}

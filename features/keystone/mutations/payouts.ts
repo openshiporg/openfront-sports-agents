@@ -18,7 +18,7 @@ export const payoutQueries={
   const rows=await c.prisma.commissionLedgerEntry.findMany({where:{entryType:{in:['split_to_agent','reversal']},payeeUserId:{not:null}},select:{...pick,entryType:true,payeeUserId:true,payeeUser:{select:{name:true}},payoutEntry:{select:{id:true}}},take:50000});
   const by=new Map<string,any>();
   for(const r of rows){const g=by.get(r.payeeUserId)||{payeeUserId:r.payeeUserId,name:r.payeeUser?.name||'Unnamed',all:[],open:[]};g.all.push({amountCents:Number(r.amountCents),entryType:r.entryType,settled:Boolean(r.payoutEntry)});if(!r.payoutEntry)g.open.push(r);by.set(r.payeeUserId,g);}
-  const statements=[...by.values()].map(g=>({payeeUserId:g.payeeUserId,name:g.name,...netOwed(plain(g.open)),...agentStatement(g.all)}));
+  const statements=[...by.values()].map(g=>({payeeUserId:g.payeeUserId,name:g.name,...netOwed(plain(g.open)),openAllocations:g.open.filter((r:any)=>r.entryType==='split_to_agent').length,openReversals:g.open.filter((r:any)=>r.entryType==='reversal').length,...agentStatement(g.all)}));
   const payables=statements.filter(s=>s.entries>0).sort((a,b)=>b.netCents-a.netCents||a.name.localeCompare(b.name));
   const report=statements.sort((a,b)=>b.allocatedCents-a.allocatedCents||a.name.localeCompare(b.name));
   const recent=await c.prisma.agentPayout.findMany({orderBy:{createdAt:'desc'},take:25,select:{id:true,status:true,voidReason:true,releasedEntries:true,reference:true,method:true,paidOn:true,totalCents:true,currencyCode:true,payee:{select:{name:true}},_count:{select:{entries:true}}}});

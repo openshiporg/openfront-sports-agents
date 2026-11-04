@@ -43,3 +43,18 @@ test('void validation', () => {
   assert.throws(() => validateVoid({ payoutId: 'p', reason: 'x'.repeat(501) }), /too long/)
   assert.deepEqual(validateVoid({ payoutId: 'p', reason: '  Wire bounced  ' }), { payoutId: 'p', reason: 'Wire bounced' })
 })
+import { breakdownText, entriesText } from './payout'
+test('breakdown omits zero terms and only appears when it explains a difference', () => {
+  const m = (c: number) => '$' + (c / 100).toFixed(2)
+  const base = { allocations: 3, reversals: 0, allocatedCents: 10000, reversedCents: 0, settledCents: 0 }
+  assert.equal(breakdownText(base, m), '')
+  assert.equal(breakdownText({ ...base, reversedCents: 300 }, m), '$100.00 allocated − $3.00 reversed')
+  assert.equal(breakdownText({ ...base, settledCents: 4000 }, m), '$100.00 allocated − $40.00 paid')
+  assert.equal(breakdownText({ ...base, reversedCents: 300, settledCents: 4000 }, m), '$100.00 allocated − $3.00 reversed − $40.00 paid')
+})
+test('entries text labels what the entries are', () => {
+  assert.equal(entriesText(6, 1), '6 allocations, 1 reversal')
+  assert.equal(entriesText(1, 0), '1 allocation')
+  assert.equal(entriesText(0, 2), '2 reversals')
+  assert.equal(entriesText(0, 0), 'no entries')
+})
