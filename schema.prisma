@@ -1147,6 +1147,8 @@ enum AmendmentKindType {
   move_deliverable
   add_deliverable
   change_payment_terms
+  waive_payment
+  waive_deliverable
 }
 
 enum ForecastSnapshotSourceType {

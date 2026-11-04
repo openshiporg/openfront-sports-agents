@@ -34,7 +34,7 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
           <Row key={x.id}>
             <Cell><StatusLabel value={x.status} className="mr-2" />{x.kind.replaceAll('_', ' ')}</Cell><Cell muted>{day(x.dueAt)}</Cell>
             {draft && x.status === 'scheduled' && <><DeliverableForm dealId={d.id} item={x} label="Edit" /><CommandButton operation="removeDeliverable" args={{ deliverableId: x.id }} label="Remove" /></>}
-            {live && ['scheduled', 'missed'].includes(x.status) && <AmendTerms kind="move_deliverable" ids={{ deliverableId: x.id }} label="Move date" initial={x.dueAt} />}
+            {live && ['scheduled', 'missed'].includes(x.status) && <><AmendTerms kind="move_deliverable" ids={{ deliverableId: x.id }} label="Move date" initial={x.dueAt} /><AmendTerms kind="waive_deliverable" ids={{ deliverableId: x.id }} label="Waive" /></>}
           </Row>
         )) : <Empty>No deliverables</Empty>}
         <Row className="justify-end">{draft ? <DeliverableForm dealId={d.id} label="Add deliverable" /> : live ? <AmendTerms kind="add_deliverable" ids={{ dealId: d.id }} label="Add deliverable" /> : null}</Row>
@@ -42,7 +42,7 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
       {(live || d.scheduledPayment_endorsementDeal.length > 0) && (
         <Section title="Payment schedule" hint={String(d.scheduledPayment_endorsementDeal.length)}>
           {d.scheduledPayment_endorsementDeal.length ? d.scheduledPayment_endorsementDeal.map((p: any) => (
-            <Row key={p.id}><Cell><StatusLabel value={p.status} className="mr-2" />{day(p.dueAt)}</Cell><Cell className="tabular-nums">{moneyExact(p.grossCents, d.currencyCode)}</Cell>{live && ['scheduled', 'late'].includes(p.status) && !p.invoice && <AmendTerms kind="reschedule_payment" ids={{ scheduledPaymentId: p.id }} label="Move date" initial={p.dueAt} />}</Row>
+            <Row key={p.id}><Cell><StatusLabel value={p.status} className="mr-2" />{day(p.dueAt)}</Cell><Cell className="tabular-nums">{moneyExact(p.grossCents, d.currencyCode)}</Cell>{live && ['scheduled', 'late'].includes(p.status) && !p.invoice && <><AmendTerms kind="reschedule_payment" ids={{ scheduledPaymentId: p.id }} label="Move date" initial={p.dueAt} /><AmendTerms kind="waive_payment" ids={{ scheduledPaymentId: p.id }} label="Waive" /></>}</Row>
           )) : <Empty>No payment schedule yet. Until one is set, no commission is expected from this deal.</Empty>}
           {live && <div className="border-t p-3"><SchedulePayments dealId={d.id} totalCents={Number(d.totalValueCents || 0)} termStart={d.termStart} termEnd={d.termEnd} currency={d.currencyCode} hasSchedule={d.scheduledPayment_endorsementDeal.length > 0} locked={d.scheduledPayment_endorsementDeal.some((p: any) => !['scheduled', 'late'].includes(p.status) || p.invoice || p.commissionInvoiceLine_scheduledPayment.length > 0)} /></div>}
         </Section>

@@ -79,6 +79,28 @@ export const termsMutations={
     const v=validateDeliverable({kind:a.deliverableKind,dueAt:a.dueAt,notes:a.notes},cur.termStart,cur.termEnd);const made=await tx.deliverable.create({data:{...v,dealId:cur.id,status:'scheduled'}});
     return record(tx,c,a,{athleteId:cur.athleteId,dealId:cur.id,kind,why,before:null,after:{deliverableId:made.id,kind:v.kind,dueAt:v.dueAt}});});
   }
+  if(kind==='waive_payment'){
+   const sp=await c.prisma.scheduledPayment.findUnique({where:{id:String(a.scheduledPaymentId||'')},include:{contractYear:true,endorsementDeal:true,incentive:true}});if(!sp)throw new DomainError('Record not found');
+   const contractId=sp.contractYear?.contractId||sp.incentive?.contractId||null,dealId=sp.endorsementDealId||null;if(!contractId&&!dealId)throw new DomainError('Payment has no source contract or deal');
+   // Giving up commission is a money decision: it needs the commissions permission whichever record the payment came from.
+   return command(c,'canManageCommissions',sp.athleteId,'amendTerms',a,async tx=>{
+    const cur=await tx.scheduledPayment.findUnique({where:{id:sp.id}});if(!['scheduled','late'].includes(cur.status)||cur.invoiceId)throw new DomainError('Only an unreceived, uninvoiced payment can be waived');
+    const src=contractId?await tx.playingContract.findUnique({where:{id:contractId}}):await tx.endorsementDeal.findUnique({where:{id:dealId!}});
+    if(!(contractId?LIVE_CONTRACT:LIVE_DEAL).includes(src.status))throw new DomainError('Only a signed or active record has payments to waive');
+    if(await tx.commissionInvoiceLine.count({where:{scheduledPaymentId:cur.id}})||await tx.commissionLedgerEntry.count({where:{scheduledPaymentId:cur.id}}))throw new DomainError('Commission has already been recorded against this payment');
+    await tx.scheduledPayment.update({where:{id:cur.id},data:{status:'waived'}});
+    const closed=await tx.task.updateMany({where:{autoKey:'payment:'+cur.id,status:{in:['open','in_progress']}},data:{status:'cancelled'}});
+    return record(tx,c,a,{athleteId:cur.athleteId,contractId,dealId,kind,why,before:{scheduledPaymentId:cur.id,status:cur.status,dueAt:cur.dueAt,grossCents:cur.grossCents,commissionBps:cur.commissionBps},after:{scheduledPaymentId:cur.id,status:'waived',tasksCancelled:closed.count}});});
+  }
+  if(kind==='waive_deliverable'){
+   const del=await get(c,'deliverable',a.deliverableId,{deal:true});
+   return command(c,'canManageEndorsements',del.deal.athleteId,'amendTerms',a,async tx=>{
+    const deal=await tx.endorsementDeal.findUnique({where:{id:del.dealId}});if(!LIVE_DEAL.includes(deal.status))throw new DomainError('Remove it with the draft editor before signing');
+    const cur=await tx.deliverable.findUnique({where:{id:del.id}});if(!['scheduled','missed'].includes(cur.status))throw new DomainError('Only a scheduled or missed deliverable can be waived');
+    await tx.deliverable.update({where:{id:cur.id},data:{status:'waived'}});
+    const closed=await tx.task.updateMany({where:{autoKey:'deliverable:'+cur.id,status:{in:['open','in_progress']}},data:{status:'cancelled'}});
+    return record(tx,c,a,{athleteId:deal.athleteId,dealId:deal.id,kind,why,before:{deliverableId:cur.id,kind:cur.kind,status:cur.status,dueAt:cur.dueAt},after:{deliverableId:cur.id,status:'waived',tasksCancelled:closed.count}});});
+  }
   if(kind==='change_payment_terms'){
    const days=parseTermsDays(a.paymentTermsDays);
    const contractId=a.contractId?String(a.contractId):null,dealId=a.dealId?String(a.dealId):null;if(!!contractId===!!dealId)throw new DomainError('Choose a contract or a deal');

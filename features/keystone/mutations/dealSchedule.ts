@@ -6,14 +6,14 @@ import {DomainError} from '../lib/errors';
 
 const dayOf=(d:Date|null)=>d?d.toISOString().slice(0,10):null;
 export const dealScheduleQueries={
- /** Active deals that have no payment schedule at all, so no commission can be expected or invoiced. Scoped to the caller's athletes unless they can view all clients. */
+ /** Active deals that have no payment schedule at all (a schedule whose payments were all waived is a decision, not a gap), so no commission can be expected or invoiced. Scoped to the caller's athletes unless they can view all clients. */
  async dealsMissingSchedule(_:unknown,a:any,c:any){
   if(!c.session?.itemId)throw new DomainError('Not authorized');
   // An alert, not a gate: people without money permissions simply see none, so a shared page never fails because of it.
   if(!(permissions.canManageCommissions({session:c.session})||permissions.canManageEndorsements({session:c.session})))return {deals:[]};
   const all=Boolean(c.session.data?.role?.canViewAllClients);const me=c.session.itemId;
   const rows=await c.prisma.endorsementDeal.findMany({
-   where:{status:'active',scheduledPayment_endorsementDeal:{none:{status:{not:'waived'}}},...(all?{}:{athlete:{OR:[{leadAgentId:me},{supportStaff:{some:{id:me}}}]}})},
+   where:{status:'active',scheduledPayment_endorsementDeal:{none:{}},...(all?{}:{athlete:{OR:[{leadAgentId:me},{supportStaff:{some:{id:me}}}]}})},
    orderBy:{termStart:'asc'},take:100,
    select:{id:true,totalValueCents:true,commissionBps:true,currencyCode:true,termStart:true,termEnd:true,athlete:{select:{id:true,fullName:true}},brand:{select:{name:true}},owner:{select:{name:true}}}});
   return {deals:rows.map((r:any)=>({id:r.id,athleteId:r.athlete?.id??null,athleteName:r.athlete?.fullName??'',brandName:r.brand?.name??'',ownerName:r.owner?.name??'',currencyCode:r.currencyCode,
