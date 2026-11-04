@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { validateProbabilities, readProbabilities, probabilityChanges, forecastDeals, weigh, DEFAULT_PROBABILITIES as D } from './forecast'
+import { paymentCommission, validateProbabilities, readProbabilities, probabilityChanges, forecastDeals, weigh, DEFAULT_PROBABILITIES as D } from './forecast'
 const now = new Date('2026-11-10T00:00:00Z')
 const deal = (o: any = {}) => ({ id: 'd', status: 'negotiating', ownerId: 'a1', currencyCode: 'USD', totalValueCents: 100_000_00, commissionBps: 1500, termStart: '2027-01-15T00:00:00Z', payments: [], ...o })
 test('probabilities validate as whole percentages that never fall as the deal advances', () => {
@@ -33,4 +33,10 @@ test('agents, stages, other currencies and closed stages', () => {
   assert.deepEqual(f.agents.map((a) => [a.ownerId, a.weightedCents]), [['a2', 15_000_00], ['a1', 6_000_00], [null, 1_500_00]])
   assert.equal(f.stages.find((s) => s.stage === 'active')!.deals, 1)
   const zero = forecastDeals([deal()], { ...D, negotiating: 0 }, 'USD', now); assert.equal(zero.totals.weightedCents, 0); assert.equal(zero.totals.grossCents, 15_000_00)
+})
+test('commission of a payment is computed until it is received, then taken as recorded', () => {
+  assert.equal(paymentCommission({ status: 'scheduled', grossCents: 500_000_00, commissionBps: 1500, commissionCents: 0 }), 75_000_00)
+  assert.equal(paymentCommission({ status: 'late', grossCents: 333, commissionBps: 1500, commissionCents: 0 }), 49)
+  assert.equal(paymentCommission({ status: 'received', grossCents: 100, commissionBps: 1500, commissionCents: 17 }), 17)
+  assert.equal(paymentCommission({ status: 'scheduled', grossCents: null, commissionBps: null, commissionCents: null }), 0)
 })

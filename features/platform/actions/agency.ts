@@ -53,6 +53,7 @@ const OPERATIONS: Record<string, string> = {
   setContactDoNotContact: 'mutation($contactId: ID!, $doNotContact: Boolean!, $reason: String!, $idempotencyKey: String!) { setContactDoNotContact(contactId: $contactId, doNotContact: $doNotContact, reason: $reason, idempotencyKey: $idempotencyKey) }',
   voidAgentPayout: 'mutation($payoutId: ID!, $reason: String!, $idempotencyKey: String!) { voidAgentPayout(payoutId: $payoutId, reason: $reason, idempotencyKey: $idempotencyKey) }',
   recordAgentPayout: 'mutation($payeeUserId: ID!, $reference: String!, $paidOn: String!, $method: String, $note: String, $expectedCents: Int!, $idempotencyKey: String!) { recordAgentPayout(payeeUserId: $payeeUserId, reference: $reference, paidOn: $paidOn, method: $method, note: $note, expectedCents: $expectedCents, idempotencyKey: $idempotencyKey) }',
+  scheduleDealPayments: 'mutation($dealId: ID!, $pattern: String!, $firstDueOn: String, $count: Int, $milestones: AgencyJSON, $idempotencyKey: String!) { scheduleDealPayments(dealId: $dealId, pattern: $pattern, firstDueOn: $firstDueOn, count: $count, milestones: $milestones, idempotencyKey: $idempotencyKey) }',
   takeForecastSnapshot: 'mutation($idempotencyKey: String!) { takeForecastSnapshot(idempotencyKey: $idempotencyKey) }',
   setForecastProbabilities: 'mutation($probabilities: AgencyJSON!, $idempotencyKey: String!) { setForecastProbabilities(probabilities: $probabilities, idempotencyKey: $idempotencyKey) }',
   runInvoiceDunning: 'mutation($idempotencyKey: String!) { runInvoiceDunning(idempotencyKey: $idempotencyKey) }',

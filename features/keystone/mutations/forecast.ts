@@ -1,6 +1,6 @@
 import {permissions} from '../access';
 import {audit,lockTransactionKey} from '../lib/agencyCommand';
-import {forecastDeals,readProbabilities,validateProbabilities,probabilityChanges,FORECAST_STAGES,STAGE_NOTE,type FDeal} from '../lib/forecast';
+import {paymentCommission,forecastDeals,readProbabilities,validateProbabilities,probabilityChanges,FORECAST_STAGES,STAGE_NOTE,type FDeal} from '../lib/forecast';
 import {snapshotData,actualByMonth,compareSnapshots} from '../lib/forecastHistory';
 import {DomainError} from '../lib/errors';
 import {getOrCreateIdempotencyAttempt,updateIdempotencyAttempt} from '../utils/idempotency';
@@ -11,8 +11,8 @@ export async function loadForecast(prisma:any,all:boolean,me:string|null){
  const agency=await prisma.agency.findFirst({orderBy:{createdAt:'asc'},select:{currencyCode:true,forecastProbabilities:true}});
  const currency=agency?.currencyCode||'USD';const probs=readProbabilities(agency?.forecastProbabilities);
  const rows=await prisma.endorsementDeal.findMany({where:{status:{in:[...FORECAST_STAGES]},...(all?{}:{OR:[{ownerId:me},{athlete:{OR:[{leadAgentId:me},{supportStaff:{some:{id:me}}}]}}]})},
-  select:{id:true,status:true,ownerId:true,currencyCode:true,totalValueCents:true,commissionBps:true,termStart:true,scheduledPayment_endorsementDeal:{select:{commissionCents:true,dueAt:true,status:true}}},take:2000});
- const deals:FDeal[]=rows.map((r:any)=>({id:r.id,status:r.status,ownerId:r.ownerId,currencyCode:r.currencyCode,totalValueCents:Number(r.totalValueCents||0),commissionBps:Number(r.commissionBps||0),termStart:r.termStart,payments:r.scheduledPayment_endorsementDeal.map((p:any)=>({commissionCents:Number(p.commissionCents||0),dueAt:p.dueAt,status:p.status}))}));
+  select:{id:true,status:true,ownerId:true,currencyCode:true,totalValueCents:true,commissionBps:true,termStart:true,scheduledPayment_endorsementDeal:{select:{grossCents:true,commissionBps:true,commissionCents:true,dueAt:true,status:true}}},take:2000});
+ const deals:FDeal[]=rows.map((r:any)=>({id:r.id,status:r.status,ownerId:r.ownerId,currencyCode:r.currencyCode,totalValueCents:Number(r.totalValueCents||0),commissionBps:Number(r.commissionBps||0),termStart:r.termStart,payments:r.scheduledPayment_endorsementDeal.map((p:any)=>({commissionCents:paymentCommission(p),dueAt:p.dueAt,status:p.status}))}));
  return {forecast:forecastDeals(deals,probs,currency,new Date()),probs};
 }
 /** Records this month's forecast once. Safe to call repeatedly: the first call wins and later calls return the stored snapshot. */

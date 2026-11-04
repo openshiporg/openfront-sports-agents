@@ -17,7 +17,7 @@ export default async function EndorsementsPage({ searchParams }: { searchParams:
   const view = tab === 'deliverables' ? 'deliverables' : tab === 'forecast' ? 'forecast' : 'pipeline'
   let data: any, fc: any, fcError = ''
   if (view === 'forecast') {
-    try { fc = (await platformQuery(`{ dealForecast }`)).dealForecast } catch (e: any) { fcError = e.message }
+    try { const r = await platformQuery(`{ dealForecast dealsMissingSchedule }`); fc = { ...r.dealForecast, missing: r.dealsMissingSchedule.deals } } catch (e: any) { fcError = e.message }
     if (fcError || !fc) return <PlatformPage title="Endorsements"><ErrorState message={fcError || 'Forecast unavailable'} /></PlatformPage>
     return <PlatformPage title="Endorsements"><ScrollTabs items={TABS.map((t) => ({ href: t.href, label: t.label, active: t.key === view }))} /><Forecast fc={fc} /></PlatformPage>
   }
@@ -67,6 +67,18 @@ function Forecast({ fc }: { fc: any }) {
   const months = fc.months.filter((m: any) => m.grossCents > 0)
   return (
     <>
+      {fc.missing.length > 0 && (
+        <Section title="Active deals with no payment schedule" hint={String(fc.missing.length)}>
+          {fc.missing.slice(0, 6).map((d: any) => (
+            <Row key={d.id} href={`/dashboard/platform/endorsements/${d.id}`}>
+              <Cell>{d.athleteName} <span className="text-muted-foreground">for {d.brandName}</span></Cell>
+              <Cell muted>{money(d.commissionCents, d.currencyCode)} commission</Cell>
+            </Row>
+          ))}
+          {fc.missing.length > 6 && <div className="px-3 py-2 text-xs text-muted-foreground">and {fc.missing.length - 6} more</div>}
+          <div className="border-t px-3 py-2 text-xs text-muted-foreground">Their commission counts in the forecast from the contract total, but it cannot be invoiced until a schedule is set.</div>
+        </Section>
+      )}
       <Section title="Expected commission" hint={fc.scope === 'mine' ? 'Your deals' : 'Whole agency'}>
         <Row><Cell muted>Weighted by stage</Cell><Cell className="tabular-nums font-medium">{money(fc.totals.weightedCents, cur)}</Cell></Row>
         <Row><Cell muted>If every deal closes</Cell><Cell className="tabular-nums">{money(fc.totals.grossCents, cur)}</Cell></Row>

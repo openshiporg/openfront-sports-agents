@@ -9,6 +9,7 @@ const QUERY = `query MoneyView($now: DateTime!, $d7: DateTime!, $d60: DateTime!,
   overdue: scheduledPayments(where: { OR: [{ status: { equals: late } }, { status: { equals: scheduled }, dueAt: { lt: $now } }] }, orderBy: { dueAt: asc }, take: 100) { id dueAt grossCents commissionBps status athlete { id fullName } }
   deliverables(where: { status: { equals: scheduled }, dueAt: { lte: $d7 } }, orderBy: { dueAt: asc }, take: 50) { id kind dueAt deal { id brand { name } athlete { id fullName } } }
   certs: agentCertifications(where: { status: { equals: active }, expiresAt: { lte: $d60 } }, orderBy: { expiresAt: asc }, take: 50) { id body number expiresAt user { name } }
+  missing: dealsMissingSchedule
   agreements: representationAgreements(where: { status: { in: [signed, filed_with_union, active] }, expiresAt: { lte: $d90 } }, orderBy: { expiresAt: asc }, take: 50) { id scope expiresAt athlete { id fullName } }
 }`
 
@@ -33,6 +34,18 @@ export default async function DashboardPage() {
         <Stat label="Overdue payments" value={String(data.overdue.length)} sub={money(overdueGross)} />
         <Stat label="Deliverables this week" value={String(data.deliverables.length)} />
       </div>
+
+      {data.missing.deals.length > 0 && (
+        <Section title="Active deals with no payment schedule" hint={String(data.missing.deals.length)}>
+          {data.missing.deals.slice(0, 6).map((d: any) => (
+            <Row key={d.id} href={`/dashboard/platform/endorsements/${d.id}`}>
+              <Cell>{d.athleteName} <span className="text-muted-foreground">for {d.brandName}</span></Cell>
+              <Cell muted>Commission {money(d.commissionCents, d.currencyCode)} not expected</Cell>
+            </Row>
+          ))}
+          {data.missing.deals.length > 6 && <div className="px-3 py-2 text-xs text-muted-foreground">and {data.missing.deals.length - 6} more</div>}
+        </Section>
+      )}
 
       <Section title="Open invoices" hint={<Link href="/dashboard/platform/commissions" className="underline">All commissions</Link>}>
         {data.open.length ? data.open.slice(0, 8).map((i: any) => (

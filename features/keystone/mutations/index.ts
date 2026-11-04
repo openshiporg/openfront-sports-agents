@@ -16,6 +16,7 @@ import {certificationTypeDefs,certificationMutations} from './certifications';
 import {profileTypeDefs,profileMutations} from './profile';
 import {directoryTypeDefs,directoryMutations} from './directory';
 import {payoutTypeDefs,payoutQueries,payoutMutations,voidMutations} from './payouts';
+import {dealScheduleTypeDefs,dealScheduleQueries,dealScheduleMutations} from './dealSchedule';
 import {forecastTypeDefs,forecastQueries,forecastMutations} from './forecast';
 import {agingTypeDefs,agingQueries,agingMutations} from './aging';
 import {prospectTypeDefs,prospectMutations,lostMutations} from './prospects';
@@ -32,14 +33,14 @@ export function extendGraphqlSchema(baseSchema: GraphQLSchema) {
       type Query {
         redirectToInit: Boolean
       }
-    ` + agencyTypeDefs + forecastTypeDefs + refundTypeDefs + crmTypeDefs + documentTypeDefs + termsTypeDefs + reconcileTypeDefs + draftingTypeDefs + prospectTypeDefs + lifecycleTypeDefs + agingTypeDefs + payoutTypeDefs + directoryTypeDefs + profileTypeDefs + certificationTypeDefs + conversionTypeDefs + portalTypeDefs + `
+    ` + agencyTypeDefs + dealScheduleTypeDefs + forecastTypeDefs + refundTypeDefs + crmTypeDefs + documentTypeDefs + termsTypeDefs + reconcileTypeDefs + draftingTypeDefs + prospectTypeDefs + lifecycleTypeDefs + agingTypeDefs + payoutTypeDefs + directoryTypeDefs + profileTypeDefs + certificationTypeDefs + conversionTypeDefs + portalTypeDefs + `
       extend type Mutation { ensureOnboardingRecord(entity:String!,data:AgencyJSON!):AgencyJSON! updateActiveUser(data:AgencyJSON!):AgencyJSON! }
     `,
     resolvers: {
       Query: userFacingAll({ 
-        redirectToInit, ...agencyQueries, ...portalQueries,...reconcileQueries,...conversionQueries,...agingQueries,...forecastQueries,...payoutQueries,
+        redirectToInit, ...agencyQueries, ...portalQueries,...reconcileQueries,...conversionQueries,...agingQueries,...forecastQueries,...dealScheduleQueries,...payoutQueries,
       }),
-      Mutation: userFacingAll({...agencyMutations,...forecastMutations,...refundMutations,...crmMutations,...documentMutations,...termsMutations,...reconcileMutations,...draftingMutations,...prospectMutations,...lifecycleMutations,...agingMutations,...payoutMutations,...voidMutations,...directoryMutations,...profileMutations,...certificationMutations,...conversionMutations,...lostMutations,...portalMutations,ensureOnboardingRecord,updateActiveUser,requestManagerApproval,decideManagerApproval}),
+      Mutation: userFacingAll({...agencyMutations,...forecastMutations,...dealScheduleMutations,...refundMutations,...crmMutations,...documentMutations,...termsMutations,...reconcileMutations,...draftingMutations,...prospectMutations,...lifecycleMutations,...agingMutations,...payoutMutations,...voidMutations,...directoryMutations,...profileMutations,...certificationMutations,...conversionMutations,...lostMutations,...portalMutations,ensureOnboardingRecord,updateActiveUser,requestManagerApproval,decideManagerApproval}),
     },
   });
 }

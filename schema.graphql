@@ -5057,6 +5057,7 @@ type Mutation {
   requestManagerApproval(actionType: String!, targetId: String!, amountCents: Int, reason: String!): AgencyJSON!
   decideManagerApproval(approvalId: ID!, decision: String!): AgencyJSON!
   generateAutoTasks: AgencyJSON!
+  scheduleDealPayments(dealId: ID!, pattern: String!, firstDueOn: String, count: Int, milestones: AgencyJSON, idempotencyKey: String!): AgencyJSON!
   takeForecastSnapshot(idempotencyKey: String!): AgencyJSON!
   setForecastProbabilities(probabilities: AgencyJSON!, idempotencyKey: String!): AgencyJSON!
   checkRefundStatus(refundId: ID!): AgencyJSON!
@@ -5251,6 +5252,7 @@ type Query {
   validateUserPasswordResetToken(email: String!, token: String!): ValidateUserPasswordResetTokenResult
   redirectToInit: Boolean
   checkEndorsementConflicts(athleteId: ID!, category: String!, start: String!, end: String!): AgencyJSON!
+  dealsMissingSchedule: AgencyJSON!
   dealForecast: AgencyJSON!
   reconcileCommissions(from: String!, to: String!): AgencyJSON!
   invoiceAging: AgencyJSON!

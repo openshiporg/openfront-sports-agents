@@ -1,4 +1,5 @@
 import {DomainError} from './errors';
+import {commission} from './commission';
 /** Stage-weighted expected commission from the endorsement pipeline. Pure; the query loads the rows. */
 export const FORECAST_STAGES=['prospect','negotiating','signed','active'] as const;
 export type ForecastStage=typeof FORECAST_STAGES[number];
@@ -59,3 +60,6 @@ export function forecastDeals(deals:FDeal[],probs:Probabilities,currency:string,
  return {currency,months:rows,stages:beyond,agents:[...agents.values()].sort((x,y)=>y.weightedCents-x.weightedCents),
   totals:{grossCents:beyond.reduce((s,x)=>s+x.grossCents,0),weightedCents:beyond.reduce((s,x)=>s+x.weightedCents,0),deals:count},excludedOtherCurrency:excluded,placement:{scheduledCents,unscheduledCents}};
 }
+
+/** A scheduled payment stores its commission only once it is received, so until then it is worked out from the gross amount and the rate. */
+export const paymentCommission=(p:{status:string;grossCents:number|null;commissionBps:number|null;commissionCents:number|null})=>p.status==='received'?Number(p.commissionCents||0):commission(Number(p.grossCents||0),Number(p.commissionBps||0)).commissionCents;
