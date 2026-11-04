@@ -187,6 +187,10 @@ model Athlete {
   image                           String                      @default("")
   eligibility                     Json?
   isPublic                        Boolean                     @default(false)
+  lostReason                      AthleteLostReasonType?      @default(other)
+  lostNote                        String                      @default("")
+  lostFromStage                   String                      @default("")
+  lostAt                          DateTime?
   recruitingStage                 AthleteRecruitingStageType? @default(identified)
   contactAllowedFrom              DateTime?
   representationAgreement_athlete RepresentationAgreement[]   @relation("RepresentationAgreement_athlete")
@@ -916,6 +920,16 @@ enum AthleteStatusType {
   client
   former
   lost
+}
+
+enum AthleteLostReasonType {
+  signed_elsewhere
+  declined
+  unresponsive
+  ineligible
+  compliance
+  timing
+  other
 }
 
 enum AthleteRecruitingStageType {

@@ -39,6 +39,8 @@ const OPERATIONS: Record<string, string> = {
   draftEndorsementDeal: 'mutation($athleteId: ID!, $brandId: ID!, $termStart: String!, $termEnd: String!, $totalValueCents: Int!, $paymentTerms: String, $exclusivityCategory: String, $territory: String, $idempotencyKey: String!) { draftEndorsementDeal(athleteId: $athleteId, brandId: $brandId, termStart: $termStart, termEnd: $termEnd, totalValueCents: $totalValueCents, paymentTerms: $paymentTerms, exclusivityCategory: $exclusivityCategory, territory: $territory, idempotencyKey: $idempotencyKey) }',
   createProspect: 'mutation($fullName: String!, $sport: String!, $league: String!, $position: String, $email: String, $contactAllowedFrom: String, $leadAgentId: ID, $idempotencyKey: String!) { createProspect(fullName: $fullName, sport: $sport, league: $league, position: $position, email: $email, contactAllowedFrom: $contactAllowedFrom, leadAgentId: $leadAgentId, idempotencyKey: $idempotencyKey) }',
   reassignLeadAgent: 'mutation($athleteId: ID!, $agentId: ID!, $reason: String!, $idempotencyKey: String!) { reassignLeadAgent(athleteId: $athleteId, agentId: $agentId, reason: $reason, idempotencyKey: $idempotencyKey) }',
+  markProspectLost: 'mutation($athleteId: ID!, $reason: String!, $note: String, $idempotencyKey: String!) { markProspectLost(athleteId: $athleteId, reason: $reason, note: $note, idempotencyKey: $idempotencyKey) }',
+  reopenProspect: 'mutation($athleteId: ID!, $note: String!, $idempotencyKey: String!) { reopenProspect(athleteId: $athleteId, note: $note, idempotencyKey: $idempotencyKey) }',
   generateAutoTasks: 'mutation { generateAutoTasks }',
 }
 

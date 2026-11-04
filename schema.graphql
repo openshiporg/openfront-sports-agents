@@ -1181,6 +1181,10 @@ type Athlete {
   image: String
   eligibility: JSON
   isPublic: Boolean
+  lostReason: AthleteLostReasonType
+  lostNote: String
+  lostFromStage: String
+  lostAt: DateTime
   recruitingStage: AthleteRecruitingStageType
   contactAllowedFrom: DateTime
   representationAgreement_athlete(where: RepresentationAgreementWhereInput! = {}, orderBy: [RepresentationAgreementOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: RepresentationAgreementWhereUniqueInput): [RepresentationAgreement!]
@@ -1237,6 +1241,16 @@ enum AthleteStatusType {
   lost
 }
 
+enum AthleteLostReasonType {
+  signed_elsewhere
+  declined
+  unresponsive
+  ineligible
+  compliance
+  timing
+  other
+}
+
 enum AthleteRecruitingStageType {
   identified
   contacted
@@ -1273,6 +1287,10 @@ input AthleteWhereInput {
   marketabilityNotes: StringFilter
   image: StringFilter
   isPublic: BooleanFilter
+  lostReason: AthleteLostReasonTypeNullableFilter
+  lostNote: StringFilter
+  lostFromStage: StringFilter
+  lostAt: DateTimeNullableFilter
   recruitingStage: AthleteRecruitingStageTypeNullableFilter
   contactAllowedFrom: DateTimeNullableFilter
   representationAgreement_athlete: RepresentationAgreementManyRelationFilter
@@ -1316,6 +1334,13 @@ input AthleteStatusTypeNullableFilter {
   in: [AthleteStatusType!]
   notIn: [AthleteStatusType!]
   not: AthleteStatusTypeNullableFilter
+}
+
+input AthleteLostReasonTypeNullableFilter {
+  equals: AthleteLostReasonType
+  in: [AthleteLostReasonType!]
+  notIn: [AthleteLostReasonType!]
+  not: AthleteLostReasonTypeNullableFilter
 }
 
 input AthleteRecruitingStageTypeNullableFilter {
@@ -1370,6 +1395,10 @@ input AthleteOrderByInput {
   marketabilityNotes: OrderDirection
   image: OrderDirection
   isPublic: OrderDirection
+  lostReason: OrderDirection
+  lostNote: OrderDirection
+  lostFromStage: OrderDirection
+  lostAt: OrderDirection
   recruitingStage: OrderDirection
   contactAllowedFrom: OrderDirection
   createdAt: OrderDirection
@@ -1397,6 +1426,10 @@ input AthleteUpdateInput {
   image: String
   eligibility: JSON
   isPublic: Boolean
+  lostReason: AthleteLostReasonType
+  lostNote: String
+  lostFromStage: String
+  lostAt: DateTime
   recruitingStage: AthleteRecruitingStageType
   contactAllowedFrom: DateTime
   representationAgreement_athlete: RepresentationAgreementRelateToManyForUpdateInput
@@ -1481,6 +1514,10 @@ input AthleteCreateInput {
   image: String
   eligibility: JSON
   isPublic: Boolean
+  lostReason: AthleteLostReasonType
+  lostNote: String
+  lostFromStage: String
+  lostAt: DateTime
   recruitingStage: AthleteRecruitingStageType
   contactAllowedFrom: DateTime
   representationAgreement_athlete: RepresentationAgreementRelateToManyForCreateInput
@@ -4691,6 +4728,8 @@ type Mutation {
   draftPlayingContract(athleteId: ID!, teamId: ID!, contractType: String!, startSeason: String!, endSeason: String!, totalValueCents: Int!, guaranteedCents: Int!, signingBonusCents: Int!, idempotencyKey: String!): AgencyJSON!
   draftEndorsementDeal(athleteId: ID!, brandId: ID!, termStart: String!, termEnd: String!, totalValueCents: Int!, paymentTerms: String, exclusivityCategory: String, territory: String, idempotencyKey: String!): AgencyJSON!
   createProspect(fullName: String!, sport: String!, league: String!, position: String, email: String, contactAllowedFrom: String, leadAgentId: ID, idempotencyKey: String!): AgencyJSON!
+  markProspectLost(athleteId: ID!, reason: String!, note: String, idempotencyKey: String!): AgencyJSON!
+  reopenProspect(athleteId: ID!, note: String!, idempotencyKey: String!): AgencyJSON!
   reassignLeadAgent(athleteId: ID!, agentId: ID!, reason: String!, idempotencyKey: String!): AgencyJSON!
   submitInquiry(athleteId: ID!, name: String!, email: String!, organization: String, message: String!, idempotencyKey: String!): AgencyJSON!
   payCommissionInvoice(invoiceId: ID!, proof: String, idempotencyKey: String!): AgencyJSON!

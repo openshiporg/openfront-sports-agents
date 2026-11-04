@@ -1,6 +1,7 @@
 import {permissions} from '../access';
 import {command,audit,lockTransactionKey} from '../lib/agencyCommand';
 import {validateProspect} from '../lib/workload';
+import {validateLost} from '../lib/prospect';
 import {getOrCreateIdempotencyAttempt,updateIdempotencyAttempt} from '../utils/idempotency';
 
 export const prospectMutations={
@@ -38,8 +39,40 @@ export const prospectMutations={
   });
  },
 };
+export const lostMutations={
+ /** Closes a prospect with a listed reason. Remembers the stage so a manager can reopen it. */
+ async markProspectLost(_:unknown,a:any,c:any){
+  return command(c,'canManageAthletes',String(a.athleteId||''),'markProspectLost',a,async tx=>{
+   const l=validateLost(a);
+   const before=await tx.athlete.findUnique({where:{id:a.athleteId}});
+   if(!['prospect','recruiting'].includes(before.status))throw new Error('Only open prospects can be marked lost');
+   const swapped=await tx.athlete.updateMany({where:{id:before.id,status:before.status},data:{status:'lost',recruitingStage:'lost',lostReason:l.reason,lostNote:l.note,lostFromStage:before.recruitingStage||'identified',lostAt:new Date()}});
+   if(swapped.count!==1)throw new Error('Record changed concurrently');
+   const after=await tx.athlete.findUnique({where:{id:before.id}});
+   await audit(tx,c,'prospect.lost','Athlete',before.id,{status:before.status,recruitingStage:before.recruitingStage},{status:'lost',reason:l.reason,note:l.note,fromStage:after.lostFromStage},a.idempotencyKey);
+   return after;
+  });
+ },
+ /** Managers return a lost prospect to the stage it left. The loss stays in the audit trail. */
+ async reopenProspect(_:unknown,a:any,c:any){
+  if(!c.session?.data?.role?.canViewAllClients)throw new Error('Not authorized');
+  return command(c,'canManageAthletes',String(a.athleteId||''),'reopenProspect',a,async tx=>{
+   const note=String(a.note??'').trim();if(!note||note.length>500)throw new Error('A note up to 500 characters is required');
+   const before=await tx.athlete.findUnique({where:{id:a.athleteId}});
+   if(before.status!=='lost')throw new Error('Only lost prospects can be reopened');
+   const stage=before.lostFromStage&&before.lostFromStage!=='lost'&&before.lostFromStage!=='signed'?before.lostFromStage:'identified';
+   const swapped=await tx.athlete.updateMany({where:{id:before.id,status:'lost'},data:{status:stage==='identified'?'prospect':'recruiting',recruitingStage:stage,lostReason:'other',lostNote:'',lostFromStage:'',lostAt:null}});
+   if(swapped.count!==1)throw new Error('Record changed concurrently');
+   const after=await tx.athlete.findUnique({where:{id:before.id}});
+   await audit(tx,c,'prospect.reopened','Athlete',before.id,{lostReason:before.lostReason,lostNote:before.lostNote,lostAt:before.lostAt},{status:after.status,recruitingStage:stage,note},a.idempotencyKey);
+   return after;
+  });
+ },
+};
 export const prospectTypeDefs=`
  extend type Mutation {
   createProspect(fullName:String!,sport:String!,league:String!,position:String,email:String,contactAllowedFrom:String,leadAgentId:ID,idempotencyKey:String!):AgencyJSON!
+  markProspectLost(athleteId:ID!,reason:String!,note:String,idempotencyKey:String!):AgencyJSON!
+  reopenProspect(athleteId:ID!,note:String!,idempotencyKey:String!):AgencyJSON!
   reassignLeadAgent(athleteId:ID!,agentId:ID!,reason:String!,idempotencyKey:String!):AgencyJSON!
  }`;

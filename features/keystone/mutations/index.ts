@@ -9,7 +9,7 @@ import {refundTypeDefs,refundMutations} from './refunds';
 import {crmTypeDefs,crmMutations} from './crm';
 import {documentTypeDefs,documentMutations} from './documents';
 import {termsTypeDefs,termsMutations} from './terms';
-import {prospectTypeDefs,prospectMutations} from './prospects';
+import {prospectTypeDefs,prospectMutations,lostMutations} from './prospects';
 import {draftingTypeDefs,draftingMutations} from './drafting';
 import {reconcileTypeDefs,reconcileQueries,reconcileMutations} from './reconcile';
 import {portalTypeDefs,portalQueries,portalMutations} from './portal';
@@ -30,7 +30,7 @@ export function extendGraphqlSchema(baseSchema: GraphQLSchema) {
       Query: { 
         redirectToInit, ...agencyQueries, ...portalQueries,...reconcileQueries,
       },
-      Mutation: {...agencyMutations,...refundMutations,...crmMutations,...documentMutations,...termsMutations,...reconcileMutations,...draftingMutations,...prospectMutations,...portalMutations,ensureOnboardingRecord,updateActiveUser,requestManagerApproval,decideManagerApproval},
+      Mutation: {...agencyMutations,...refundMutations,...crmMutations,...documentMutations,...termsMutations,...reconcileMutations,...draftingMutations,...prospectMutations,...lostMutations,...portalMutations,ensureOnboardingRecord,updateActiveUser,requestManagerApproval,decideManagerApproval},
     },
   });
 }
