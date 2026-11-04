@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { LogInteraction } from '../components/LogInteraction'
 import { DraftAgreement } from '../components/DraftAgreement'
 import { notFound } from 'next/navigation'
 import { PlatformPage, Section, Row, Cell, Empty, ErrorState } from '../../components/Section'
@@ -124,6 +125,7 @@ export default async function ClientDetailPage({ params, searchParams }: { param
       )}
       {tab === 'timeline' && (
         <Section title="Interactions">
+          <LogInteraction athleteId={a.id} />
           {a.interaction_athlete.length ? a.interaction_athlete.map((i: any) => (
             <Row key={i.id}><Cell className="font-mono text-xs uppercase">{i.kind}</Cell><Cell>{i.summary}</Cell><Cell muted>{day(i.occurredAt)}</Cell></Row>
           )) : <Empty>No interactions</Empty>}

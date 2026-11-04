@@ -16,6 +16,7 @@ export default async function TasksPage() {
             <Cell className="font-medium"><StatusLabel value={t.priority} className="mr-2" />{t.title}</Cell>
             <Cell muted>{[t.athlete?.fullName, t.assignee?.name].filter(Boolean).join(' · ')}</Cell>
             <Cell muted>{day(t.dueAt)}</Cell>
+            <CommandButton operation="completeTask" args={{ taskId: t.id }} label="Complete" />
           </Row>
         )) : <Empty>No open tasks</Empty>}
       </Section>

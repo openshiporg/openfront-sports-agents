@@ -21,6 +21,8 @@ const OPERATIONS: Record<string, string> = {
   recordIncentiveEarned: 'mutation($incentiveId: ID!, $evidence: String!, $dueAt: String!, $idempotencyKey: String!) { recordIncentiveEarned(incentiveId: $incentiveId, evidence: $evidence, dueAt: $dueAt, idempotencyKey: $idempotencyKey) }',
   generatePaymentSchedule: 'mutation($contractId: ID, $dealId: ID, $idempotencyKey: String!) { generatePaymentSchedule(contractId: $contractId, dealId: $dealId, idempotencyKey: $idempotencyKey) }',
   refundInvoicePayment: 'mutation($paymentId: ID!, $amountCents: Int!, $reason: String!, $approvalId: ID, $idempotencyKey: String!) { refundInvoicePayment(paymentId: $paymentId, amountCents: $amountCents, reason: $reason, approvalId: $approvalId, idempotencyKey: $idempotencyKey) }',
+  logInteraction: 'mutation($athleteId: ID!, $kind: String!, $summary: String!, $occurredAt: String, $nextStepAt: String, $idempotencyKey: String!) { logInteraction(athleteId: $athleteId, kind: $kind, summary: $summary, occurredAt: $occurredAt, nextStepAt: $nextStepAt, idempotencyKey: $idempotencyKey) }',
+  completeTask: 'mutation($taskId: ID!, $idempotencyKey: String!) { completeTask(taskId: $taskId, idempotencyKey: $idempotencyKey) }',
   generateAutoTasks: 'mutation { generateAutoTasks }',
 }
 
