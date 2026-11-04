@@ -10,29 +10,32 @@ import { runAgencyCommand } from '../../actions/agency'
 
 const KINDS = ['call', 'meeting', 'email', 'text', 'visit', 'note']
 
-export function LogInteraction({ athleteId }: { athleteId: string }) {
+export function LogInteraction({ athleteId, contactAllowedFrom }: { athleteId: string; contactAllowedFrom?: string | null }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [kind, setKind] = useState('call')
   const [summary, setSummary] = useState('')
   const [next, setNext] = useState<Date | undefined>()
+  const [ack, setAck] = useState(false)
   const [error, setError] = useState('')
   const [pending, start] = useTransition()
   const key = useRef(crypto.randomUUID())
+  const closed = kind !== 'note' && !!contactAllowedFrom && new Date(contactAllowedFrom).getTime() > Date.now()
   if (!open) return <div className="p-3"><Button variant="outline" size="sm" onClick={() => setOpen(true)}>Log interaction</Button></div>
   return <form className="flex flex-col gap-3 p-3" onSubmit={e => {
     e.preventDefault(); setError('')
     start(async () => {
-      const r = await runAgencyCommand('logInteraction', { athleteId, kind, summary, nextStepAt: next?.toISOString(), idempotencyKey: key.current })
+      const r = await runAgencyCommand('logInteraction', { athleteId, kind, summary, nextStepAt: next?.toISOString(), acknowledgeContactWindow: closed && ack, idempotencyKey: key.current })
       if (!r.success) { setError(r.error); key.current = crypto.randomUUID() } else { setOpen(false); setSummary(''); setNext(undefined); key.current = crypto.randomUUID(); router.refresh() }
     })
   }}>
     <div className="inline-flex max-w-full gap-1 overflow-x-auto rounded-lg bg-muted p-1">
       {KINDS.map(k => <button type="button" key={k} onClick={() => setKind(k)} className={`rounded-md px-3 py-1.5 text-sm capitalize ${k === kind ? 'bg-background font-medium shadow-sm' : 'text-muted-foreground'}`}>{k}</button>)}
     </div>
+    {closed && <label className="flex items-start gap-2 rounded-md border border-amber-500/50 p-3 text-sm"><input type="checkbox" className="mt-1" checked={ack} onChange={e => setAck(e.target.checked)} /><span><span className="font-mono text-xs uppercase">Contact window closed</span><br />Opens {format(new Date(contactAllowedFrom!), 'MMM d, yyyy')}. Contact before then may breach recruiting rules. Tick to record it anyway; the entry is flagged in the audit log.</span></label>}
     <label className="text-sm">Summary<Input required maxLength={2000} value={summary} onChange={e => setSummary(e.target.value)} /></label>
     <div className="text-sm">Next step<Popover><PopoverTrigger asChild><Button type="button" variant="outline" className="block">{next ? format(next, 'MMM d, yyyy') : 'No follow-up'}</Button></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={next} onSelect={setNext} disabled={{ before: new Date() }} /></PopoverContent></Popover></div>
-    <div className="flex gap-2"><Button type="submit" size="sm" disabled={pending || !summary.trim()}>{pending ? 'Working' : 'Save interaction'}</Button><Button type="button" variant="ghost" size="sm" onClick={() => setOpen(false)}>Cancel</Button></div>
+    <div className="flex gap-2"><Button type="submit" size="sm" disabled={pending || !summary.trim() || (closed && !ack)}>{pending ? 'Working' : 'Save interaction'}</Button><Button type="button" variant="ghost" size="sm" onClick={() => setOpen(false)}>Cancel</Button></div>
     {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
   </form>
 }

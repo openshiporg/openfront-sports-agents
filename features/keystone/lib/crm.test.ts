@@ -1,9 +1,9 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { crmMutations } from '../mutations/crm'
-function h(task:any={id:'t',status:'open',athleteId:'a',assigneeId:'u'},perm=true,all=false){
+function h(task:any={id:'t',status:'open',athleteId:'a',assigneeId:'u'},perm=true,all=false,from:Date|null=null){
  const w:any={tasks:[],ints:[]};const t:any={...task};
- const tx:any={$executeRaw:async()=>{},athlete:{findUnique:async()=>({id:'a',leadAgentId:'u',supportStaff:[]})},
+ const tx:any={$executeRaw:async()=>{},athlete:{findUnique:async()=>({id:'a',leadAgentId:'u',supportStaff:[],contactAllowedFrom:from})},
   interaction:{create:async({data}:any)=>{const r={id:'i',...data};w.ints.push(r);return r}},
   task:{create:async({data}:any)=>{w.tasks.push(data);return data},findUnique:async()=>t,updateMany:async({data}:any)=>{Object.assign(t,data);return {count:1}}},
   auditEvent:{create:async()=>({})},idempotencyKey:{findUnique:async()=>null,create:async()=>({id:'k'}),update:async()=>({})}};
@@ -16,3 +16,8 @@ test('refuses unauthorized interaction',async()=>{const x=h(undefined,false);awa
 test('completes athlete task',async()=>{const x=h();await crmMutations.completeTask(null,{taskId:'t',idempotencyKey:'c'},x.c);assert.equal(x.t.status,'completed')})
 test('refuses completed task again',async()=>{const x=h({id:'t',status:'completed',athleteId:'a'});await assert.rejects(()=>crmMutations.completeTask(null,{taskId:'t',idempotencyKey:'c'},x.c),/transition/)})
 test('athlete-less task limited to assignee',async()=>{const x=h({id:'t',status:'open',athleteId:null,assigneeId:'other'});await assert.rejects(()=>crmMutations.completeTask(null,{taskId:'t',idempotencyKey:'c'},x.c),/not found/);const y=h({id:'t',status:'open',athleteId:null,assigneeId:'u'});await crmMutations.completeTask(null,{taskId:'t',idempotencyKey:'c'},y.c);assert.equal(y.t.status,'completed')})
+
+import { contactWindowBreach } from './crm'
+test('window rule: notes never breach, outbound before the opening date does',()=>{const f=new Date('2027-01-10');assert.equal(contactWindowBreach('call',new Date('2027-01-09'),f),true);assert.equal(contactWindowBreach('call',new Date('2027-01-10'),f),false);assert.equal(contactWindowBreach('note',new Date('2027-01-01'),f),false);assert.equal(contactWindowBreach('call',new Date(),null),false)})
+test('closed window refuses unless acknowledged, then records and audits the breach',async()=>{const x=h(undefined,true,false,new Date(Date.now()+5*86400000));await assert.rejects(()=>crmMutations.logInteraction(null,ia,x.c),/Contact window opens/);assert.equal(x.w.ints.length,0);await crmMutations.logInteraction(null,{...ia,acknowledgeContactWindow:true},x.c);assert.equal(x.w.ints.length,1)})
+test('notes are recorded without acknowledgment in a closed window',async()=>{const x=h(undefined,true,false,new Date(Date.now()+5*86400000));await crmMutations.logInteraction(null,{...ia,kind:'note'},x.c);assert.equal(x.w.ints.length,1)})

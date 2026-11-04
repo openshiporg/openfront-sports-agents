@@ -4670,8 +4670,9 @@ type Mutation {
   requestManagerApproval(actionType: String!, targetId: String!, amountCents: Int, reason: String!): AgencyJSON!
   decideManagerApproval(approvalId: ID!, decision: String!): AgencyJSON!
   generateAutoTasks: AgencyJSON!
+  checkRefundStatus(refundId: ID!): AgencyJSON!
   refundInvoicePayment(paymentId: ID!, amountCents: Int!, reason: String!, approvalId: ID, idempotencyKey: String!): AgencyJSON!
-  logInteraction(athleteId: ID!, kind: String!, summary: String!, occurredAt: String, nextStepAt: String, idempotencyKey: String!): AgencyJSON!
+  logInteraction(athleteId: ID!, kind: String!, summary: String!, occurredAt: String, nextStepAt: String, acknowledgeContactWindow: Boolean, idempotencyKey: String!): AgencyJSON!
   completeTask(taskId: ID!, idempotencyKey: String!): AgencyJSON!
   submitInquiry(athleteId: ID!, name: String!, email: String!, organization: String, message: String!, idempotencyKey: String!): AgencyJSON!
   payCommissionInvoice(invoiceId: ID!, proof: String, idempotencyKey: String!): AgencyJSON!

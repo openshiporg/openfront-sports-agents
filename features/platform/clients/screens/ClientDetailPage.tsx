@@ -11,7 +11,7 @@ const TABS = ['overview', 'agreements', 'contracts', 'endorsements', 'payments',
 
 const QUERY = `query ClientDetail($id: ID!) {
   athlete(where: { id: $id }) {
-    id fullName preferredName sport league position status email phone recruitingStage representationStartedAt marketabilityNotes socialHandles followerCounts
+    id fullName preferredName sport league position status email phone recruitingStage representationStartedAt marketabilityNotes socialHandles followerCounts contactAllowedFrom
     team { name } leadAgent { name } supportStaff { name }
     representationAgreement_athlete(orderBy: { createdAt: desc }) { id scope status playingCommissionBps marketingCommissionBps capBps effectiveAt expiresAt }
     playingContract_athlete(orderBy: { createdAt: desc }) { id status startSeason endSeason totalValueCents commissionBps team { name } }
@@ -125,7 +125,7 @@ export default async function ClientDetailPage({ params, searchParams }: { param
       )}
       {tab === 'timeline' && (
         <Section title="Interactions">
-          <LogInteraction athleteId={a.id} />
+          <LogInteraction athleteId={a.id} contactAllowedFrom={a.contactAllowedFrom} />
           {a.interaction_athlete.length ? a.interaction_athlete.map((i: any) => (
             <Row key={i.id}><Cell className="font-mono text-xs uppercase">{i.kind}</Cell><Cell>{i.summary}</Cell><Cell muted>{day(i.occurredAt)}</Cell></Row>
           )) : <Empty>No interactions</Empty>}
