@@ -7,6 +7,7 @@ import { DraftAgreement } from '../components/DraftAgreement'
 import { notFound } from 'next/navigation'
 import { PlatformPage, Section, Row, Cell, Empty, ErrorState } from '../../components/Section'
 import { StatusLabel } from '../../components/StatusLabel'
+import { AgreementLifecycle } from '../components/AgreementLifecycle'
 import { ConversionChecklist } from '../components/ConversionChecklist'
 import { ReassignAgent } from '../components/ReassignAgent'
 import { CommandButton } from '../../components/CommandButton'
@@ -18,7 +19,7 @@ const QUERY = `query ClientDetail($id: ID!) {
   athlete(where: { id: $id }) {
     id fullName preferredName sport league position status email phone recruitingStage representationStartedAt marketabilityNotes socialHandles followerCounts contactAllowedFrom
     team { name } leadAgent { id name } supportStaff { name }
-    representationAgreement_athlete(orderBy: { createdAt: desc }) { id scope status playingCommissionBps marketingCommissionBps capBps effectiveAt expiresAt }
+    representationAgreement_athlete(orderBy: { createdAt: desc }) { id scope status playingCommissionBps marketingCommissionBps capBps effectiveAt expiresAt terminationNoticeDays }
     playingContract_athlete(orderBy: { createdAt: desc }) { id status startSeason endSeason totalValueCents commissionBps team { name } }
     endorsementDeal_athlete(orderBy: { createdAt: desc }) { id status termStart termEnd totalValueCents commissionBps exclusivityCategory brand { name } }
     scheduledPayment_athlete(orderBy: { dueAt: asc }, take: 60) { id status dueAt grossCents commissionBps commissionCents }
@@ -75,6 +76,7 @@ export default async function ClientDetailPage({ params, searchParams }: { param
               <Cell muted>Playing {(r.playingCommissionBps / 100).toFixed(2)}% · Marketing {(r.marketingCommissionBps / 100).toFixed(2)}% · Cap {(r.capBps / 100).toFixed(2)}%</Cell>
               <Cell muted>{day(r.effectiveAt)} to {day(r.expiresAt)}</Cell>
               {['draft', 'sent'].includes(r.status) && <CommandButton operation="signRepresentationAgreement" args={{ agreementId: r.id }} label="Record signed" />}
+              {['signed', 'filed_with_union', 'active'].includes(r.status) && <AgreementLifecycle agreementId={r.id} expiresAt={r.expiresAt} noticeDays={r.terminationNoticeDays} />}
             </Row>
           )) : <Empty>No agreements</Empty>}
         </Section>

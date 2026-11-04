@@ -4731,6 +4731,9 @@ type Mutation {
   markProspectLost(athleteId: ID!, reason: String!, note: String, idempotencyKey: String!): AgencyJSON!
   reopenProspect(athleteId: ID!, note: String!, idempotencyKey: String!): AgencyJSON!
   reassignLeadAgent(athleteId: ID!, agentId: ID!, reason: String!, idempotencyKey: String!): AgencyJSON!
+  terminateAgreement(agreementId: ID!, noticeGivenAt: String!, reason: String!, idempotencyKey: String!): AgencyJSON!
+  renewAgreement(agreementId: ID!, expiresAt: String!, reason: String!, idempotencyKey: String!): AgencyJSON!
+  lapseAgreement(agreementId: ID!, idempotencyKey: String!): AgencyJSON!
   convertProspectToClient(athleteId: ID!, idempotencyKey: String!): AgencyJSON!
   submitInquiry(athleteId: ID!, name: String!, email: String!, organization: String, message: String!, idempotencyKey: String!): AgencyJSON!
   payCommissionInvoice(invoiceId: ID!, proof: String, idempotencyKey: String!): AgencyJSON!

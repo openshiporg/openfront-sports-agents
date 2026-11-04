@@ -42,6 +42,9 @@ const OPERATIONS: Record<string, string> = {
   markProspectLost: 'mutation($athleteId: ID!, $reason: String!, $note: String, $idempotencyKey: String!) { markProspectLost(athleteId: $athleteId, reason: $reason, note: $note, idempotencyKey: $idempotencyKey) }',
   reopenProspect: 'mutation($athleteId: ID!, $note: String!, $idempotencyKey: String!) { reopenProspect(athleteId: $athleteId, note: $note, idempotencyKey: $idempotencyKey) }',
   convertProspectToClient: 'mutation($athleteId: ID!, $idempotencyKey: String!) { convertProspectToClient(athleteId: $athleteId, idempotencyKey: $idempotencyKey) }',
+  terminateAgreement: 'mutation($agreementId: ID!, $noticeGivenAt: String!, $reason: String!, $idempotencyKey: String!) { terminateAgreement(agreementId: $agreementId, noticeGivenAt: $noticeGivenAt, reason: $reason, idempotencyKey: $idempotencyKey) }',
+  renewAgreement: 'mutation($agreementId: ID!, $expiresAt: String!, $reason: String!, $idempotencyKey: String!) { renewAgreement(agreementId: $agreementId, expiresAt: $expiresAt, reason: $reason, idempotencyKey: $idempotencyKey) }',
+  lapseAgreement: 'mutation($agreementId: ID!, $idempotencyKey: String!) { lapseAgreement(agreementId: $agreementId, idempotencyKey: $idempotencyKey) }',
   generateAutoTasks: 'mutation { generateAutoTasks }',
 }
 
