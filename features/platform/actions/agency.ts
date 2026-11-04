@@ -45,6 +45,8 @@ const OPERATIONS: Record<string, string> = {
   terminateAgreement: 'mutation($agreementId: ID!, $noticeGivenAt: String!, $reason: String!, $idempotencyKey: String!) { terminateAgreement(agreementId: $agreementId, noticeGivenAt: $noticeGivenAt, reason: $reason, idempotencyKey: $idempotencyKey) }',
   renewAgreement: 'mutation($agreementId: ID!, $expiresAt: String!, $reason: String!, $idempotencyKey: String!) { renewAgreement(agreementId: $agreementId, expiresAt: $expiresAt, reason: $reason, idempotencyKey: $idempotencyKey) }',
   lapseAgreement: 'mutation($agreementId: ID!, $idempotencyKey: String!) { lapseAgreement(agreementId: $agreementId, idempotencyKey: $idempotencyKey) }',
+  addAgentCertification: 'mutation($userId: ID, $body: String!, $number: String!, $issuedAt: String!, $expiresAt: String!, $idempotencyKey: String!) { addAgentCertification(userId: $userId, body: $body, number: $number, issuedAt: $issuedAt, expiresAt: $expiresAt, idempotencyKey: $idempotencyKey) }',
+  renewAgentCertification: 'mutation($certificationId: ID!, $expiresAt: String!, $reason: String!, $idempotencyKey: String!) { renewAgentCertification(certificationId: $certificationId, expiresAt: $expiresAt, reason: $reason, idempotencyKey: $idempotencyKey) }',
   generateAutoTasks: 'mutation { generateAutoTasks }',
 }
 
