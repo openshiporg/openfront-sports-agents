@@ -29,7 +29,7 @@ export default async function EndorsementsPage({ searchParams }: { searchParams:
           <Section key={s} title={s[0].toUpperCase() + s.slice(1)} hint={String(rows.length)}>
             {rows.map((d: any) => (
               <Row key={d.id}>
-                <Cell className="font-medium"><StatusLabel value={d.status} className="mr-2" />{d.athlete?.fullName} <span className="font-normal text-muted-foreground">for {d.brand?.name}</span></Cell>
+                <Cell className="font-medium"><StatusLabel value={d.status} className="mr-2" /><Link href={`/dashboard/platform/endorsements/${d.id}`} className="underline-offset-4 hover:underline">{d.athlete?.fullName}</Link> <span className="font-normal text-muted-foreground">for {d.brand?.name}</span></Cell>
                 <Cell muted>{d.exclusivityCategory} · {day(d.termStart)} to {day(d.termEnd)} · {d.owner?.name}</Cell>
                 <Cell className="tabular-nums">{money(d.totalValueCents, d.currencyCode)}</Cell>
                 {['prospect', 'negotiating', 'signed'].includes(d.status) && (d.blocked ? <RequestApprovalButton actionType="exclusivity_override" targetId={d.id} label="Request override" /> : <CommandButton operation="activateEndorsementDeal" args={{ dealId: d.id }} label="Activate" />)}

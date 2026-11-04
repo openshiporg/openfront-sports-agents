@@ -36,4 +36,5 @@ export const Athlete = domainList({
     clientTrustEntry_athlete: rel("ClientTrustEntry.athlete", true),
     document_athlete: rel("Document.athlete", true),
     task_athlete: rel("Task.athlete", true),
+    amendment_athlete: rel("Amendment.athlete", true),
 }, "canManageAthletes", 'self', false);

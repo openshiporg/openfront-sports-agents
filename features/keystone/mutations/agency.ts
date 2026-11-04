@@ -2,6 +2,7 @@ import {permissions} from '../access';
 import {command,audit,transition,humanCode,authorizeAthlete} from '../lib/agencyCommand';
 import {applyInvoiceReceipt} from '../lib/invoiceReceipt';
 import {consumeManagerApproval} from '../utils/managerApproval';
+import {paymentDates} from '../lib/terms';
 import {commission,allocateCommission,installmentAmounts,trustBalance,exactReversal} from '../lib/commission';
 async function locate(context:any,model:string,id:string,include:any={}){if(!context.session)throw new Error('Not authorized');const row=await context.prisma[model].findUnique({where:{id},include});if(!row)throw new Error('Record not found');return row;}
 export const agencyMutations = {
@@ -41,7 +42,7 @@ export const agencyMutations = {
  const current=await tx[a.contractId?'playingContract':'endorsementDeal'].findUnique({where:{id:row.id}});if(!['signed','active'].includes(current.status))throw new Error('Signed source required');
  const periods=a.contractId?await tx.contractYear.findMany({where:{contractId:row.id}}):[{id:row.id,baseSalaryCents:current.totalValueCents,payPeriods:1,season:new Date(current.termStart||Date.now()).getUTCFullYear().toString()}];
  const rows:any[]=[];for(const year of periods){const amounts=installmentAmounts(a.contractId?year.baseSalaryCents+year.rosterBonusCents+year.workoutBonusCents:year.baseSalaryCents,year.payPeriods);for(let i=0;i<amounts.length;i++){
- const sourceKey=(a.contractId?'contract:':'deal:')+year.id+':'+i;const dueAt=a.contractId?new Date(Date.UTC(Number(year.season),10,1+i*7)):current.termStart||new Date();
+ const sourceKey=(a.contractId?'contract:':'deal:')+year.id+':'+i;const dueAt=a.contractId?((year.firstPaymentAt&&paymentDates(year.paySchedule,year.firstPaymentAt,amounts.length)[i])||new Date(Date.UTC(Number(year.season),10,1+i*7))):current.termStart||new Date();
  rows.push({sourceKey,athleteId:row.athleteId,...(a.contractId?{contractYearId:year.id}:{endorsementDealId:row.id}),dueAt,grossCents:amounts[i],commissionBps:current.commissionBps,currencyCode:current.currencyCode,status:'scheduled'});}}
  // Idempotent by source key: existing periods are skipped, never duplicated.
  const created=await tx.scheduledPayment.createMany({data:rows,skipDuplicates:true});const records={length:created.count};

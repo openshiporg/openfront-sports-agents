@@ -32,6 +32,7 @@ model User {
   document_uploadedBy              Document[]                @relation("Document_uploadedBy")
   task_assignee                    Task[]                    @relation("Task_assignee")
   auditEvent_actor                 AuditEvent[]              @relation("AuditEvent_actor")
+  amendment_appliedBy              Amendment[]               @relation("Amendment_appliedBy")
   requestedApprovals               ManagerApproval[]         @relation("ManagerApproval_requestedBy")
   approvedApprovals                ManagerApproval[]         @relation("ManagerApproval_approvedBy")
   onboardingStatus                 UserOnboardingStatusType? @default(not_started)
@@ -201,6 +202,7 @@ model Athlete {
   clientTrustEntry_athlete        ClientTrustEntry[]          @relation("ClientTrustEntry_athlete")
   document_athlete                Document[]                  @relation("Document_athlete")
   task_athlete                    Task[]                      @relation("Task_athlete")
+  amendment_athlete               Amendment[]                 @relation("Amendment_athlete")
   createdAt                       DateTime                    @default(now())
   updatedAt                       DateTime                    @default(now()) @updatedAt
 
@@ -311,6 +313,7 @@ model PlayingContract {
   incentive_contract        Incentive[]                      @relation("Incentive_contract")
   document_contract         Document[]                       @relation("Document_contract")
   task_contract             Task[]                           @relation("Task_contract")
+  amendment_contract        Amendment[]                      @relation("Amendment_contract")
   createdAt                 DateTime                         @default(now())
   updatedAt                 DateTime                         @default(now()) @updatedAt
 
@@ -329,6 +332,7 @@ model ContractYear {
   guaranteedCents               Int?                         @default(0)
   rosterBonusCents              Int?                         @default(0)
   workoutBonusCents             Int?                         @default(0)
+  firstPaymentAt                DateTime?
   payPeriods                    Int?                         @default(17)
   paySchedule                   ContractYearPayScheduleType? @default(game_checks)
   currencyCode                  String                       @default("USD")
@@ -381,6 +385,7 @@ model EndorsementDeal {
   agentSplit_deal                  AgentSplit[]               @relation("AgentSplit_deal")
   document_deal                    Document[]                 @relation("Document_deal")
   task_deal                        Task[]                     @relation("Task_deal")
+  amendment_deal                   Amendment[]                @relation("Amendment_deal")
   createdAt                        DateTime                   @default(now())
   updatedAt                        DateTime                   @default(now()) @updatedAt
 
@@ -656,6 +661,29 @@ model AuditEvent {
 
   @@index([actorId])
   @@index([requestId])
+}
+
+model Amendment {
+  id          String             @id @default(cuid())
+  athlete     Athlete?           @relation("Amendment_athlete", fields: [athleteId], references: [id])
+  athleteId   String?            @map("athlete")
+  contract    PlayingContract?   @relation("Amendment_contract", fields: [contractId], references: [id])
+  contractId  String?            @map("contract")
+  deal        EndorsementDeal?   @relation("Amendment_deal", fields: [dealId], references: [id])
+  dealId      String?            @map("deal")
+  kind        AmendmentKindType? @default(reschedule_payment)
+  reason      String             @default("")
+  before      Json?
+  after       Json?
+  appliedBy   User?              @relation("Amendment_appliedBy", fields: [appliedById], references: [id])
+  appliedById String?            @map("appliedBy")
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @default(now()) @updatedAt
+
+  @@index([athleteId])
+  @@index([contractId])
+  @@index([dealId])
+  @@index([appliedById])
 }
 
 model PaymentProvider {
@@ -1024,6 +1052,13 @@ enum TaskPriorityType {
   normal
   high
   urgent
+}
+
+enum AmendmentKindType {
+  reschedule_payment
+  extend_deal_term
+  move_deliverable
+  add_deliverable
 }
 
 enum PaymentCollectionDescriptionType {

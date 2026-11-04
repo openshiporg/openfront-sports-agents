@@ -7,8 +7,9 @@ export const ContractYear = domainList({
     guaranteedCents: cents(),
     rosterBonusCents: cents(),
     workoutBonusCents: cents(),
+    firstPaymentAt: timestamp(),
     payPeriods: integer({defaultValue:17,validation:{min:1,max:366}}),
     paySchedule: state(['game_checks', 'semi_monthly', 'lump_sum']),
     currencyCode: currencyCode(),
     scheduledPayment_contractYear: rel("ScheduledPayment.contractYear", true),
-}, "canManageContracts", 'contract.athlete', false);
+}, "canManageContracts", 'contract.athlete', true);

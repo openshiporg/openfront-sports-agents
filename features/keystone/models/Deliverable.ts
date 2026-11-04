@@ -9,4 +9,4 @@ export const Deliverable = domainList({
     proofLink: text(),
     proof: rel("Document.deliverable_proof", false),
     notes: text(),
-}, "canManageEndorsements", 'deal.athlete', false);
+}, "canManageEndorsements", 'deal.athlete', true);

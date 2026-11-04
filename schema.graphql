@@ -35,6 +35,8 @@ type User {
   task_assigneeCount(where: TaskWhereInput! = {}): Int
   auditEvent_actor(where: AuditEventWhereInput! = {}, orderBy: [AuditEventOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: AuditEventWhereUniqueInput): [AuditEvent!]
   auditEvent_actorCount(where: AuditEventWhereInput! = {}): Int
+  amendment_appliedBy(where: AmendmentWhereInput! = {}, orderBy: [AmendmentOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: AmendmentWhereUniqueInput): [Amendment!]
+  amendment_appliedByCount(where: AmendmentWhereInput! = {}): Int
   requestedApprovals(where: ManagerApprovalWhereInput! = {}, orderBy: [ManagerApprovalOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: ManagerApprovalWhereUniqueInput): [ManagerApproval!]
   requestedApprovalsCount(where: ManagerApprovalWhereInput! = {}): Int
   approvedApprovals(where: ManagerApprovalWhereInput! = {}, orderBy: [ManagerApprovalOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: ManagerApprovalWhereUniqueInput): [ManagerApproval!]
@@ -85,6 +87,7 @@ input UserWhereInput {
   document_uploadedBy: DocumentManyRelationFilter
   task_assignee: TaskManyRelationFilter
   auditEvent_actor: AuditEventManyRelationFilter
+  amendment_appliedBy: AmendmentManyRelationFilter
   requestedApprovals: ManagerApprovalManyRelationFilter
   approvedApprovals: ManagerApprovalManyRelationFilter
   onboardingStatus: UserOnboardingStatusTypeNullableFilter
@@ -200,6 +203,12 @@ input AuditEventManyRelationFilter {
   none: AuditEventWhereInput
 }
 
+input AmendmentManyRelationFilter {
+  every: AmendmentWhereInput
+  some: AmendmentWhereInput
+  none: AmendmentWhereInput
+}
+
 input ManagerApprovalManyRelationFilter {
   every: ManagerApprovalWhereInput
   some: ManagerApprovalWhereInput
@@ -273,6 +282,7 @@ input UserUpdateInput {
   document_uploadedBy: DocumentRelateToManyForUpdateInput
   task_assignee: TaskRelateToManyForUpdateInput
   auditEvent_actor: AuditEventRelateToManyForUpdateInput
+  amendment_appliedBy: AmendmentRelateToManyForUpdateInput
   requestedApprovals: ManagerApprovalRelateToManyForUpdateInput
   approvedApprovals: ManagerApprovalRelateToManyForUpdateInput
   onboardingStatus: UserOnboardingStatusType
@@ -320,7 +330,6 @@ input InteractionRelateToManyForUpdateInput {
 input EndorsementDealRelateToManyForUpdateInput {
   disconnect: [EndorsementDealWhereUniqueInput!]
   set: [EndorsementDealWhereUniqueInput!]
-  create: [EndorsementDealCreateInput!]
   connect: [EndorsementDealWhereUniqueInput!]
 }
 
@@ -355,6 +364,12 @@ input AuditEventRelateToManyForUpdateInput {
   connect: [AuditEventWhereUniqueInput!]
 }
 
+input AmendmentRelateToManyForUpdateInput {
+  disconnect: [AmendmentWhereUniqueInput!]
+  set: [AmendmentWhereUniqueInput!]
+  connect: [AmendmentWhereUniqueInput!]
+}
+
 input ManagerApprovalRelateToManyForUpdateInput {
   disconnect: [ManagerApprovalWhereUniqueInput!]
   set: [ManagerApprovalWhereUniqueInput!]
@@ -386,6 +401,7 @@ input UserCreateInput {
   document_uploadedBy: DocumentRelateToManyForCreateInput
   task_assignee: TaskRelateToManyForCreateInput
   auditEvent_actor: AuditEventRelateToManyForCreateInput
+  amendment_appliedBy: AmendmentRelateToManyForCreateInput
   requestedApprovals: ManagerApprovalRelateToManyForCreateInput
   approvedApprovals: ManagerApprovalRelateToManyForCreateInput
   onboardingStatus: UserOnboardingStatusType
@@ -422,7 +438,6 @@ input InteractionRelateToManyForCreateInput {
 }
 
 input EndorsementDealRelateToManyForCreateInput {
-  create: [EndorsementDealCreateInput!]
   connect: [EndorsementDealWhereUniqueInput!]
 }
 
@@ -445,6 +460,10 @@ input TaskRelateToManyForCreateInput {
 
 input AuditEventRelateToManyForCreateInput {
   connect: [AuditEventWhereUniqueInput!]
+}
+
+input AmendmentRelateToManyForCreateInput {
+  connect: [AmendmentWhereUniqueInput!]
 }
 
 input ManagerApprovalRelateToManyForCreateInput {
@@ -1117,7 +1136,6 @@ input TeamUpdateInput {
 input PlayingContractRelateToManyForUpdateInput {
   disconnect: [PlayingContractWhereUniqueInput!]
   set: [PlayingContractWhereUniqueInput!]
-  create: [PlayingContractCreateInput!]
   connect: [PlayingContractWhereUniqueInput!]
 }
 
@@ -1137,7 +1155,6 @@ input TeamCreateInput {
 }
 
 input PlayingContractRelateToManyForCreateInput {
-  create: [PlayingContractCreateInput!]
   connect: [PlayingContractWhereUniqueInput!]
 }
 
@@ -1192,6 +1209,8 @@ type Athlete {
   document_athleteCount(where: DocumentWhereInput! = {}): Int
   task_athlete(where: TaskWhereInput! = {}, orderBy: [TaskOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: TaskWhereUniqueInput): [Task!]
   task_athleteCount(where: TaskWhereInput! = {}): Int
+  amendment_athlete(where: AmendmentWhereInput! = {}, orderBy: [AmendmentOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: AmendmentWhereUniqueInput): [Amendment!]
+  amendment_athleteCount(where: AmendmentWhereInput! = {}): Int
   createdAt: DateTime
   updatedAt: DateTime
 }
@@ -1269,6 +1288,7 @@ input AthleteWhereInput {
   clientTrustEntry_athlete: ClientTrustEntryManyRelationFilter
   document_athlete: DocumentManyRelationFilter
   task_athlete: TaskManyRelationFilter
+  amendment_athlete: AmendmentManyRelationFilter
   createdAt: DateTimeFilter
   updatedAt: DateTimeFilter
 }
@@ -1392,6 +1412,7 @@ input AthleteUpdateInput {
   clientTrustEntry_athlete: ClientTrustEntryRelateToManyForUpdateInput
   document_athlete: DocumentRelateToManyForUpdateInput
   task_athlete: TaskRelateToManyForUpdateInput
+  amendment_athlete: AmendmentRelateToManyForUpdateInput
   createdAt: DateTime
   updatedAt: DateTime
 }
@@ -1475,6 +1496,7 @@ input AthleteCreateInput {
   clientTrustEntry_athlete: ClientTrustEntryRelateToManyForCreateInput
   document_athlete: DocumentRelateToManyForCreateInput
   task_athlete: TaskRelateToManyForCreateInput
+  amendment_athlete: AmendmentRelateToManyForCreateInput
   createdAt: DateTime
   updatedAt: DateTime
 }
@@ -1966,6 +1988,8 @@ type PlayingContract {
   document_contractCount(where: DocumentWhereInput! = {}): Int
   task_contract(where: TaskWhereInput! = {}, orderBy: [TaskOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: TaskWhereUniqueInput): [Task!]
   task_contractCount(where: TaskWhereInput! = {}): Int
+  amendment_contract(where: AmendmentWhereInput! = {}, orderBy: [AmendmentOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: AmendmentWhereUniqueInput): [Amendment!]
+  amendment_contractCount(where: AmendmentWhereInput! = {}): Int
   createdAt: DateTime
   updatedAt: DateTime
 }
@@ -2017,6 +2041,7 @@ input PlayingContractWhereInput {
   incentive_contract: IncentiveManyRelationFilter
   document_contract: DocumentManyRelationFilter
   task_contract: TaskManyRelationFilter
+  amendment_contract: AmendmentManyRelationFilter
   createdAt: DateTimeFilter
   updatedAt: DateTimeFilter
 }
@@ -2084,6 +2109,7 @@ input PlayingContractUpdateInput {
   incentive_contract: IncentiveRelateToManyForUpdateInput
   document_contract: DocumentRelateToManyForUpdateInput
   task_contract: TaskRelateToManyForUpdateInput
+  amendment_contract: AmendmentRelateToManyForUpdateInput
   createdAt: DateTime
   updatedAt: DateTime
 }
@@ -2097,7 +2123,6 @@ input RepresentationAgreementRelateToOneForUpdateInput {
 input ContractYearRelateToManyForUpdateInput {
   disconnect: [ContractYearWhereUniqueInput!]
   set: [ContractYearWhereUniqueInput!]
-  create: [ContractYearCreateInput!]
   connect: [ContractYearWhereUniqueInput!]
 }
 
@@ -2113,45 +2138,6 @@ input PlayingContractUpdateArgs {
   data: PlayingContractUpdateInput!
 }
 
-input PlayingContractCreateInput {
-  athlete: AthleteRelateToOneForCreateInput
-  team: TeamRelateToOneForCreateInput
-  league: String
-  contractType: PlayingContractContractTypeType
-  signedAt: DateTime
-  startSeason: String
-  endSeason: String
-  totalValueCents: Int
-  guaranteedCents: Int
-  signingBonusCents: Int
-  status: PlayingContractStatusType
-  document: DocumentRelateToOneForCreateInput
-  commissionBps: Int
-  representationAgreement: RepresentationAgreementRelateToOneForCreateInput
-  currencyCode: String
-  contractYear_contract: ContractYearRelateToManyForCreateInput
-  incentive_contract: IncentiveRelateToManyForCreateInput
-  document_contract: DocumentRelateToManyForCreateInput
-  task_contract: TaskRelateToManyForCreateInput
-  createdAt: DateTime
-  updatedAt: DateTime
-}
-
-input RepresentationAgreementRelateToOneForCreateInput {
-  create: RepresentationAgreementCreateInput
-  connect: RepresentationAgreementWhereUniqueInput
-}
-
-input ContractYearRelateToManyForCreateInput {
-  create: [ContractYearCreateInput!]
-  connect: [ContractYearWhereUniqueInput!]
-}
-
-input IncentiveRelateToManyForCreateInput {
-  create: [IncentiveCreateInput!]
-  connect: [IncentiveWhereUniqueInput!]
-}
-
 type ContractYear {
   id: ID!
   contract: PlayingContract
@@ -2160,6 +2146,7 @@ type ContractYear {
   guaranteedCents: Int
   rosterBonusCents: Int
   workoutBonusCents: Int
+  firstPaymentAt: DateTime
   payPeriods: Int
   paySchedule: ContractYearPayScheduleType
   currencyCode: String
@@ -2190,6 +2177,7 @@ input ContractYearWhereInput {
   guaranteedCents: IntNullableFilter
   rosterBonusCents: IntNullableFilter
   workoutBonusCents: IntNullableFilter
+  firstPaymentAt: DateTimeNullableFilter
   payPeriods: IntNullableFilter
   paySchedule: ContractYearPayScheduleTypeNullableFilter
   currencyCode: StringFilter
@@ -2212,6 +2200,7 @@ input ContractYearOrderByInput {
   guaranteedCents: OrderDirection
   rosterBonusCents: OrderDirection
   workoutBonusCents: OrderDirection
+  firstPaymentAt: OrderDirection
   payPeriods: OrderDirection
   paySchedule: OrderDirection
   currencyCode: OrderDirection
@@ -2226,6 +2215,7 @@ input ContractYearUpdateInput {
   guaranteedCents: Int
   rosterBonusCents: Int
   workoutBonusCents: Int
+  firstPaymentAt: DateTime
   payPeriods: Int
   paySchedule: ContractYearPayScheduleType
   currencyCode: String
@@ -2235,7 +2225,6 @@ input ContractYearUpdateInput {
 }
 
 input PlayingContractRelateToOneForUpdateInput {
-  create: PlayingContractCreateInput
   connect: PlayingContractWhereUniqueInput
   disconnect: Boolean
 }
@@ -2243,26 +2232,6 @@ input PlayingContractRelateToOneForUpdateInput {
 input ContractYearUpdateArgs {
   where: ContractYearWhereUniqueInput!
   data: ContractYearUpdateInput!
-}
-
-input ContractYearCreateInput {
-  contract: PlayingContractRelateToOneForCreateInput
-  season: String
-  baseSalaryCents: Int
-  guaranteedCents: Int
-  rosterBonusCents: Int
-  workoutBonusCents: Int
-  payPeriods: Int
-  paySchedule: ContractYearPayScheduleType
-  currencyCode: String
-  scheduledPayment_contractYear: ScheduledPaymentRelateToManyForCreateInput
-  createdAt: DateTime
-  updatedAt: DateTime
-}
-
-input PlayingContractRelateToOneForCreateInput {
-  create: PlayingContractCreateInput
-  connect: PlayingContractWhereUniqueInput
 }
 
 type Incentive {
@@ -2362,6 +2331,10 @@ input IncentiveCreateInput {
   updatedAt: DateTime
 }
 
+input PlayingContractRelateToOneForCreateInput {
+  connect: PlayingContractWhereUniqueInput
+}
+
 type EndorsementDeal {
   id: ID!
   athlete: Athlete
@@ -2387,6 +2360,8 @@ type EndorsementDeal {
   document_dealCount(where: DocumentWhereInput! = {}): Int
   task_deal(where: TaskWhereInput! = {}, orderBy: [TaskOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: TaskWhereUniqueInput): [Task!]
   task_dealCount(where: TaskWhereInput! = {}): Int
+  amendment_deal(where: AmendmentWhereInput! = {}, orderBy: [AmendmentOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: AmendmentWhereUniqueInput): [Amendment!]
+  amendment_dealCount(where: AmendmentWhereInput! = {}): Int
   createdAt: DateTime
   updatedAt: DateTime
 }
@@ -2427,6 +2402,7 @@ input EndorsementDealWhereInput {
   agentSplit_deal: AgentSplitManyRelationFilter
   document_deal: DocumentManyRelationFilter
   task_deal: TaskManyRelationFilter
+  amendment_deal: AmendmentManyRelationFilter
   createdAt: DateTimeFilter
   updatedAt: DateTimeFilter
 }
@@ -2478,6 +2454,7 @@ input EndorsementDealUpdateInput {
   agentSplit_deal: AgentSplitRelateToManyForUpdateInput
   document_deal: DocumentRelateToManyForUpdateInput
   task_deal: TaskRelateToManyForUpdateInput
+  amendment_deal: AmendmentRelateToManyForUpdateInput
   createdAt: DateTime
   updatedAt: DateTime
 }
@@ -2485,41 +2462,12 @@ input EndorsementDealUpdateInput {
 input DeliverableRelateToManyForUpdateInput {
   disconnect: [DeliverableWhereUniqueInput!]
   set: [DeliverableWhereUniqueInput!]
-  create: [DeliverableCreateInput!]
   connect: [DeliverableWhereUniqueInput!]
 }
 
 input EndorsementDealUpdateArgs {
   where: EndorsementDealWhereUniqueInput!
   data: EndorsementDealUpdateInput!
-}
-
-input EndorsementDealCreateInput {
-  athlete: AthleteRelateToOneForCreateInput
-  brand: BrandRelateToOneForCreateInput
-  owner: UserRelateToOneForCreateInput
-  status: EndorsementDealStatusType
-  termStart: DateTime
-  termEnd: DateTime
-  totalValueCents: Int
-  commissionBps: Int
-  exclusivityCategory: String
-  territory: String
-  document: DocumentRelateToOneForCreateInput
-  paymentTerms: String
-  currencyCode: String
-  deliverable_deal: DeliverableRelateToManyForCreateInput
-  scheduledPayment_endorsementDeal: ScheduledPaymentRelateToManyForCreateInput
-  agentSplit_deal: AgentSplitRelateToManyForCreateInput
-  document_deal: DocumentRelateToManyForCreateInput
-  task_deal: TaskRelateToManyForCreateInput
-  createdAt: DateTime
-  updatedAt: DateTime
-}
-
-input DeliverableRelateToManyForCreateInput {
-  create: [DeliverableCreateInput!]
-  connect: [DeliverableWhereUniqueInput!]
 }
 
 type Deliverable {
@@ -2613,7 +2561,6 @@ input DeliverableUpdateInput {
 }
 
 input EndorsementDealRelateToOneForUpdateInput {
-  create: EndorsementDealCreateInput
   connect: EndorsementDealWhereUniqueInput
   disconnect: Boolean
 }
@@ -2621,24 +2568,6 @@ input EndorsementDealRelateToOneForUpdateInput {
 input DeliverableUpdateArgs {
   where: DeliverableWhereUniqueInput!
   data: DeliverableUpdateInput!
-}
-
-input DeliverableCreateInput {
-  deal: EndorsementDealRelateToOneForCreateInput
-  kind: DeliverableKindType
-  dueAt: DateTime
-  status: DeliverableStatusType
-  completedAt: DateTime
-  proofLink: String
-  proof: DocumentRelateToOneForCreateInput
-  notes: String
-  createdAt: DateTime
-  updatedAt: DateTime
-}
-
-input EndorsementDealRelateToOneForCreateInput {
-  create: EndorsementDealCreateInput
-  connect: EndorsementDealWhereUniqueInput
 }
 
 type ScheduledPayment {
@@ -2752,7 +2681,6 @@ input ScheduledPaymentUpdateInput {
 }
 
 input ContractYearRelateToOneForUpdateInput {
-  create: ContractYearCreateInput
   connect: ContractYearWhereUniqueInput
   disconnect: Boolean
 }
@@ -3530,6 +3458,10 @@ input TaskCreateInput {
   updatedAt: DateTime
 }
 
+input EndorsementDealRelateToOneForCreateInput {
+  connect: EndorsementDealWhereUniqueInput
+}
+
 type AuditEvent {
   id: ID!
   actor: User
@@ -3590,6 +3522,79 @@ input AuditEventUpdateInput {
 input AuditEventUpdateArgs {
   where: AuditEventWhereUniqueInput!
   data: AuditEventUpdateInput!
+}
+
+type Amendment {
+  id: ID!
+  athlete: Athlete
+  contract: PlayingContract
+  deal: EndorsementDeal
+  kind: AmendmentKindType
+  reason: String
+  before: JSON
+  after: JSON
+  appliedBy: User
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+enum AmendmentKindType {
+  reschedule_payment
+  extend_deal_term
+  move_deliverable
+  add_deliverable
+}
+
+input AmendmentWhereUniqueInput {
+  id: ID
+}
+
+input AmendmentWhereInput {
+  AND: [AmendmentWhereInput!]
+  OR: [AmendmentWhereInput!]
+  NOT: [AmendmentWhereInput!]
+  id: IDFilter
+  athlete: AthleteWhereInput
+  contract: PlayingContractWhereInput
+  deal: EndorsementDealWhereInput
+  kind: AmendmentKindTypeNullableFilter
+  reason: StringFilter
+  appliedBy: UserWhereInput
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+}
+
+input AmendmentKindTypeNullableFilter {
+  equals: AmendmentKindType
+  in: [AmendmentKindType!]
+  notIn: [AmendmentKindType!]
+  not: AmendmentKindTypeNullableFilter
+}
+
+input AmendmentOrderByInput {
+  id: OrderDirection
+  kind: OrderDirection
+  reason: OrderDirection
+  createdAt: OrderDirection
+  updatedAt: OrderDirection
+}
+
+input AmendmentUpdateInput {
+  athlete: AthleteRelateToOneForUpdateInput
+  contract: PlayingContractRelateToOneForUpdateInput
+  deal: EndorsementDealRelateToOneForUpdateInput
+  kind: AmendmentKindType
+  reason: String
+  before: JSON
+  after: JSON
+  appliedBy: UserRelateToOneForUpdateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input AmendmentUpdateArgs {
+  where: AmendmentWhereUniqueInput!
+  data: AmendmentUpdateInput!
 }
 
 type PaymentProvider {
@@ -4552,36 +4557,20 @@ type Mutation {
   updateInteractions(data: [InteractionUpdateArgs!]!): [Interaction]
   deleteInteraction(where: InteractionWhereUniqueInput!): Interaction
   deleteInteractions(where: [InteractionWhereUniqueInput!]!): [Interaction]
-  createPlayingContract(data: PlayingContractCreateInput!): PlayingContract
-  createPlayingContracts(data: [PlayingContractCreateInput!]!): [PlayingContract]
   updatePlayingContract(where: PlayingContractWhereUniqueInput!, data: PlayingContractUpdateInput!): PlayingContract
   updatePlayingContracts(data: [PlayingContractUpdateArgs!]!): [PlayingContract]
-  deletePlayingContract(where: PlayingContractWhereUniqueInput!): PlayingContract
-  deletePlayingContracts(where: [PlayingContractWhereUniqueInput!]!): [PlayingContract]
-  createContractYear(data: ContractYearCreateInput!): ContractYear
-  createContractYears(data: [ContractYearCreateInput!]!): [ContractYear]
   updateContractYear(where: ContractYearWhereUniqueInput!, data: ContractYearUpdateInput!): ContractYear
   updateContractYears(data: [ContractYearUpdateArgs!]!): [ContractYear]
-  deleteContractYear(where: ContractYearWhereUniqueInput!): ContractYear
-  deleteContractYears(where: [ContractYearWhereUniqueInput!]!): [ContractYear]
   createIncentive(data: IncentiveCreateInput!): Incentive
   createIncentives(data: [IncentiveCreateInput!]!): [Incentive]
   updateIncentive(where: IncentiveWhereUniqueInput!, data: IncentiveUpdateInput!): Incentive
   updateIncentives(data: [IncentiveUpdateArgs!]!): [Incentive]
   deleteIncentive(where: IncentiveWhereUniqueInput!): Incentive
   deleteIncentives(where: [IncentiveWhereUniqueInput!]!): [Incentive]
-  createEndorsementDeal(data: EndorsementDealCreateInput!): EndorsementDeal
-  createEndorsementDeals(data: [EndorsementDealCreateInput!]!): [EndorsementDeal]
   updateEndorsementDeal(where: EndorsementDealWhereUniqueInput!, data: EndorsementDealUpdateInput!): EndorsementDeal
   updateEndorsementDeals(data: [EndorsementDealUpdateArgs!]!): [EndorsementDeal]
-  deleteEndorsementDeal(where: EndorsementDealWhereUniqueInput!): EndorsementDeal
-  deleteEndorsementDeals(where: [EndorsementDealWhereUniqueInput!]!): [EndorsementDeal]
-  createDeliverable(data: DeliverableCreateInput!): Deliverable
-  createDeliverables(data: [DeliverableCreateInput!]!): [Deliverable]
   updateDeliverable(where: DeliverableWhereUniqueInput!, data: DeliverableUpdateInput!): Deliverable
   updateDeliverables(data: [DeliverableUpdateArgs!]!): [Deliverable]
-  deleteDeliverable(where: DeliverableWhereUniqueInput!): Deliverable
-  deleteDeliverables(where: [DeliverableWhereUniqueInput!]!): [Deliverable]
   updateScheduledPayment(where: ScheduledPaymentWhereUniqueInput!, data: ScheduledPaymentUpdateInput!): ScheduledPayment
   updateScheduledPayments(data: [ScheduledPaymentUpdateArgs!]!): [ScheduledPayment]
   updateCommissionInvoice(where: CommissionInvoiceWhereUniqueInput!, data: CommissionInvoiceUpdateInput!): CommissionInvoice
@@ -4610,6 +4599,8 @@ type Mutation {
   deleteTasks(where: [TaskWhereUniqueInput!]!): [Task]
   updateAuditEvent(where: AuditEventWhereUniqueInput!, data: AuditEventUpdateInput!): AuditEvent
   updateAuditEvents(data: [AuditEventUpdateArgs!]!): [AuditEvent]
+  updateAmendment(where: AmendmentWhereUniqueInput!, data: AmendmentUpdateInput!): Amendment
+  updateAmendments(data: [AmendmentUpdateArgs!]!): [Amendment]
   createPaymentProvider(data: PaymentProviderCreateInput!): PaymentProvider
   createPaymentProviders(data: [PaymentProviderCreateInput!]!): [PaymentProvider]
   updatePaymentProvider(where: PaymentProviderWhereUniqueInput!, data: PaymentProviderUpdateInput!): PaymentProvider
@@ -4689,6 +4680,13 @@ type Mutation {
   requestDocumentUpload(athleteId: ID!, kind: String!, fileName: String!, mimeType: String!, byteSize: Int!, sha256: String!, idempotencyKey: String!): AgencyJSON!
   finalizeDocumentUpload(documentId: ID!, idempotencyKey: String): AgencyJSON!
   downloadDocument(documentId: ID!, idempotencyKey: String): AgencyJSON!
+  editContractTerms(contractId: ID!, contractType: String!, startSeason: String!, endSeason: String!, totalValueCents: Int!, guaranteedCents: Int!, signingBonusCents: Int!, idempotencyKey: String!): AgencyJSON!
+  saveContractYear(contractId: ID!, yearId: ID, season: String!, baseSalaryCents: Int!, rosterBonusCents: Int!, workoutBonusCents: Int!, guaranteedCents: Int!, paySchedule: String!, payPeriods: Int!, firstPaymentAt: String, idempotencyKey: String!): AgencyJSON!
+  removeContractYear(yearId: ID!, idempotencyKey: String!): AgencyJSON!
+  editDealTerms(dealId: ID!, termStart: String!, termEnd: String!, totalValueCents: Int!, paymentTerms: String, exclusivityCategory: String, territory: String, idempotencyKey: String!): AgencyJSON!
+  saveDeliverable(dealId: ID!, deliverableId: ID, kind: String!, dueAt: String!, notes: String, idempotencyKey: String!): AgencyJSON!
+  removeDeliverable(deliverableId: ID!, idempotencyKey: String!): AgencyJSON!
+  amendTerms(kind: String!, reason: String!, scheduledPaymentId: ID, dealId: ID, deliverableId: ID, dueAt: String, termEnd: String, deliverableKind: String, notes: String, idempotencyKey: String!): AgencyJSON!
   submitInquiry(athleteId: ID!, name: String!, email: String!, organization: String, message: String!, idempotencyKey: String!): AgencyJSON!
   payCommissionInvoice(invoiceId: ID!, proof: String, idempotencyKey: String!): AgencyJSON!
   confirmCommissionPayment(paymentId: ID!, proof: String): AgencyJSON!
@@ -4806,6 +4804,9 @@ type Query {
   auditEvent(where: AuditEventWhereUniqueInput!): AuditEvent
   auditEvents(where: AuditEventWhereInput! = {}, orderBy: [AuditEventOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: AuditEventWhereUniqueInput): [AuditEvent!]
   auditEventsCount(where: AuditEventWhereInput! = {}): Int
+  amendment(where: AmendmentWhereUniqueInput!): Amendment
+  amendments(where: AmendmentWhereInput! = {}, orderBy: [AmendmentOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: AmendmentWhereUniqueInput): [Amendment!]
+  amendmentsCount(where: AmendmentWhereInput! = {}): Int
   paymentProvider(where: PaymentProviderWhereUniqueInput!): PaymentProvider
   paymentProviders(where: PaymentProviderWhereInput! = {}, orderBy: [PaymentProviderOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: PaymentProviderWhereUniqueInput): [PaymentProvider!]
   paymentProvidersCount(where: PaymentProviderWhereInput! = {}): Int

@@ -93,6 +93,7 @@ export const User = list({
     document_uploadedBy: rel("Document.uploadedBy", true),
     task_assignee: rel("Task.assignee", true),
     auditEvent_actor: rel("AuditEvent.actor", true),
+    amendment_appliedBy: rel("Amendment.appliedBy", true),
     requestedApprovals: rel("ManagerApproval.requestedBy", true),
     approvedApprovals: rel("ManagerApproval.approvedBy", true),
     onboardingStatus: select({type:"enum", options:["not_started","in_progress","completed","dismissed"], defaultValue:"not_started"}),

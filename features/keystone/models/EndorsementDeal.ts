@@ -19,4 +19,5 @@ export const EndorsementDeal = domainList({
     agentSplit_deal: rel("AgentSplit.deal", true),
     document_deal: rel("Document.deal", true),
     task_deal: rel("Task.deal", true),
-}, "canManageEndorsements", 'athlete', false);
+    amendment_deal: rel("Amendment.deal", true),
+}, "canManageEndorsements", 'athlete', true);

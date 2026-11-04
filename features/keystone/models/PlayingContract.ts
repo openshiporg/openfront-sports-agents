@@ -20,4 +20,5 @@ export const PlayingContract = domainList({
     incentive_contract: rel("Incentive.contract", true),
     document_contract: rel("Document.contract", true),
     task_contract: rel("Task.contract", true),
-}, "canManageContracts", 'athlete', false);
+    amendment_contract: rel("Amendment.contract", true),
+}, "canManageContracts", 'athlete', true);
