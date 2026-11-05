@@ -5122,6 +5122,10 @@ type Mutation {
   terminateAgreement(agreementId: ID!, noticeGivenAt: String!, reason: String!, idempotencyKey: String!): AgencyJSON!
   renewAgreement(agreementId: ID!, expiresAt: String!, reason: String!, idempotencyKey: String!): AgencyJSON!
   lapseAgreement(agreementId: ID!, idempotencyKey: String!): AgencyJSON!
+  closeEndorsementDeal(dealId: ID!, outcome: String!, reason: String, waiveOpen: Boolean, idempotencyKey: String!): AgencyJSON!
+  closePlayingContract(contractId: ID!, outcome: String!, reason: String, waiveOpen: Boolean, idempotencyKey: String!): AgencyJSON!
+  recordIncentiveNotEarned(incentiveId: ID!, reason: String!, idempotencyKey: String!): AgencyJSON!
+  markDeliverableMissed(deliverableId: ID!, idempotencyKey: String!): AgencyJSON!
   runInvoiceDunning(idempotencyKey: String!): AgencyJSON!
   voidAgentPayout(payoutId: ID!, reason: String!, idempotencyKey: String!): AgencyJSON!
   recordAgentPayout(payeeUserId: ID!, reference: String!, paidOn: String!, method: String, note: String, expectedCents: Int!, idempotencyKey: String!): AgencyJSON!

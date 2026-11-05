@@ -3,6 +3,7 @@ import { PlatformPage, Section, Row, Cell, Empty, ErrorState } from '../../compo
 import { StatusLabel } from '../../components/StatusLabel'
 import { CommandButton } from '../../components/CommandButton'
 import { AmendTerms } from '../../components/AmendTerms'
+import { CloseRecord } from '../../components/CloseRecord'
 import { SchedulePayments } from '../components/SchedulePayments'
 import { DealTermsForm, DeliverableForm } from '../components/DealTermsForm'
 import { termsLabel } from '@/features/keystone/lib/paymentTerms'
@@ -27,6 +28,7 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
           {draft && <DealTermsForm deal={d} />}
           {live && <AmendTerms kind="extend_deal_term" ids={{ dealId: d.id }} label="Extend term" initial={d.termEnd} />}
           {live && <AmendTerms kind="change_payment_terms" ids={{ dealId: d.id }} label="Change payment terms" initialDays={d.paymentTermsDays} />}
+          {live && <CloseRecord kind="deal" id={d.id} termOver={!!d.termEnd && new Date(d.termEnd).getTime() <= Date.now()} openPayments={d.scheduledPayment_endorsementDeal.filter((p: any) => ['scheduled', 'late'].includes(p.status)).length} openDeliverables={d.deliverable_deal.filter((x: any) => ['scheduled', 'missed'].includes(x.status)).length} />}
         </Row>
       </Section>
       <Section title="Deliverables" hint={String(d.deliverable_deal.length)}>
@@ -34,6 +36,7 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
           <Row key={x.id}>
             <Cell><StatusLabel value={x.status} className="mr-2" />{x.kind.replaceAll('_', ' ')}</Cell><Cell muted>{day(x.dueAt)}</Cell>
             {draft && x.status === 'scheduled' && <><DeliverableForm dealId={d.id} item={x} label="Edit" /><CommandButton operation="removeDeliverable" args={{ deliverableId: x.id }} label="Remove" /></>}
+            {live && x.status === 'scheduled' && x.dueAt && String(x.dueAt).slice(0, 10) < new Date().toISOString().slice(0, 10) && <CommandButton operation="markDeliverableMissed" args={{ deliverableId: x.id }} label="Mark missed" />}
             {live && ['scheduled', 'missed'].includes(x.status) && <><AmendTerms kind="move_deliverable" ids={{ deliverableId: x.id }} label="Move date" initial={x.dueAt} /><AmendTerms kind="waive_deliverable" ids={{ deliverableId: x.id }} label="Waive" /></>}
           </Row>
         )) : <Empty>No deliverables</Empty>}

@@ -2,6 +2,7 @@ import { ContractTermsForm } from '../components/ContractTermsForm'
 import { ContractYearForm } from '../components/ContractYearForm'
 import { AmendTerms } from '../../components/AmendTerms'
 import { IncentiveEarned } from '../components/IncentiveEarned'
+import { CloseRecord, IncentiveNotEarned } from '../../components/CloseRecord'
 import { notFound } from 'next/navigation'
 import { PlatformPage, Section, Row, Cell, Empty, ErrorState } from '../../components/Section'
 import { StatusLabel } from '../../components/StatusLabel'
@@ -16,7 +17,7 @@ export default async function ContractDetailPage({ params }: { params: Promise<{
     c = (await platformQuery(`query($id: ID!) { playingContract(where: { id: $id }) { id status contractType league startSeason endSeason signedAt totalValueCents guaranteedCents signingBonusCents paymentTermsDays commissionBps currencyCode athlete { id fullName } team { name } representationAgreement { scope status capBps }
       contractYear_contract(orderBy: { season: asc }) { id season baseSalaryCents guaranteedCents rosterBonusCents workoutBonusCents payPeriods paySchedule firstPaymentAt scheduledPayment_contractYear(orderBy: { dueAt: asc }) { id dueAt grossCents status invoice { id } } }
       amendment_contract(orderBy: { createdAt: desc }, take: 20) { id kind reason before after createdAt appliedBy { name } }
-      incentive_contract { id description amountCents likelyToBeEarned status evidence earnedAt } } }`, { id })).playingContract
+      incentive_contract { id description scheduledPayment_incentive { id status } amountCents likelyToBeEarned status evidence earnedAt } } }`, { id })).playingContract
   } catch (e: any) { return <PlatformPage title="Contract"><ErrorState message={e.message} /></PlatformPage> }
   if (!c) notFound()
   return (
@@ -28,6 +29,7 @@ export default async function ContractDetailPage({ params }: { params: Promise<{
           {['signed', 'active'].includes(c.status) && <AmendTerms kind="change_payment_terms" ids={{ contractId: c.id }} label="Change payment terms" initialDays={c.paymentTermsDays} />}
           {c.status === 'negotiating' && <CommandButton operation="recordContractSigned" args={{ contractId: c.id }} label="Record signed" />}
           {['signed', 'active'].includes(c.status) && <CommandButton operation="generatePaymentSchedule" args={{ contractId: c.id }} label="Generate payment schedule" />}
+          {['signed', 'active'].includes(c.status) && <CloseRecord kind="contract" id={c.id} termOver={Number(String(c.endSeason || '').slice(0, 4)) <= new Date().getUTCFullYear()} openPayments={[...c.contractYear_contract.flatMap((y: any) => y.scheduledPayment_contractYear), ...c.incentive_contract.flatMap((i: any) => i.scheduledPayment_incentive)].filter((p: any) => ['scheduled', 'late'].includes(p.status)).length} pendingIncentives={c.incentive_contract.filter((i: any) => i.status === 'pending').length} />}
         </Row>
       </Section>
       <Section title="Contract years">
@@ -58,7 +60,7 @@ export default async function ContractDetailPage({ params }: { params: Promise<{
       </Section>
       <Section title="Incentives">
         {c.incentive_contract.length ? c.incentive_contract.map((i: any) => (
-          <Row key={i.id}><Cell><StatusLabel value={i.status} className="mr-2" />{i.description}</Cell><Cell muted>{i.likelyToBeEarned ? 'Likely' : 'Unlikely'}</Cell><Cell className="tabular-nums">{money(i.amountCents, c.currencyCode)}</Cell>{i.evidence && <Cell muted>{i.evidence}</Cell>}{i.status === 'pending' && ['signed', 'active'].includes(c.status) && <IncentiveEarned incentiveId={i.id} />}</Row>
+          <Row key={i.id}><Cell><StatusLabel value={i.status} className="mr-2" />{i.description}</Cell><Cell muted>{i.likelyToBeEarned ? 'Likely' : 'Unlikely'}</Cell><Cell className="tabular-nums">{money(i.amountCents, c.currencyCode)}</Cell>{i.evidence && <Cell muted>{i.evidence}</Cell>}{i.status === 'pending' && ['signed', 'active'].includes(c.status) && <><IncentiveEarned incentiveId={i.id} /><IncentiveNotEarned incentiveId={i.id} /></>}</Row>
         )) : <Empty>No incentives</Empty>}
       </Section>
     </PlatformPage>

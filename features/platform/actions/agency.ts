@@ -5,6 +5,10 @@ import { revalidatePath } from 'next/cache'
 import { keystoneClient } from '@/features/dashboard/lib/keystoneClient'
 
 const OPERATIONS: Record<string, string> = {
+  closeEndorsementDeal: 'mutation($dealId: ID!, $outcome: String!, $reason: String, $waiveOpen: Boolean, $idempotencyKey: String!) { closeEndorsementDeal(dealId: $dealId, outcome: $outcome, reason: $reason, waiveOpen: $waiveOpen, idempotencyKey: $idempotencyKey) }',
+  closePlayingContract: 'mutation($contractId: ID!, $outcome: String!, $reason: String, $waiveOpen: Boolean, $idempotencyKey: String!) { closePlayingContract(contractId: $contractId, outcome: $outcome, reason: $reason, waiveOpen: $waiveOpen, idempotencyKey: $idempotencyKey) }',
+  recordIncentiveNotEarned: 'mutation($incentiveId: ID!, $reason: String!, $idempotencyKey: String!) { recordIncentiveNotEarned(incentiveId: $incentiveId, reason: $reason, idempotencyKey: $idempotencyKey) }',
+  markDeliverableMissed: 'mutation($deliverableId: ID!, $idempotencyKey: String!) { markDeliverableMissed(deliverableId: $deliverableId, idempotencyKey: $idempotencyKey) }',
   moveRecruitingStage: 'mutation($athleteId: ID!, $stage: String!, $idempotencyKey: String!) { moveRecruitingStage(athleteId: $athleteId, stage: $stage, idempotencyKey: $idempotencyKey) }',
   markPaymentReceived: 'mutation($scheduledPaymentId: ID!, $fxRate: String, $idempotencyKey: String!) { markPaymentReceived(scheduledPaymentId: $scheduledPaymentId, fxRate: $fxRate, idempotencyKey: $idempotencyKey) }',
   draftCommissionInvoice: 'mutation($athleteId: ID!, $scheduledPaymentIds: [ID!]!, $idempotencyKey: String!) { draftCommissionInvoice(athleteId: $athleteId, scheduledPaymentIds: $scheduledPaymentIds, idempotencyKey: $idempotencyKey) }',
