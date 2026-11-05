@@ -91,6 +91,8 @@ export const User = list({
     agentPayout_payee: rel("AgentPayout.payee", true),
     agentPayout_recordedBy: rel("AgentPayout.recordedBy", true),
     agentPayout_voidedBy: rel("AgentPayout.voidedBy", true),
+    trustReconciliation_preparedBy: rel("TrustReconciliation.preparedBy", true),
+    trustReconciliation_reopenedBy: rel("TrustReconciliation.reopenedBy", true),
     commissionLedgerEntry_preparedBy: rel("CommissionLedgerEntry.preparedBy", true),
     commissionLedgerEntry_approvedBy: rel("CommissionLedgerEntry.approvedBy", true),
     agentSplit_user: rel("AgentSplit.user", true),

@@ -30,6 +30,8 @@ model User {
   agentPayout_payee                AgentPayout[]             @relation("AgentPayout_payee")
   agentPayout_recordedBy           AgentPayout[]             @relation("AgentPayout_recordedBy")
   agentPayout_voidedBy             AgentPayout[]             @relation("AgentPayout_voidedBy")
+  trustReconciliation_preparedBy   TrustReconciliation[]     @relation("TrustReconciliation_preparedBy")
+  trustReconciliation_reopenedBy   TrustReconciliation[]     @relation("TrustReconciliation_reopenedBy")
   commissionLedgerEntry_preparedBy CommissionLedgerEntry[]   @relation("CommissionLedgerEntry_preparedBy")
   commissionLedgerEntry_approvedBy CommissionLedgerEntry[]   @relation("CommissionLedgerEntry_approvedBy")
   agentSplit_user                  AgentSplit[]              @relation("AgentSplit_user")
@@ -595,6 +597,8 @@ model ClientTrustEntry {
   reversalKey               String?                        @unique
   currencyCode              String                         @default("USD")
   clientTrustEntry_reverses ClientTrustEntry[]             @relation("ClientTrustEntry_reverses")
+  clearedIn                 TrustReconciliation?           @relation("ClientTrustEntry_clearedIn", fields: [clearedInId], references: [id])
+  clearedInId               String?                        @map("clearedIn")
   createdAt                 DateTime                       @default(now())
   updatedAt                 DateTime                       @default(now()) @updatedAt
 
@@ -602,6 +606,33 @@ model ClientTrustEntry {
   @@index([athleteId])
   @@index([invoiceId])
   @@index([reversesId])
+  @@index([clearedInId])
+}
+
+model TrustReconciliation {
+  id                    String                         @id @default(cuid())
+  currencyCode          String                         @default("USD")
+  statementDate         DateTime                       @postgresql.Date
+  statementBalanceCents BigInt
+  bookCents             BigInt
+  clearedCents          BigInt
+  outstandingCents      BigInt
+  differenceCents       BigInt
+  status                TrustReconciliationStatusType? @default(reconciled)
+  note                  String                         @default("")
+  clientBalances        Json?
+  preparedBy            User?                          @relation("TrustReconciliation_preparedBy", fields: [preparedById], references: [id])
+  preparedById          String?                        @map("preparedBy")
+  reopenedAt            DateTime?
+  reopenReason          String                         @default("")
+  reopenedBy            User?                          @relation("TrustReconciliation_reopenedBy", fields: [reopenedById], references: [id])
+  reopenedById          String?                        @map("reopenedBy")
+  clearedEntries        ClientTrustEntry[]             @relation("ClientTrustEntry_clearedIn")
+  createdAt             DateTime                       @default(now())
+  updatedAt             DateTime                       @default(now()) @updatedAt
+
+  @@index([preparedById])
+  @@index([reopenedById])
 }
 
 model Document {
@@ -1130,6 +1161,12 @@ enum ClientTrustEntryEntryTypeType {
   commission_transfer
   disbursement_to_client
   reversal
+}
+
+enum TrustReconciliationStatusType {
+  reconciled
+  exception
+  reopened
 }
 
 enum TaskStatusType {

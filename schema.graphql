@@ -31,6 +31,10 @@ type User {
   agentPayout_recordedByCount(where: AgentPayoutWhereInput! = {}): Int
   agentPayout_voidedBy(where: AgentPayoutWhereInput! = {}, orderBy: [AgentPayoutOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: AgentPayoutWhereUniqueInput): [AgentPayout!]
   agentPayout_voidedByCount(where: AgentPayoutWhereInput! = {}): Int
+  trustReconciliation_preparedBy(where: TrustReconciliationWhereInput! = {}, orderBy: [TrustReconciliationOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: TrustReconciliationWhereUniqueInput): [TrustReconciliation!]
+  trustReconciliation_preparedByCount(where: TrustReconciliationWhereInput! = {}): Int
+  trustReconciliation_reopenedBy(where: TrustReconciliationWhereInput! = {}, orderBy: [TrustReconciliationOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: TrustReconciliationWhereUniqueInput): [TrustReconciliation!]
+  trustReconciliation_reopenedByCount(where: TrustReconciliationWhereInput! = {}): Int
   commissionLedgerEntry_preparedBy(where: CommissionLedgerEntryWhereInput! = {}, orderBy: [CommissionLedgerEntryOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: CommissionLedgerEntryWhereUniqueInput): [CommissionLedgerEntry!]
   commissionLedgerEntry_preparedByCount(where: CommissionLedgerEntryWhereInput! = {}): Int
   commissionLedgerEntry_approvedBy(where: CommissionLedgerEntryWhereInput! = {}, orderBy: [CommissionLedgerEntryOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: CommissionLedgerEntryWhereUniqueInput): [CommissionLedgerEntry!]
@@ -93,6 +97,8 @@ input UserWhereInput {
   agentPayout_payee: AgentPayoutManyRelationFilter
   agentPayout_recordedBy: AgentPayoutManyRelationFilter
   agentPayout_voidedBy: AgentPayoutManyRelationFilter
+  trustReconciliation_preparedBy: TrustReconciliationManyRelationFilter
+  trustReconciliation_reopenedBy: TrustReconciliationManyRelationFilter
   commissionLedgerEntry_preparedBy: CommissionLedgerEntryManyRelationFilter
   commissionLedgerEntry_approvedBy: CommissionLedgerEntryManyRelationFilter
   agentSplit_user: AgentSplitManyRelationFilter
@@ -203,6 +209,12 @@ input AgentPayoutManyRelationFilter {
   none: AgentPayoutWhereInput
 }
 
+input TrustReconciliationManyRelationFilter {
+  every: TrustReconciliationWhereInput
+  some: TrustReconciliationWhereInput
+  none: TrustReconciliationWhereInput
+}
+
 input AgentSplitManyRelationFilter {
   every: AgentSplitWhereInput
   some: AgentSplitWhereInput
@@ -304,6 +316,8 @@ input UserUpdateInput {
   agentPayout_payee: AgentPayoutRelateToManyForUpdateInput
   agentPayout_recordedBy: AgentPayoutRelateToManyForUpdateInput
   agentPayout_voidedBy: AgentPayoutRelateToManyForUpdateInput
+  trustReconciliation_preparedBy: TrustReconciliationRelateToManyForUpdateInput
+  trustReconciliation_reopenedBy: TrustReconciliationRelateToManyForUpdateInput
   commissionLedgerEntry_preparedBy: CommissionLedgerEntryRelateToManyForUpdateInput
   commissionLedgerEntry_approvedBy: CommissionLedgerEntryRelateToManyForUpdateInput
   agentSplit_user: AgentSplitRelateToManyForUpdateInput
@@ -379,6 +393,12 @@ input AgentPayoutRelateToManyForUpdateInput {
   connect: [AgentPayoutWhereUniqueInput!]
 }
 
+input TrustReconciliationRelateToManyForUpdateInput {
+  disconnect: [TrustReconciliationWhereUniqueInput!]
+  set: [TrustReconciliationWhereUniqueInput!]
+  connect: [TrustReconciliationWhereUniqueInput!]
+}
+
 input AgentSplitRelateToManyForUpdateInput {
   disconnect: [AgentSplitWhereUniqueInput!]
   set: [AgentSplitWhereUniqueInput!]
@@ -439,6 +459,8 @@ input UserCreateInput {
   agentPayout_payee: AgentPayoutRelateToManyForCreateInput
   agentPayout_recordedBy: AgentPayoutRelateToManyForCreateInput
   agentPayout_voidedBy: AgentPayoutRelateToManyForCreateInput
+  trustReconciliation_preparedBy: TrustReconciliationRelateToManyForCreateInput
+  trustReconciliation_reopenedBy: TrustReconciliationRelateToManyForCreateInput
   commissionLedgerEntry_preparedBy: CommissionLedgerEntryRelateToManyForCreateInput
   commissionLedgerEntry_approvedBy: CommissionLedgerEntryRelateToManyForCreateInput
   agentSplit_user: AgentSplitRelateToManyForCreateInput
@@ -495,6 +517,10 @@ input ForecastSnapshotRelateToManyForCreateInput {
 
 input AgentPayoutRelateToManyForCreateInput {
   connect: [AgentPayoutWhereUniqueInput!]
+}
+
+input TrustReconciliationRelateToManyForCreateInput {
+  connect: [TrustReconciliationWhereUniqueInput!]
 }
 
 input AgentSplitRelateToManyForCreateInput {
@@ -3306,6 +3332,7 @@ type ClientTrustEntry {
   currencyCode: String
   clientTrustEntry_reverses(where: ClientTrustEntryWhereInput! = {}, orderBy: [ClientTrustEntryOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: ClientTrustEntryWhereUniqueInput): [ClientTrustEntry!]
   clientTrustEntry_reversesCount(where: ClientTrustEntryWhereInput! = {}): Int
+  clearedIn: TrustReconciliation
   createdAt: DateTime
   updatedAt: DateTime
 }
@@ -3338,6 +3365,7 @@ input ClientTrustEntryWhereInput {
   reversalKey: StringNullableFilter
   currencyCode: StringFilter
   clientTrustEntry_reverses: ClientTrustEntryManyRelationFilter
+  clearedIn: TrustReconciliationWhereInput
   createdAt: DateTimeFilter
   updatedAt: DateTimeFilter
 }
@@ -3373,6 +3401,7 @@ input ClientTrustEntryUpdateInput {
   reversalKey: String
   currencyCode: String
   clientTrustEntry_reverses: ClientTrustEntryRelateToManyForUpdateInput
+  clearedIn: TrustReconciliationRelateToOneForUpdateInput
   createdAt: DateTime
   updatedAt: DateTime
 }
@@ -3388,9 +3417,129 @@ input ClientTrustEntryRelateToOneForUpdateInput {
   disconnect: Boolean
 }
 
+input TrustReconciliationRelateToOneForUpdateInput {
+  connect: TrustReconciliationWhereUniqueInput
+  disconnect: Boolean
+}
+
 input ClientTrustEntryUpdateArgs {
   where: ClientTrustEntryWhereUniqueInput!
   data: ClientTrustEntryUpdateInput!
+}
+
+type TrustReconciliation {
+  id: ID!
+  currencyCode: String
+  statementDate: CalendarDay
+  statementBalanceCents: BigInt
+  bookCents: BigInt
+  clearedCents: BigInt
+  outstandingCents: BigInt
+  differenceCents: BigInt
+  status: TrustReconciliationStatusType
+  note: String
+  clientBalances: JSON
+  preparedBy: User
+  reopenedAt: DateTime
+  reopenReason: String
+  reopenedBy: User
+  clearedEntries(where: ClientTrustEntryWhereInput! = {}, orderBy: [ClientTrustEntryOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: ClientTrustEntryWhereUniqueInput): [ClientTrustEntry!]
+  clearedEntriesCount(where: ClientTrustEntryWhereInput! = {}): Int
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+enum TrustReconciliationStatusType {
+  reconciled
+  exception
+  reopened
+}
+
+input TrustReconciliationWhereUniqueInput {
+  id: ID
+}
+
+input TrustReconciliationWhereInput {
+  AND: [TrustReconciliationWhereInput!]
+  OR: [TrustReconciliationWhereInput!]
+  NOT: [TrustReconciliationWhereInput!]
+  id: IDFilter
+  currencyCode: StringFilter
+  statementDate: CalendarDayFilter
+  statementBalanceCents: BigIntFilter
+  bookCents: BigIntFilter
+  clearedCents: BigIntFilter
+  outstandingCents: BigIntFilter
+  differenceCents: BigIntFilter
+  status: TrustReconciliationStatusTypeNullableFilter
+  note: StringFilter
+  preparedBy: UserWhereInput
+  reopenedAt: DateTimeNullableFilter
+  reopenReason: StringFilter
+  reopenedBy: UserWhereInput
+  clearedEntries: ClientTrustEntryManyRelationFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+}
+
+input CalendarDayFilter {
+  equals: CalendarDay
+  in: [CalendarDay!]
+  notIn: [CalendarDay!]
+  lt: CalendarDay
+  lte: CalendarDay
+  gt: CalendarDay
+  gte: CalendarDay
+  not: CalendarDayFilter
+}
+
+input TrustReconciliationStatusTypeNullableFilter {
+  equals: TrustReconciliationStatusType
+  in: [TrustReconciliationStatusType!]
+  notIn: [TrustReconciliationStatusType!]
+  not: TrustReconciliationStatusTypeNullableFilter
+}
+
+input TrustReconciliationOrderByInput {
+  id: OrderDirection
+  currencyCode: OrderDirection
+  statementDate: OrderDirection
+  statementBalanceCents: OrderDirection
+  bookCents: OrderDirection
+  clearedCents: OrderDirection
+  outstandingCents: OrderDirection
+  differenceCents: OrderDirection
+  status: OrderDirection
+  note: OrderDirection
+  reopenedAt: OrderDirection
+  reopenReason: OrderDirection
+  createdAt: OrderDirection
+  updatedAt: OrderDirection
+}
+
+input TrustReconciliationUpdateInput {
+  currencyCode: String
+  statementDate: CalendarDay
+  statementBalanceCents: BigInt
+  bookCents: BigInt
+  clearedCents: BigInt
+  outstandingCents: BigInt
+  differenceCents: BigInt
+  status: TrustReconciliationStatusType
+  note: String
+  clientBalances: JSON
+  preparedBy: UserRelateToOneForUpdateInput
+  reopenedAt: DateTime
+  reopenReason: String
+  reopenedBy: UserRelateToOneForUpdateInput
+  clearedEntries: ClientTrustEntryRelateToManyForUpdateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input TrustReconciliationUpdateArgs {
+  where: TrustReconciliationWhereUniqueInput!
+  data: TrustReconciliationUpdateInput!
 }
 
 type Document {
@@ -3891,17 +4040,6 @@ input AgentPayoutWhereInput {
   entries: AgentPayoutEntryManyRelationFilter
   createdAt: DateTimeFilter
   updatedAt: DateTimeFilter
-}
-
-input CalendarDayFilter {
-  equals: CalendarDay
-  in: [CalendarDay!]
-  notIn: [CalendarDay!]
-  lt: CalendarDay
-  lte: CalendarDay
-  gt: CalendarDay
-  gte: CalendarDay
-  not: CalendarDayFilter
 }
 
 input AgentPayoutStatusTypeNullableFilter {
@@ -5005,6 +5143,8 @@ type Mutation {
   deleteClientTrustAccounts(where: [ClientTrustAccountWhereUniqueInput!]!): [ClientTrustAccount]
   updateClientTrustEntry(where: ClientTrustEntryWhereUniqueInput!, data: ClientTrustEntryUpdateInput!): ClientTrustEntry
   updateClientTrustEntries(data: [ClientTrustEntryUpdateArgs!]!): [ClientTrustEntry]
+  updateTrustReconciliation(where: TrustReconciliationWhereUniqueInput!, data: TrustReconciliationUpdateInput!): TrustReconciliation
+  updateTrustReconciliations(data: [TrustReconciliationUpdateArgs!]!): [TrustReconciliation]
   updateDocument(where: DocumentWhereUniqueInput!, data: DocumentUpdateInput!): Document
   updateDocuments(data: [DocumentUpdateArgs!]!): [Document]
   createTask(data: TaskCreateInput!): Task
@@ -5139,6 +5279,8 @@ type Mutation {
   submitInquiry(athleteId: ID!, name: String!, email: String!, organization: String, message: String!, idempotencyKey: String!): AgencyJSON!
   payCommissionInvoice(invoiceId: ID!, proof: String, idempotencyKey: String!): AgencyJSON!
   confirmCommissionPayment(paymentId: ID!, proof: String): AgencyJSON!
+  reconcileTrustStatement(currencyCode: String!, statementDate: String!, statementBalanceCents: Int!, clearIds: [ID!]!, acceptDifference: Boolean, note: String, idempotencyKey: String!): AgencyJSON!
+  reopenTrustReconciliation(reconciliationId: ID!, reason: String!, idempotencyKey: String!): AgencyJSON!
   ensureOnboardingRecord(entity: String!, data: AgencyJSON!): AgencyJSON!
   updateActiveUser(data: AgencyJSON!): AgencyJSON!
 }
@@ -5244,6 +5386,9 @@ type Query {
   clientTrustEntry(where: ClientTrustEntryWhereUniqueInput!): ClientTrustEntry
   clientTrustEntries(where: ClientTrustEntryWhereInput! = {}, orderBy: [ClientTrustEntryOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: ClientTrustEntryWhereUniqueInput): [ClientTrustEntry!]
   clientTrustEntriesCount(where: ClientTrustEntryWhereInput! = {}): Int
+  trustReconciliation(where: TrustReconciliationWhereUniqueInput!): TrustReconciliation
+  trustReconciliations(where: TrustReconciliationWhereInput! = {}, orderBy: [TrustReconciliationOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: TrustReconciliationWhereUniqueInput): [TrustReconciliation!]
+  trustReconciliationsCount(where: TrustReconciliationWhereInput! = {}): Int
   document(where: DocumentWhereUniqueInput!): Document
   documents(where: DocumentWhereInput! = {}, orderBy: [DocumentOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: DocumentWhereUniqueInput): [Document!]
   documentsCount(where: DocumentWhereInput! = {}): Int
@@ -5308,6 +5453,7 @@ type Query {
   agencyAthlete(athleteId: ID!): AgencyJSON!
   lookupInvoice(email: String!, number: String!): AgencyJSON!
   guestInvoice(invoiceId: ID!, proof: String): AgencyJSON!
+  trustReconWorkspace(currencyCode: String): AgencyJSON!
 }
 
 union AuthenticatedItem = User

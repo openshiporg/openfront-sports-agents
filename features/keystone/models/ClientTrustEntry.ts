@@ -12,4 +12,6 @@ export const ClientTrustEntry = domainList({
     reversalKey: text({isIndexed:"unique",db:{isNullable:true}}),
     currencyCode: currencyCode(),
     clientTrustEntry_reverses: rel("ClientTrustEntry.reverses", true),
+    // Set only by reconcileTrustStatement when the entry appears on a bank statement; cleared again if that reconciliation is reopened.
+    clearedIn: rel("TrustReconciliation.clearedEntries", false),
 }, "canManageTrust", 'athlete', true);
