@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { PlatformPage, Section, Row, Cell, Empty, Stat, ErrorState } from '../../components/Section'
 import { StatusLabel } from '../../components/StatusLabel'
+import { PastTermList } from '../../components/PastTermList'
 import { platformQuery, money, day, commissionOf } from '../../lib/query'
 
 const QUERY = `query MoneyView($now: DateTime!, $d7: DateTime!, $d60: DateTime!, $d90: DateTime!) {
@@ -10,6 +11,7 @@ const QUERY = `query MoneyView($now: DateTime!, $d7: DateTime!, $d60: DateTime!,
   deliverables(where: { status: { equals: scheduled }, dueAt: { lte: $d7 } }, orderBy: { dueAt: asc }, take: 50) { id kind dueAt deal { id brand { name } athlete { id fullName } } }
   certs: agentCertifications(where: { status: { equals: active }, expiresAt: { lte: $d60 } }, orderBy: { expiresAt: asc }, take: 50) { id body number expiresAt user { name } }
   missing: dealsMissingSchedule
+  pastTerm: termsPastEnd
   agreements: representationAgreements(where: { status: { in: [signed, filed_with_union, active] }, expiresAt: { lte: $d90 } }, orderBy: { expiresAt: asc }, take: 50) { id scope expiresAt athlete { id fullName } }
 }`
 
@@ -46,6 +48,8 @@ export default async function DashboardPage() {
           {data.missing.deals.length > 6 && <div className="px-3 py-2 text-xs text-muted-foreground">and {data.missing.deals.length - 6} more</div>}
         </Section>
       )}
+
+      <PastTermList data={data.pastTerm} />
 
       <Section title="Open invoices" hint={<Link href="/dashboard/platform/commissions" className="underline">All commissions</Link>}>
         {data.open.length ? data.open.slice(0, 8).map((i: any) => (

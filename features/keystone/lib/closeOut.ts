@@ -42,3 +42,14 @@ export function canMarkMissed(status:string,dueAt:Date|null,now:Date){
 export function notEarnedReason(v:unknown){const r=String(v??'').trim();if(r.length<3||r.length>1000)throw new DomainError('A reason of 3 to 1000 characters is required');return r;}
 const count=(n:number,w:string)=>n+' '+w+(n===1?'':'s');
 const plural=(n:number,w:string)=>n+' '+w+(n===1?' is':'s are');
+/** Whether a deal or contract whose term has run is ready to record as completed, and what still blocks it. Pure, for the close-out list. */
+export function closeReadiness(i:{payments:Pay[];deliverables?:Del[];pendingIncentives?:number}){
+ const openPay=i.payments.filter(p=>OPEN_PAYMENT.includes(p.status));
+ const invoiced=openPay.filter(p=>p.invoiceId).length;
+ const openDel=(i.deliverables||[]).filter(d=>OPEN_DELIVERABLE.includes(d.status)).length;
+ const pending=i.pendingIncentives||0;
+ const blockers=[openPay.length?count(openPay.length,'open payment')+(invoiced?' ('+invoiced+' invoiced)':''):'',openDel?count(openDel,'open deliverable'):''].filter(Boolean);
+ return {ready:openPay.length===0&&openDel===0,openPayments:openPay.length,invoicedPayments:invoiced,openDeliverables:openDel,pendingIncentives:pending,blockers};
+}
+/** A contract's term has run once its end season has started (same rule as completing it). */
+export function contractTermOver(endSeason:string|null|undefined,now:Date){const m=/^(\d{4})/.exec(String(endSeason??'').trim());return !!m&&Number(m[1])<=now.getUTCFullYear();}

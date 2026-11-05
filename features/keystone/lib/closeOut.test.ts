@@ -42,3 +42,14 @@ test('missed deliverables and not-earned reasons', () => {
   assert.equal(notEarnedReason('  Missed the Pro Bowl '), 'Missed the Pro Bowl')
   assert.throws(() => notEarnedReason('no'), /reason/)
 })
+import { closeReadiness, contractTermOver } from './closeOut'
+test('close readiness lists what still blocks completion', () => {
+  assert.deepEqual(closeReadiness({ payments: [{ id: 'a', status: 'received' }, { id: 'b', status: 'waived' }], deliverables: [{ id: 'd', status: 'completed' }] }).ready, true)
+  const r = closeReadiness({ payments: [{ id: 'a', status: 'scheduled', invoiceId: 'i' }, { id: 'b', status: 'late' }], deliverables: [{ id: 'd', status: 'missed' }], pendingIncentives: 1 })
+  assert.equal(r.ready, false); assert.deepEqual(r.blockers, ['2 open payments (1 invoiced)', '1 open deliverable'])
+  assert.equal(closeReadiness({ payments: [], pendingIncentives: 2 }).ready, true)
+})
+test('contract term over once the end season starts', () => {
+  const now = new Date('2026-11-05T00:00:00Z')
+  assert.equal(contractTermOver('2026', now), true); assert.equal(contractTermOver('2025-26', now), true); assert.equal(contractTermOver('2027', now), false); assert.equal(contractTermOver('', now), false); assert.equal(contractTermOver(null, now), false)
+})

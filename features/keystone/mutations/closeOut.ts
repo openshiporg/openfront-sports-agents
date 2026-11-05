@@ -1,6 +1,6 @@
 import {permissions} from '../access';
 import {command,audit,transition} from '../lib/agencyCommand';
-import {planClose,canMarkMissed,notEarnedReason,LIVE} from '../lib/closeOut';
+import {planClose,canMarkMissed,notEarnedReason,closeReadiness,contractTermOver,LIVE} from '../lib/closeOut';
 import {DomainError} from '../lib/errors';
 
 async function find(c:any,model:string,id:unknown,select:any){if(!c.session?.itemId)throw new DomainError('Not authorized');const r=await c.prisma[model].findUnique({where:{id:String(id||'')},select});if(!r)throw new DomainError('Record not found');return r;}
@@ -18,6 +18,29 @@ async function waiveAll(tx:any,c:any,paymentIds:string[],deliverableIds:string[]
  if(paymentIds.length||deliverableIds.length)await audit(tx,c,'close.open_items_waived','Batch',requestId,null,{scheduledPaymentIds:paymentIds,deliverableIds,reason:why},requestId);
 }
 
+const ymd=(d:Date|null)=>d?d.toISOString().slice(0,10):null;
+export const closeOutQueries={
+ /** Signed or active deals and contracts whose term has run, so they still count in forecasts and reminders. Each says whether it can be recorded
+  *  completed now or what still blocks it. Scoped to the caller's athletes unless they can view all clients; optional athleteId narrows to one client. */
+ async termsPastEnd(_:unknown,a:any,c:any){
+  if(!c.session?.itemId)throw new DomainError('Not authorized');
+  const canDeals=permissions.canManageEndorsements({session:c.session}),canContracts=permissions.canManageContracts({session:c.session});
+  if(!canDeals&&!canContracts)return {deals:[],contracts:[]};
+  const me=c.session.itemId;const scope=c.session.data?.role?.canViewAllClients?{}:{athlete:{OR:[{leadAgentId:me},{supportStaff:{some:{id:me}}}]}};
+  const who=a.athleteId?{athleteId:String(a.athleteId)}:{};const now=new Date();
+  const deals=canDeals?await c.prisma.endorsementDeal.findMany({where:{status:{in:LIVE},termEnd:{lte:now},...scope,...who},orderBy:{termEnd:'asc'},take:100,
+   select:{id:true,status:true,termEnd:true,totalValueCents:true,currencyCode:true,athlete:{select:{id:true,fullName:true}},brand:{select:{name:true}},scheduledPayment_endorsementDeal:{select:{id:true,status:true,invoiceId:true}},deliverable_deal:{select:{id:true,status:true}}}}):[];
+  const ks=canContracts?(await c.prisma.playingContract.findMany({where:{status:{in:LIVE},...scope,...who},orderBy:{endSeason:'asc'},take:300,
+   select:{id:true,status:true,endSeason:true,totalValueCents:true,athlete:{select:{id:true,fullName:true}},team:{select:{name:true}},incentive_contract:{select:{status:true,scheduledPayment_incentive:{select:{id:true,status:true,invoiceId:true}}}},
+    contractYear_contract:{select:{scheduledPayment_contractYear:{select:{id:true,status:true,invoiceId:true}}}}}})).filter((k:any)=>contractTermOver(k.endSeason,now)).slice(0,100):[];
+  return {
+   deals:deals.map((d:any)=>({id:d.id,status:d.status,athleteId:d.athlete?.id,athleteName:d.athlete?.fullName||'',counterparty:d.brand?.name||'',endedOn:ymd(d.termEnd),totalValueCents:Number(d.totalValueCents||0),currencyCode:d.currencyCode,
+    ...closeReadiness({payments:d.scheduledPayment_endorsementDeal,deliverables:d.deliverable_deal})})),
+   contracts:ks.map((k:any)=>({id:k.id,status:k.status,athleteId:k.athlete?.id,athleteName:k.athlete?.fullName||'',counterparty:k.team?.name||'',endSeason:k.endSeason,totalValueCents:Number(k.totalValueCents||0),currencyCode:'USD',
+    ...closeReadiness({payments:[...k.contractYear_contract.flatMap((y:any)=>y.scheduledPayment_contractYear),...k.incentive_contract.flatMap((i:any)=>i.scheduledPayment_incentive)],pendingIncentives:k.incentive_contract.filter((i:any)=>i.status==='pending').length})})),
+  };
+ },
+};
 export const closeOutMutations={
  /** Ends a signed or active endorsement deal: completed after its term, or terminated early with a reason. */
  async closeEndorsementDeal(_:unknown,a:any,c:any){
@@ -71,6 +94,7 @@ export const closeOutMutations={
  },
 };
 export const closeOutTypeDefs=`
+ extend type Query { termsPastEnd(athleteId:ID):AgencyJSON! }
  extend type Mutation {
   closeEndorsementDeal(dealId:ID!,outcome:String!,reason:String,waiveOpen:Boolean,idempotencyKey:String!):AgencyJSON!
   closePlayingContract(contractId:ID!,outcome:String!,reason:String,waiveOpen:Boolean,idempotencyKey:String!):AgencyJSON!

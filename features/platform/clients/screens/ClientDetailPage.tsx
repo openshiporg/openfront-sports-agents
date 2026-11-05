@@ -12,6 +12,7 @@ import { StatusLabel } from '../../components/StatusLabel'
 import { AgreementLifecycle } from '../components/AgreementLifecycle'
 import { ConversionChecklist } from '../components/ConversionChecklist'
 import { ReassignAgent } from '../components/ReassignAgent'
+import { PastTermList } from '../../components/PastTermList'
 import { CommandButton } from '../../components/CommandButton'
 import { MarkReceived } from '../../commissions/components/MarkReceived'
 import { platformQuery, money, moneyExact, day } from '../../lib/query'
@@ -53,6 +54,8 @@ export default async function ClientDetailPage({ params, searchParams }: { param
   try { contacts = (await platformQuery(`{ contacts(orderBy: { name: asc }, take: 500) { id name doNotContact } }`)).contacts } catch { contacts = [] }
   let canReassign = false
   try { canReassign = Boolean((await platformQuery(`{ authenticatedItem { ... on User { role { canViewAllClients } } } }`)).authenticatedItem?.role?.canViewAllClients) } catch { canReassign = false }
+  let pastTerm: any = null
+  if (tab === 'overview') { try { pastTerm = (await platformQuery(`query($id: ID!) { termsPastEnd(athleteId: $id) }`, { id })).termsPastEnd } catch { pastTerm = null } }
   const trust = a.clientTrustEntry_athlete.reduce((n: number, e: any) => n + Number(e.amountCents), 0)
   return (
     <PlatformPage title={a.fullName} crumbs={[{ label: 'Clients', href: '/dashboard/platform/clients' }, { label: a.fullName }]} actions={<StatusLabel value={a.status} />}>
@@ -67,6 +70,7 @@ export default async function ClientDetailPage({ params, searchParams }: { param
           {canReassign && agents.length > 0 && <Row className="justify-end"><ReassignAgent athleteId={a.id} currentId={a.leadAgent?.id} agents={agents} /></Row>}
         </Section>
       )}
+      {tab === 'overview' && pastTerm && <PastTermList data={pastTerm} showAthlete={false} limit={20} />}
       {tab === 'overview' && checklist && (
         <Section title="Conversion checklist" hint={checklist.ready ? 'Ready' : `${checklist.blockers.length} blocking`}>
           <ConversionChecklist athleteId={a.id} checks={checklist.checks} ready={checklist.ready} blockers={checklist.blockers} />

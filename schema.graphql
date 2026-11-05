@@ -5442,6 +5442,7 @@ type Query {
   dealsMissingSchedule: AgencyJSON!
   dealForecast: AgencyJSON!
   reconcileCommissions(from: String!, to: String!): AgencyJSON!
+  termsPastEnd(athleteId: ID): AgencyJSON!
   invoiceAging: AgencyJSON!
   agentPayables: AgencyJSON!
   prospectChecklist(athleteId: ID!): AgencyJSON!

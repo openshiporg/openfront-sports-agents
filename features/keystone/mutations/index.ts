@@ -12,7 +12,7 @@ import {documentTypeDefs,documentMutations} from './documents';
 import {termsTypeDefs,termsMutations} from './terms';
 import {conversionTypeDefs,conversionQueries,conversionMutations} from './conversion';
 import {lifecycleTypeDefs,lifecycleMutations} from './lifecycle';
-import {closeOutTypeDefs,closeOutMutations} from './closeOut';
+import {closeOutTypeDefs,closeOutMutations,closeOutQueries} from './closeOut';
 import {certificationTypeDefs,certificationMutations} from './certifications';
 import {profileTypeDefs,profileMutations} from './profile';
 import {directoryTypeDefs,directoryMutations} from './directory';
@@ -40,7 +40,7 @@ export function extendGraphqlSchema(baseSchema: GraphQLSchema) {
     `,
     resolvers: {
       Query: userFacingAll({ 
-        redirectToInit, ...agencyQueries, ...portalQueries,...reconcileQueries,...conversionQueries,...agingQueries,...forecastQueries,...dealScheduleQueries,...payoutQueries,...trustReconQueries,
+        redirectToInit, ...agencyQueries, ...portalQueries,...reconcileQueries,...conversionQueries,...agingQueries,...forecastQueries,...dealScheduleQueries,...payoutQueries,...trustReconQueries,...closeOutQueries,
       }),
       Mutation: userFacingAll({...agencyMutations,...forecastMutations,...dealScheduleMutations,...refundMutations,...crmMutations,...documentMutations,...termsMutations,...reconcileMutations,...draftingMutations,...prospectMutations,...lifecycleMutations,...closeOutMutations,...agingMutations,...payoutMutations,...voidMutations,...directoryMutations,...profileMutations,...certificationMutations,...conversionMutations,...lostMutations,...portalMutations,...trustReconMutations,ensureOnboardingRecord,updateActiveUser,requestManagerApproval,decideManagerApproval}),
     },
