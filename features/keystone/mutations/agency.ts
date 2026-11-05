@@ -1,4 +1,5 @@
 import {permissions} from '../access';
+import {receiptFx} from '../lib/fx';
 import {invoiceTermsDays,dueFrom} from '../lib/paymentTerms';
 import {command,audit,transition,humanCode,authorizeAthlete} from '../lib/agencyCommand';
 import {applyInvoiceReceipt} from '../lib/invoiceReceipt';
@@ -52,7 +53,8 @@ export const agencyMutations = {
  });},
  async markPaymentReceived(_:unknown,a:any,c:any){const row=await locate(c,'scheduledPayment',a.scheduledPaymentId);return command(c,'canManageCommissions',row.athleteId,'markPaymentReceived',a,async tx=>{
  const payment=await tx.scheduledPayment.findUnique({where:{id:row.id}});const math=commission(payment.grossCents,payment.commissionBps);
- const updated=await transition(tx,c,'scheduledPayment',row.id,['scheduled','late'],'received',a.idempotencyKey,{receivedAt:new Date(),...math});
+ const agencyRow=await tx.agency.findFirst({orderBy:{createdAt:'asc'},select:{currencyCode:true}});const fx=receiptFx(payment.currencyCode,agencyRow?.currencyCode||'USD',math.commissionCents,a.fxRate);
+ const updated=await transition(tx,c,'scheduledPayment',row.id,['scheduled','late'],'received',a.idempotencyKey,{receivedAt:new Date(),...math,fxRateMicros:BigInt(fx.fxRateMicros),baseCurrencyCode:fx.baseCurrencyCode,baseCommissionCents:BigInt(fx.baseCommissionCents)});
  await tx.commissionLedgerEntry.create({data:{entryKey:'accrual:'+row.id,athleteId:row.athleteId,scheduledPaymentId:row.id,entryType:'accrual',amountCents:BigInt(math.commissionCents),reason:'Athlete payment received',preparedById:c.session.itemId,occurredAt:new Date(),currencyCode:payment.currencyCode}});
  return updated;
  });},
@@ -132,7 +134,7 @@ export const agencyTypeDefs = `
  recordContractSigned(contractId:ID!,idempotencyKey:String!):AgencyJSON!
  recordIncentiveEarned(incentiveId:ID!,evidence:String!,dueAt:String!,idempotencyKey:String!):AgencyJSON!
  generatePaymentSchedule(contractId:ID,dealId:ID,idempotencyKey:String!):AgencyJSON!
- markPaymentReceived(scheduledPaymentId:ID!,idempotencyKey:String!):AgencyJSON!
+ markPaymentReceived(scheduledPaymentId:ID!,fxRate:String,idempotencyKey:String!):AgencyJSON!
  draftCommissionInvoice(athleteId:ID!,scheduledPaymentIds:[ID!]!,idempotencyKey:String!):AgencyJSON!
  sendCommissionInvoice(invoiceId:ID!,idempotencyKey:String!):AgencyJSON!
  voidCommissionInvoice(invoiceId:ID!,reason:String!,idempotencyKey:String!):AgencyJSON!

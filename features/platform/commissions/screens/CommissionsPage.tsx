@@ -10,6 +10,8 @@ import { RefundPayment } from '../components/RefundPayment'
 import { CommandButton } from '../../components/CommandButton'
 import { platformQuery, moneyExact, day } from '../../lib/query'
 import { parsePeriod } from '@/features/keystone/lib/reconcile'
+import { MarkReceived } from '../components/MarkReceived'
+import { formatRate } from '@/features/keystone/lib/fx'
 import { plural, breakdownText, entriesText } from '@/features/keystone/lib/payout'
 import { BUCKETS, BUCKET_LABEL } from '@/features/keystone/lib/aging'
 
@@ -23,10 +25,10 @@ export default async function CommissionsPage({ searchParams }: { searchParams: 
   let data: any
   try {
     data = await platformQuery(`{
-      scheduledPayments(orderBy: { dueAt: asc }, take: 300) { id status dueAt grossCents commissionBps commissionCents invoice { id } athlete { id fullName } }
+      scheduledPayments(orderBy: { dueAt: asc }, take: 300) { id status dueAt grossCents commissionBps commissionCents currencyCode fxRateMicros baseCurrencyCode baseCommissionCents invoice { id } athlete { id fullName } }
       commissionInvoices(orderBy: { createdAt: desc }, take: 100) { id number status totalCents paidCents currencyCode athlete { fullName } payment_order(where: { status: { in: ["succeeded", "partially_refunded"] } }) { id amount refundedAmount cardBrand cardLast4 } }
       refunds(where: { status: { in: ["processing", "unknown"] } }, orderBy: { createdAt: asc }, take: 50) { id amount status reason order { number } }
-      agencies(take: 1) { refundApprovalThresholdCents }
+      agencies(take: 1) { refundApprovalThresholdCents currencyCode }
       commissionLedgerEntries(orderBy: { occurredAt: desc }, take: 150) { id entryType amountCents reason occurredAt reverses { id } reversalKey payeeUser { name } athlete { fullName } }
     }`)
   } catch (e: any) { return <PlatformPage title="Commissions"><ErrorState message={e.message} /></PlatformPage> }
@@ -39,6 +41,7 @@ export default async function CommissionsPage({ searchParams }: { searchParams: 
     try {
       parsePeriod(from, to); rec = (await platformQuery(`query($from: String!, $to: String!) { reconcileCommissions(from: $from, to: $to) }`, { from, to })).reconcileCommissions } catch (e: any) { recError = /Dates|End date|period/.test(e.message) ? e.message : 'Reconciliation could not run. Try a shorter period.' }
   }
+  data.baseCurrency = data.agencies?.[0]?.currencyCode || 'USD'
   const received = data.scheduledPayments.filter((p: any) => p.status === 'received' && !p.invoice)
   const byAthlete = new Map<string, { id: string; name: string; ids: string[] }>()
   for (const p of received) { const k = p.athlete.id; const cur = byAthlete.get(k) || { id: k, name: p.athlete.fullName, ids: [] as string[] }; cur.ids.push(p.id); byAthlete.set(k, cur) }
@@ -59,8 +62,8 @@ export default async function CommissionsPage({ searchParams }: { searchParams: 
               <Row key={p.id}>
                 <Cell><StatusLabel value={p.status} className="mr-2" />{p.athlete?.fullName}</Cell>
                 <Cell muted>{day(p.dueAt)} · {(p.commissionBps / 100).toFixed(2)}%</Cell>
-                <Cell className="tabular-nums">{moneyExact(p.grossCents)}</Cell>
-                {['scheduled', 'late'].includes(p.status) && <CommandButton operation="markPaymentReceived" args={{ scheduledPaymentId: p.id }} label="Mark received" />}
+                <Cell className="tabular-nums">{moneyExact(p.grossCents, p.currencyCode)}{p.fxRateMicros != null && p.currencyCode !== p.baseCurrencyCode && <span className="block text-xs text-muted-foreground">{p.baseCurrencyCode} {formatRate(p.fxRateMicros)} · commission {moneyExact(Number(p.baseCommissionCents), p.baseCurrencyCode)}</span>}</Cell>
+                {['scheduled', 'late'].includes(p.status) && <MarkReceived paymentId={p.id} currency={p.currencyCode} baseCurrency={data.baseCurrency} commissionCents={Math.floor(Number(p.grossCents) * Number(p.commissionBps) / 10000)} />}
               </Row>
             )) : <Empty>No scheduled payments</Empty>}
           </Section>

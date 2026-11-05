@@ -444,6 +444,9 @@ model ScheduledPayment {
   commissionCents                        Int?                        @default(0)
   remainder                              Int?                        @default(0)
   waivedCents                            Int?                        @default(0)
+  fxRateMicros                           BigInt?
+  baseCurrencyCode                       String                      @default("")
+  baseCommissionCents                    BigInt?
   receivedAt                             DateTime?
   status                                 ScheduledPaymentStatusType? @default(scheduled)
   currencyCode                           String                      @default("USD")

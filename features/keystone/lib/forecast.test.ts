@@ -40,3 +40,12 @@ test('commission of a payment is computed until it is received, then taken as re
   assert.equal(paymentCommission({ status: 'received', grossCents: 100, commissionBps: 1500, commissionCents: 17 }), 17)
   assert.equal(paymentCommission({ status: 'scheduled', grossCents: null, commissionBps: null, commissionCents: null }), 0)
 })
+test('other currencies get their own block and never mix into the base totals', () => {
+  const now = new Date('2026-11-03T00:00:00Z')
+  const mk = (id: string, currencyCode: string, total: number, status = 'active') => ({ id, status, ownerId: 'u', currencyCode, totalValueCents: total, commissionBps: 1000, termStart: '2026-12-01T00:00:00Z', payments: [] })
+  const f = forecastDeals([mk('a', 'USD', 1_000_000), mk('b', 'EUR', 500_000), mk('c', 'EUR', 200_000, 'prospect'), mk('d', 'GBP', 100_000)] as any, D, 'USD', now)
+  assert.equal(f.totals.deals, 1); assert.equal(f.totals.grossCents, 100_000)
+  assert.deepEqual(f.otherCurrencies.map((o) => [o.currency, o.deals, o.grossCents, o.weightedCents, o.unscheduledCents]), [['EUR', 2, 70_000, 52_000, 70_000], ['GBP', 1, 10_000, 10_000, 10_000]])
+  assert.equal(f.excludedOtherCurrency, 3); assert.deepEqual(f.otherCurrencies[0].months.map((m) => m.month), ['2026-12'])
+  assert.deepEqual(forecastDeals([mk('a', 'USD', 1000)] as any, D, 'USD', now).otherCurrencies, [])
+})

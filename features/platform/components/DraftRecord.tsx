@@ -49,7 +49,7 @@ export function DraftContract({ athletes, teams }: { athletes: Opt[]; teams: Opt
 
 export function DraftDeal({ athletes, brands }: { athletes: Opt[]; brands: Opt[] }) {
   const [open, setOpen] = useState(false)
-  const [f, setF] = useState({ athleteId: '', brandId: '', total: '', days: '', category: '', territory: '' })
+  const [f, setF] = useState({ athleteId: '', brandId: '', total: '', days: '', currency: '', category: '', territory: '' })
   const [start, setStart] = useState<Date>(); const [end, setEnd] = useState<Date>()
   const [local, setLocal] = useState('')
   const { run, pending, error } = useCommand('draftEndorsementDeal', () => setOpen(false))
@@ -59,13 +59,14 @@ export function DraftDeal({ athletes, brands }: { athletes: Opt[]; brands: Opt[]
     e.preventDefault(); const total = toCents(f.total)
     if (!f.athleteId || !f.brandId || !start || !end) { setLocal('Choose an athlete, a brand and both dates'); return }
     if (total === null) { setLocal('Enter an amount like 250000.00'); return }
-    setLocal(''); run({ athleteId: f.athleteId, brandId: f.brandId, termStart: utc(start), termEnd: utc(end), totalValueCents: total, paymentTermsDays: daysArg(f.days), exclusivityCategory: f.category, territory: f.territory })
+    setLocal(''); run({ athleteId: f.athleteId, brandId: f.brandId, termStart: utc(start), termEnd: utc(end), totalValueCents: total, paymentTermsDays: daysArg(f.days), currencyCode: f.currency || undefined, exclusivityCategory: f.category, territory: f.territory })
   }}>
     <Pick label="Athlete" value={f.athleteId} onChange={v => setF({ ...f, athleteId: v })} options={athletes} />
     <Pick label="Brand" value={f.brandId} onChange={v => setF({ ...f, brandId: v })} options={brands} />
     <DateField label="Term start" value={start} onChange={setStart} /><DateField label="Term end" value={end} onChange={setEnd} />
     <label className="text-sm">Total value<Input inputMode="decimal" value={f.total} onChange={set('total')} /></label>
     <PaymentTermsField value={f.days} onChange={v => setF({ ...f, days: v })} />
+    <label className="text-sm">Currency (blank uses the agency's)<Input maxLength={3} value={f.currency} onChange={e => setF({ ...f, currency: e.target.value.toUpperCase() })} placeholder="EUR" /></label>
     <label className="text-sm">Exclusivity category<Input maxLength={100} value={f.category} onChange={set('category')} /></label>
     <label className="text-sm">Territory<Input maxLength={100} value={f.territory} onChange={set('territory')} /></label>
     <div className="flex gap-2"><Button type="submit" size="sm" disabled={pending}>{pending ? 'Working' : 'Create draft'}</Button><Button type="button" variant="ghost" size="sm" onClick={() => setOpen(false)}>Cancel</Button></div>

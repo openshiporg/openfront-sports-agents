@@ -40,8 +40,8 @@ export const forecastQueries={
   if(all){
    const snaps=await c.prisma.forecastSnapshot.findMany({orderBy:{month:'desc'},take:6});
    const since=snaps.length?new Date(snaps[snaps.length-1].month+'-01T00:00:00Z'):now;
-   const recv=await c.prisma.scheduledPayment.findMany({where:{status:'received',endorsementDealId:{not:null},receivedAt:{gte:since},currencyCode:currency},select:{receivedAt:true,commissionCents:true},take:5000});
-   history=compareSnapshots(snaps.map((x:any)=>({month:x.month,takenAt:x.takenAt,source:x.source,weightedCents:Number(x.weightedCents),grossCents:Number(x.grossCents),firstMonthWeightedCents:Number(x.firstMonthWeightedCents),firstMonthGrossCents:Number(x.firstMonthGrossCents),dealCount:x.dealCount})),actualByMonth(recv.map((r:any)=>({receivedAt:r.receivedAt,commissionCents:Number(r.commissionCents||0)}))),now);
+   const recv=await c.prisma.scheduledPayment.findMany({where:{status:'received',endorsementDealId:{not:null},receivedAt:{gte:since},OR:[{currencyCode:currency},{baseCurrencyCode:currency}]},select:{receivedAt:true,commissionCents:true,baseCommissionCents:true,currencyCode:true},take:5000});
+   history=compareSnapshots(snaps.map((x:any)=>({month:x.month,takenAt:x.takenAt,source:x.source,weightedCents:Number(x.weightedCents),grossCents:Number(x.grossCents),firstMonthWeightedCents:Number(x.firstMonthWeightedCents),firstMonthGrossCents:Number(x.firstMonthGrossCents),dealCount:x.dealCount})),actualByMonth(recv.map((r:any)=>({receivedAt:r.receivedAt,commissionCents:r.currencyCode===currency?Number(r.commissionCents||0):Number(r.baseCommissionCents||0)}))),now);
   }
   const thisMonth=now.toISOString().slice(0,7);
   const snapshotTaken=all?Boolean(await c.prisma.forecastSnapshot.findUnique({where:{month:thisMonth},select:{id:true}})):false;

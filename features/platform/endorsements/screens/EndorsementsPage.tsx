@@ -84,8 +84,17 @@ function Forecast({ fc }: { fc: any }) {
         <Row><Cell muted>If every deal closes</Cell><Cell className="tabular-nums">{money(fc.totals.grossCents, cur)}</Cell></Row>
         <Row><Cell muted>Deals counted</Cell><Cell className="tabular-nums">{fc.totals.deals}</Cell></Row>
         <Row><Cell muted>Already scheduled / not yet scheduled</Cell><Cell className="tabular-nums">{money(fc.placement.scheduledCents, cur)} / {money(fc.placement.unscheduledCents, cur)}</Cell></Row>
-        {fc.excludedOtherCurrency > 0 && <Row><Cell muted>Left out: other currency</Cell><Cell className="tabular-nums">{fc.excludedOtherCurrency} {fc.excludedOtherCurrency === 1 ? 'deal' : 'deals'}</Cell></Row>}
+        {fc.otherCurrencies.length > 0 && <Row><Cell muted>Other currencies</Cell><Cell className="tabular-nums">Listed separately below, never added in</Cell></Row>}
       </Section>
+      {fc.otherCurrencies.map((o: any) => (
+        <Section key={o.currency} title={`Expected commission in ${o.currency}`} hint={`Not converted to ${cur}`}>
+          <Row><Cell muted>Weighted by stage</Cell><Cell className="tabular-nums font-medium">{money(o.weightedCents, o.currency)}</Cell></Row>
+          <Row><Cell muted>If every deal closes</Cell><Cell className="tabular-nums">{money(o.grossCents, o.currency)}</Cell></Row>
+          <Row><Cell muted>Deals counted</Cell><Cell className="tabular-nums">{o.deals}</Cell></Row>
+          <Row><Cell muted>Already scheduled / not yet scheduled</Cell><Cell className="tabular-nums">{money(o.scheduledCents, o.currency)} / {money(o.unscheduledCents, o.currency)}</Cell></Row>
+          {o.months.slice(0, 6).map((m: any) => <Row key={m.month}><Cell>{monthLabel(m.month)}</Cell><Cell muted className="tabular-nums">{money(m.weightedCents, o.currency)} of {money(m.grossCents, o.currency)}</Cell></Row>)}
+        </Section>
+      ))}
       <Section title="By month" hint="Next 12 months">
         {months.length ? months.map((m: any) => <Row key={m.month}><Cell>{monthLabel(m.month)}</Cell><Cell muted className="tabular-nums">{money(m.grossCents, cur)} total</Cell><Cell className="tabular-nums font-medium">{money(m.weightedCents, cur)}</Cell></Row>) : <Empty>No expected commission in the next 12 months</Empty>}
         <div className="border-t px-3 py-2 text-xs text-muted-foreground">Scheduled payments fall in their due month; overdue ones in this month. Commission not yet scheduled falls in the deal's start month. Later months are in the totals above.</div>

@@ -18,11 +18,11 @@ export const draftingMutations={
    const brand=await tx.brand.findUnique({where:{id:String(a.brandId||'')}});if(!brand)throw new DomainError('Brand not found');
    const agency=await tx.agency.findFirst({orderBy:{createdAt:'asc'}});if(!agency)throw new DomainError('Agency settings required');
    const agreement=await tx.representationAgreement.findFirst({where:{athleteId:a.athleteId,status:{in:['signed','filed_with_union','active']},scope:{in:['marketing','both']}},orderBy:{createdAt:'desc'}});
-   const row=await tx.endorsementDeal.create({data:{athleteId:a.athleteId,brandId:brand.id,ownerId:c.session.itemId,...t,status:'prospect',currencyCode:'USD',commissionBps:agreement?.marketingCommissionBps??agency.defaultEndorsementCommissionBps}});
+   const row=await tx.endorsementDeal.create({data:{athleteId:a.athleteId,brandId:brand.id,ownerId:c.session.itemId,...t,status:'prospect',currencyCode:t.currencyCode??agency.currencyCode??'USD',commissionBps:agreement?.marketingCommissionBps??agency.defaultEndorsementCommissionBps}});
    await audit(tx,c,'deal.drafted','EndorsementDeal',row.id,null,row,a.idempotencyKey);return row;});},
 };
 export const draftingTypeDefs=`
  extend type Mutation {
   draftPlayingContract(athleteId:ID!,teamId:ID!,contractType:String!,startSeason:String!,endSeason:String!,totalValueCents:Int!,guaranteedCents:Int!,signingBonusCents:Int!,paymentTermsDays:Int,idempotencyKey:String!):AgencyJSON!
-  draftEndorsementDeal(athleteId:ID!,brandId:ID!,termStart:String!,termEnd:String!,totalValueCents:Int!,paymentTermsDays:Int,exclusivityCategory:String,territory:String,idempotencyKey:String!):AgencyJSON!
+  draftEndorsementDeal(athleteId:ID!,brandId:ID!,termStart:String!,termEnd:String!,totalValueCents:Int!,paymentTermsDays:Int,currencyCode:String,exclusivityCategory:String,territory:String,idempotencyKey:String!):AgencyJSON!
  }`;

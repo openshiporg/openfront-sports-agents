@@ -13,6 +13,10 @@ export const ScheduledPayment = domainList({
     remainder: integer({defaultValue:0}),
     // Part of the original instalment given up by amendment. Original amount = grossCents + waivedCents.
     waivedCents: cents(),
+    // Recorded at receipt when the payment currency differs from the agency base currency (operator-entered rate, millionths of base per unit).
+    fxRateMicros: bigInt(),
+    baseCurrencyCode: text(),
+    baseCommissionCents: bigInt(),
     receivedAt: timestamp(),
     status: state(['scheduled', 'received', 'late', 'waived']),
     currencyCode: currencyCode(),

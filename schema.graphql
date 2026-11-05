@@ -2693,6 +2693,9 @@ type ScheduledPayment {
   commissionCents: Int
   remainder: Int
   waivedCents: Int
+  fxRateMicros: BigInt
+  baseCurrencyCode: String
+  baseCommissionCents: BigInt
   receivedAt: DateTime
   status: ScheduledPaymentStatusType
   currencyCode: String
@@ -2704,6 +2707,8 @@ type ScheduledPayment {
   createdAt: DateTime
   updatedAt: DateTime
 }
+
+scalar BigInt
 
 enum ScheduledPaymentStatusType {
   scheduled
@@ -2733,6 +2738,9 @@ input ScheduledPaymentWhereInput {
   commissionCents: IntNullableFilter
   remainder: IntNullableFilter
   waivedCents: IntNullableFilter
+  fxRateMicros: BigIntNullableFilter
+  baseCurrencyCode: StringFilter
+  baseCommissionCents: BigIntNullableFilter
   receivedAt: DateTimeNullableFilter
   status: ScheduledPaymentStatusTypeNullableFilter
   currencyCode: StringFilter
@@ -2741,6 +2749,17 @@ input ScheduledPaymentWhereInput {
   commissionLedgerEntry_scheduledPayment: CommissionLedgerEntryManyRelationFilter
   createdAt: DateTimeFilter
   updatedAt: DateTimeFilter
+}
+
+input BigIntNullableFilter {
+  equals: BigInt
+  in: [BigInt!]
+  notIn: [BigInt!]
+  lt: BigInt
+  lte: BigInt
+  gt: BigInt
+  gte: BigInt
+  not: BigIntNullableFilter
 }
 
 input ScheduledPaymentStatusTypeNullableFilter {
@@ -2765,6 +2784,9 @@ input ScheduledPaymentOrderByInput {
   commissionCents: OrderDirection
   remainder: OrderDirection
   waivedCents: OrderDirection
+  fxRateMicros: OrderDirection
+  baseCurrencyCode: OrderDirection
+  baseCommissionCents: OrderDirection
   receivedAt: OrderDirection
   status: OrderDirection
   currencyCode: OrderDirection
@@ -2784,6 +2806,9 @@ input ScheduledPaymentUpdateInput {
   commissionCents: Int
   remainder: Int
   waivedCents: Int
+  fxRateMicros: BigInt
+  baseCurrencyCode: String
+  baseCommissionCents: BigInt
   receivedAt: DateTime
   status: ScheduledPaymentStatusType
   currencyCode: String
@@ -3060,8 +3085,6 @@ enum CommissionLedgerEntryEntryTypeType {
   reversal
   write_off
 }
-
-scalar BigInt
 
 input CommissionLedgerEntryWhereUniqueInput {
   id: ID
@@ -5058,7 +5081,7 @@ type Mutation {
   recordContractSigned(contractId: ID!, idempotencyKey: String!): AgencyJSON!
   recordIncentiveEarned(incentiveId: ID!, evidence: String!, dueAt: String!, idempotencyKey: String!): AgencyJSON!
   generatePaymentSchedule(contractId: ID, dealId: ID, idempotencyKey: String!): AgencyJSON!
-  markPaymentReceived(scheduledPaymentId: ID!, idempotencyKey: String!): AgencyJSON!
+  markPaymentReceived(scheduledPaymentId: ID!, fxRate: String, idempotencyKey: String!): AgencyJSON!
   draftCommissionInvoice(athleteId: ID!, scheduledPaymentIds: [ID!]!, idempotencyKey: String!): AgencyJSON!
   sendCommissionInvoice(invoiceId: ID!, idempotencyKey: String!): AgencyJSON!
   voidCommissionInvoice(invoiceId: ID!, reason: String!, idempotencyKey: String!): AgencyJSON!
@@ -5085,13 +5108,13 @@ type Mutation {
   editContractTerms(contractId: ID!, contractType: String!, startSeason: String!, endSeason: String!, totalValueCents: Int!, guaranteedCents: Int!, signingBonusCents: Int!, paymentTermsDays: Int, idempotencyKey: String!): AgencyJSON!
   saveContractYear(contractId: ID!, yearId: ID, season: String!, baseSalaryCents: Int!, rosterBonusCents: Int!, workoutBonusCents: Int!, guaranteedCents: Int!, paySchedule: String!, payPeriods: Int!, firstPaymentAt: String, idempotencyKey: String!): AgencyJSON!
   removeContractYear(yearId: ID!, idempotencyKey: String!): AgencyJSON!
-  editDealTerms(dealId: ID!, termStart: String!, termEnd: String!, totalValueCents: Int!, paymentTermsDays: Int, exclusivityCategory: String, territory: String, idempotencyKey: String!): AgencyJSON!
+  editDealTerms(dealId: ID!, termStart: String!, termEnd: String!, totalValueCents: Int!, paymentTermsDays: Int, currencyCode: String, exclusivityCategory: String, territory: String, idempotencyKey: String!): AgencyJSON!
   saveDeliverable(dealId: ID!, deliverableId: ID, kind: String!, dueAt: String!, notes: String, idempotencyKey: String!): AgencyJSON!
   removeDeliverable(deliverableId: ID!, idempotencyKey: String!): AgencyJSON!
   amendTerms(kind: String!, reason: String!, scheduledPaymentId: ID, dealId: ID, contractId: ID, paymentTermsDays: Int, amountCents: Int, deliverableId: ID, dueAt: String, termEnd: String, deliverableKind: String, notes: String, idempotencyKey: String!): AgencyJSON!
   exportAgentPayouts(from: String!, to: String!, idempotencyKey: String!): AgencyJSON!
   draftPlayingContract(athleteId: ID!, teamId: ID!, contractType: String!, startSeason: String!, endSeason: String!, totalValueCents: Int!, guaranteedCents: Int!, signingBonusCents: Int!, paymentTermsDays: Int, idempotencyKey: String!): AgencyJSON!
-  draftEndorsementDeal(athleteId: ID!, brandId: ID!, termStart: String!, termEnd: String!, totalValueCents: Int!, paymentTermsDays: Int, exclusivityCategory: String, territory: String, idempotencyKey: String!): AgencyJSON!
+  draftEndorsementDeal(athleteId: ID!, brandId: ID!, termStart: String!, termEnd: String!, totalValueCents: Int!, paymentTermsDays: Int, currencyCode: String, exclusivityCategory: String, territory: String, idempotencyKey: String!): AgencyJSON!
   createProspect(fullName: String!, sport: String!, league: String!, position: String, email: String, contactAllowedFrom: String, leadAgentId: ID, idempotencyKey: String!): AgencyJSON!
   markProspectLost(athleteId: ID!, reason: String!, note: String, idempotencyKey: String!): AgencyJSON!
   reopenProspect(athleteId: ID!, note: String!, idempotencyKey: String!): AgencyJSON!

@@ -33,7 +33,7 @@ export type Forecast={currency:string;months:MonthRow[];stages:{stage:ForecastSt
 
 /** Expected commission per deal = unreceived scheduled commission, plus any commission not yet scheduled (contract total at the deal rate minus all scheduled).
  *  Scheduled amounts land in their due month (overdue ones in the current month). The unscheduled remainder lands in the term start month, or this month if that has passed. */
-export function forecastDeals(deals:FDeal[],probs:Probabilities,currency:string,now:Date,horizon=12):Forecast{
+function forecastOne(deals:FDeal[],probs:Probabilities,currency:string,now:Date,horizon:number):Forecast{
  const first=monthStart(now);const keys:string[]=[];for(let i=0;i<horizon;i++)keys.push(monthKey(new Date(Date.UTC(first.getUTCFullYear(),first.getUTCMonth()+i,1))));
  const months=new Map<string,MonthRow>(keys.map(k=>[k,{month:k,grossCents:0,weightedCents:0}]));
  const stages=new Map<ForecastStage,{stage:ForecastStage;deals:number;grossCents:number;weightedCents:number}>(FORECAST_STAGES.map(s=>[s,{stage:s,deals:0,grossCents:0,weightedCents:0}]));
@@ -63,3 +63,15 @@ export function forecastDeals(deals:FDeal[],probs:Probabilities,currency:string,
 
 /** A scheduled payment stores its commission only once it is received, so until then it is worked out from the gross amount and the rate. */
 export const paymentCommission=(p:{status:string;grossCents:number|null;commissionBps:number|null;commissionCents:number|null})=>p.status==='received'?Number(p.commissionCents||0):commission(Number(p.grossCents||0),Number(p.commissionBps||0)).commissionCents;
+
+export type OtherCurrency={currency:string;deals:number;grossCents:number;weightedCents:number;scheduledCents:number;unscheduledCents:number;months:MonthRow[]};
+export type ForecastAll=Forecast&{otherCurrencies:OtherCurrency[]};
+/** Base-currency forecast plus one separate block per other currency. Currencies are never added together: there is no live FX feed, and a rate is only recorded at receipt. */
+export function forecastDeals(deals:FDeal[],probs:Probabilities,currency:string,now:Date,horizon=12):ForecastAll{
+ const base=forecastOne(deals,probs,currency,now,horizon);
+ const others=[...new Set(deals.filter(d=>d.currencyCode!==currency).map(d=>d.currencyCode))].sort();
+ const otherCurrencies:OtherCurrency[]=[];
+ for(const cur of others){const f=forecastOne(deals,probs,cur,now,horizon);if(f.totals.deals===0)continue;
+  otherCurrencies.push({currency:cur,deals:f.totals.deals,grossCents:f.totals.grossCents,weightedCents:f.totals.weightedCents,scheduledCents:f.placement.scheduledCents,unscheduledCents:f.placement.unscheduledCents,months:f.months.filter(m=>m.grossCents>0)});}
+ return {...base,otherCurrencies};
+}

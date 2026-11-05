@@ -13,6 +13,7 @@ import { AgreementLifecycle } from '../components/AgreementLifecycle'
 import { ConversionChecklist } from '../components/ConversionChecklist'
 import { ReassignAgent } from '../components/ReassignAgent'
 import { CommandButton } from '../../components/CommandButton'
+import { MarkReceived } from '../../commissions/components/MarkReceived'
 import { platformQuery, money, moneyExact, day } from '../../lib/query'
 
 const TABS = ['overview', 'agreements', 'contracts', 'endorsements', 'payments', 'commissions', 'trust', 'documents', 'timeline'] as const
@@ -24,7 +25,7 @@ const QUERY = `query ClientDetail($id: ID!) {
     representationAgreement_athlete(orderBy: { createdAt: desc }) { id scope status playingCommissionBps marketingCommissionBps capBps effectiveAt expiresAt terminationNoticeDays }
     playingContract_athlete(orderBy: { createdAt: desc }) { id status startSeason endSeason totalValueCents commissionBps team { name } }
     endorsementDeal_athlete(orderBy: { createdAt: desc }) { id status termStart termEnd totalValueCents commissionBps exclusivityCategory brand { name } }
-    scheduledPayment_athlete(orderBy: { dueAt: asc }, take: 60) { id status dueAt grossCents commissionBps commissionCents }
+    scheduledPayment_athlete(orderBy: { dueAt: asc }, take: 60) { id status dueAt grossCents commissionBps commissionCents currencyCode }
     commissionInvoice_athlete(orderBy: { createdAt: desc }) { id number status totalCents paidCents }
     commissionLedgerEntry_athlete(orderBy: { occurredAt: desc }, take: 40) { id entryType amountCents reason occurredAt }
     clientTrustAccount_athlete { id name currencyCode }
@@ -42,7 +43,8 @@ export default async function ClientDetailPage({ params, searchParams }: { param
   try { a = (await platformQuery(QUERY, { id })).athlete } catch (e: any) { return <PlatformPage title="Client"><ErrorState message={e.message} /></PlatformPage> }
   if (!a) notFound()
   let agents: { id: string; name: string }[] = []
-  try { agents = (await platformQuery(`{ users(orderBy: { name: asc }, take: 200) { id name } }`)).users } catch { agents = [] }
+  let baseCurrency = 'USD'
+  try { const r = await platformQuery(`{ users(orderBy: { name: asc }, take: 200) { id name } agencies(take: 1) { currencyCode } }`); agents = r.users; baseCurrency = r.agencies?.[0]?.currencyCode || 'USD' } catch { agents = [] }
   let checklist: any = null
   if (['prospect', 'recruiting'].includes(a.status)) { try { checklist = (await platformQuery(`query($id: ID!) { prospectChecklist(athleteId: $id) }`, { id })).prospectChecklist } catch { checklist = null } }
   let teams: any[] = []
@@ -111,8 +113,8 @@ export default async function ClientDetailPage({ params, searchParams }: { param
           {a.scheduledPayment_athlete.length ? a.scheduledPayment_athlete.map((p: any) => (
             <Row key={p.id}>
               <Cell><StatusLabel value={p.status} className="mr-2" />{day(p.dueAt)}</Cell>
-              <Cell className="tabular-nums">{moneyExact(p.grossCents)}</Cell>
-              {['scheduled', 'late'].includes(p.status) && <CommandButton operation="markPaymentReceived" args={{ scheduledPaymentId: p.id }} label="Mark received" />}
+              <Cell className="tabular-nums">{moneyExact(p.grossCents, p.currencyCode)}</Cell>
+              {['scheduled', 'late'].includes(p.status) && <MarkReceived paymentId={p.id} currency={p.currencyCode} baseCurrency={baseCurrency} commissionCents={Math.floor(Number(p.grossCents) * Number(p.commissionBps) / 10000)} />}
             </Row>
           )) : <Empty>No scheduled payments</Empty>}
         </Section>

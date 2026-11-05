@@ -22,7 +22,7 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
   return (
     <PlatformPage title={`${d.athlete?.fullName} · ${d.brand?.name}`} crumbs={[{ label: 'Endorsements', href: '/dashboard/platform/endorsements' }, { label: d.athlete?.fullName }]} actions={<StatusLabel value={d.status} />}>
       <Section title="Terms">
-        {[['Term', `${day(d.termStart)} to ${day(d.termEnd)}`], ['Total value', money(d.totalValueCents, d.currencyCode)], ['Commission', `${(d.commissionBps / 100).toFixed(2)}%`], ['Exclusivity', d.exclusivityCategory || 'None'], ['Territory', d.territory || 'Not set'], ['Payment terms', termsLabel(d.paymentTermsDays)]].map(([k, v]) => <Row key={k}><Cell muted>{k}</Cell><Cell>{v}</Cell></Row>)}
+        {[['Term', `${day(d.termStart)} to ${day(d.termEnd)}`], ['Total value', `${money(d.totalValueCents, d.currencyCode)} ${d.currencyCode}`], ['Commission', `${(d.commissionBps / 100).toFixed(2)}%`], ['Exclusivity', d.exclusivityCategory || 'None'], ['Territory', d.territory || 'Not set'], ['Payment terms', termsLabel(d.paymentTermsDays)]].map(([k, v]) => <Row key={k}><Cell muted>{k}</Cell><Cell>{v}</Cell></Row>)}
         <Row className="justify-end gap-2">
           {draft && <DealTermsForm deal={d} />}
           {live && <AmendTerms kind="extend_deal_term" ids={{ dealId: d.id }} label="Extend term" initial={d.termEnd} />}

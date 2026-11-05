@@ -36,6 +36,7 @@ export const termsMutations={
   return command(c,'canManageEndorsements',row.athleteId,'editDealTerms',a,async tx=>{
    const before=await tx.endorsementDeal.findUnique({where:{id:row.id}});if(!DRAFT_DEAL.includes(before.status))throw new DomainError('Signed deals change only by amendment');
    const t=validateDealTerms(a);
+   if(t.currencyCode&&t.currencyCode!==before.currencyCode&&await tx.scheduledPayment.count({where:{endorsementDealId:row.id}}))throw new DomainError('This deal already has scheduled payments in '+before.currencyCode+'. Remove them before changing the currency.');
    const out=await tx.deliverable.count({where:{dealId:row.id,OR:[{dueAt:{lt:t.termStart}},{dueAt:{gt:t.termEnd}}]}});if(out)throw new DomainError('Move or remove deliverables that fall outside the new term first');
    const swapped=await tx.endorsementDeal.updateMany({where:{id:row.id,status:before.status},data:t});if(swapped.count!==1)throw new DomainError('Record changed concurrently');
    const after=await tx.endorsementDeal.findUnique({where:{id:row.id}});await audit(tx,c,'deal.terms_edited','EndorsementDeal',row.id,before,after,a.idempotencyKey);return after;});},
@@ -142,7 +143,7 @@ export const termsTypeDefs=`
   editContractTerms(contractId:ID!,contractType:String!,startSeason:String!,endSeason:String!,totalValueCents:Int!,guaranteedCents:Int!,signingBonusCents:Int!,paymentTermsDays:Int,idempotencyKey:String!):AgencyJSON!
   saveContractYear(contractId:ID!,yearId:ID,season:String!,baseSalaryCents:Int!,rosterBonusCents:Int!,workoutBonusCents:Int!,guaranteedCents:Int!,paySchedule:String!,payPeriods:Int!,firstPaymentAt:String,idempotencyKey:String!):AgencyJSON!
   removeContractYear(yearId:ID!,idempotencyKey:String!):AgencyJSON!
-  editDealTerms(dealId:ID!,termStart:String!,termEnd:String!,totalValueCents:Int!,paymentTermsDays:Int,exclusivityCategory:String,territory:String,idempotencyKey:String!):AgencyJSON!
+  editDealTerms(dealId:ID!,termStart:String!,termEnd:String!,totalValueCents:Int!,paymentTermsDays:Int,currencyCode:String,exclusivityCategory:String,territory:String,idempotencyKey:String!):AgencyJSON!
   saveDeliverable(dealId:ID!,deliverableId:ID,kind:String!,dueAt:String!,notes:String,idempotencyKey:String!):AgencyJSON!
   removeDeliverable(deliverableId:ID!,idempotencyKey:String!):AgencyJSON!
   amendTerms(kind:String!,reason:String!,scheduledPaymentId:ID,dealId:ID,contractId:ID,paymentTermsDays:Int,amountCents:Int,deliverableId:ID,dueAt:String,termEnd:String,deliverableKind:String,notes:String,idempotencyKey:String!):AgencyJSON!
