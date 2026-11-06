@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { getInvoice } from '../lib/data'
 import { Shell } from './Shell'
+import { StoreLogoMark } from '../components/StoreLogoMark'
 import { InvoicePayment } from './InvoicePayment'
 
 export const usd = (c: number, cur = 'USD') => new Intl.NumberFormat('en-US', { style: 'currency', currency: cur }).format(c / 100)
@@ -12,7 +13,7 @@ export default async function InvoicePage({ params, searchParams }: { params: Pr
   if (!data) notFound()
   const i = data.invoice
   return (
-    <Shell name={data.name}>
+    <Shell name={data.name} mark={<StoreLogoMark />}>
       <h1 className="text-2xl font-semibold">Invoice {i.number}</h1>
       <p className="mb-4 text-sm text-muted-foreground">{i.athleteName} · {i.status.replaceAll('_', ' ')}</p>
       <ul className="mb-4 divide-y rounded-lg border text-sm">

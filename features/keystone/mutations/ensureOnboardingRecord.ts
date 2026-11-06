@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import {permissionNames, permissions} from '../access';
 import {agencyMutations} from './agency';
 import {DomainError} from '../lib/errors';
+import { DEFAULT_STORE_LOGO_COLOR, DEFAULT_STORE_LOGO_ICON } from '../../platform/store-settings/lib/store-logo';
 
 const dt = (v: any) => (v ? new Date(v) : undefined);
 const days = (n: number) => new Date(Date.now() + n * 86400000);
@@ -20,7 +21,8 @@ type Handler = (c: any, d: any) => Promise<any>;
 const handlers: Record<string, Handler> = {
   async Agency(c, d) {
     const db = c.prisma;
-    return (await db.agency.findFirst()) || db.agency.create({data: d});
+    // As in E-commerce onboarding: the store always gets a registry logo and hue; seed values win when present.
+    return (await db.agency.findFirst()) || db.agency.create({data: {logoIcon: DEFAULT_STORE_LOGO_ICON, logoColor: DEFAULT_STORE_LOGO_COLOR, ...d}});
   },
   async Role(c, d) {
     const db = c.prisma;

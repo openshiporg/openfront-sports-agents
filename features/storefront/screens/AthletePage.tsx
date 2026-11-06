@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { getAthlete } from '../lib/data'
 import { Shell } from './Shell'
+import { StoreLogoMark } from '../components/StoreLogoMark'
 import { InquiryForm } from './InquiryForm'
 
 export default async function AthletePage({ params }: { params: Promise<{ id: string }> }) {
@@ -9,7 +10,7 @@ export default async function AthletePage({ params }: { params: Promise<{ id: st
   if (!data?.athlete) notFound()
   const a = data.athlete
   return (
-    <Shell name={data.name}>
+    <Shell name={data.name} mark={<StoreLogoMark />}>
       <h1 className="text-2xl font-semibold">{a.fullName}</h1>
       <p className="mb-6 text-sm text-muted-foreground">{[a.sport, a.league, a.position, a.team?.name].filter(Boolean).join(' · ')}</p>
       <h2 className="mb-2 text-sm font-semibold">Brand inquiry</h2>

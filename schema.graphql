@@ -969,6 +969,8 @@ type Agency {
   currencyCode: String
   fiscalYearStart: Int
   refundApprovalThresholdCents: Int
+  logoIcon: String
+  logoColor: String
   forecastProbabilities: JSON
   createdAt: DateTime
   updatedAt: DateTime
@@ -989,6 +991,8 @@ input AgencyWhereInput {
   currencyCode: StringFilter
   fiscalYearStart: IntNullableFilter
   refundApprovalThresholdCents: IntNullableFilter
+  logoIcon: StringFilter
+  logoColor: StringFilter
   createdAt: DateTimeFilter
   updatedAt: DateTimeFilter
 }
@@ -1012,6 +1016,8 @@ input AgencyOrderByInput {
   currencyCode: OrderDirection
   fiscalYearStart: OrderDirection
   refundApprovalThresholdCents: OrderDirection
+  logoIcon: OrderDirection
+  logoColor: OrderDirection
   createdAt: OrderDirection
   updatedAt: OrderDirection
 }
@@ -1023,6 +1029,8 @@ input AgencyUpdateInput {
   currencyCode: String
   fiscalYearStart: Int
   refundApprovalThresholdCents: Int
+  logoIcon: String
+  logoColor: String
   forecastProbabilities: JSON
   createdAt: DateTime
   updatedAt: DateTime
@@ -1040,6 +1048,8 @@ input AgencyCreateInput {
   currencyCode: String
   fiscalYearStart: Int
   refundApprovalThresholdCents: Int
+  logoIcon: String
+  logoColor: String
   forecastProbabilities: JSON
   createdAt: DateTime
   updatedAt: DateTime
@@ -5438,6 +5448,7 @@ type Query {
   authenticatedItem: AuthenticatedItem
   validateUserPasswordResetToken(email: String!, token: String!): ValidateUserPasswordResetTokenResult
   redirectToInit: Boolean
+  storeLogo: StoreLogo!
   checkEndorsementConflicts(athleteId: ID!, category: String!, start: String!, end: String!): AgencyJSON!
   dealsMissingSchedule: AgencyJSON!
   dealForecast: AgencyJSON!
@@ -5593,6 +5604,11 @@ type KeystoneAdminUISort {
 enum KeystoneAdminUISortDirection {
   ASC
   DESC
+}
+
+type StoreLogo {
+  logoIcon: String!
+  logoColor: String!
 }
 
 scalar AgencyJSON

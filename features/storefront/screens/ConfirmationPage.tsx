@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { getInvoice } from '../lib/data'
 import { Shell } from './Shell'
+import { StoreLogoMark } from '../components/StoreLogoMark'
 import { usd } from './InvoicePage'
 
 export default async function ConfirmationPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ proof?: string }> }) {
@@ -10,7 +11,7 @@ export default async function ConfirmationPage({ params, searchParams }: { param
   if (!data) notFound()
   const i = data.invoice
   return (
-    <Shell name={data.name}>
+    <Shell name={data.name} mark={<StoreLogoMark />}>
       <h1 className="text-2xl font-semibold">{i.balanceCents === 0 ? 'Payment received' : 'Payment recorded'}</h1>
       <p className="mb-4 text-sm text-muted-foreground">Confirmation code</p>
       <p className="mb-6 font-mono text-xl tracking-wide" data-testid="confirmation-code">{i.number}</p>

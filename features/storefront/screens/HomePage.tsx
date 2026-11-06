@@ -1,11 +1,12 @@
 import Link from 'next/link'
 import { getRoster } from '../lib/data'
 import { Shell } from './Shell'
+import { StoreLogoMark } from '../components/StoreLogoMark'
 
 export default async function HomePage() {
   const { athletes, name } = await getRoster()
   return (
-    <Shell name={name}>
+    <Shell name={name} mark={<StoreLogoMark />}>
       <h1 className="mb-4 text-2xl font-semibold">Athletes</h1>
       {athletes.length ? (
         <ul className="divide-y rounded-lg border">
