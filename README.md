@@ -2,7 +2,7 @@
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fopenshiporg%2Fopenfront-sports-agents&env=DATABASE_URL%2CSESSION_SECRET%2CS3_BUCKET_NAME%2CS3_REGION%2CS3_ENDPOINT%2CS3_ACCESS_KEY_ID%2CS3_SECRET_ACCESS_KEY)
 
-<!-- railway-button -->
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/openfront-sports-agents)
 
 Openfront Sports Agents is a self-hostable back office for sports and NIL agencies. Agents manage the athlete roster and recruiting, representation agreements, playing contracts and endorsement deals with deliverables. Commission billing follows the money, with invoices, agent splits and a client trust ledger. A public site lists athletes, takes brand inquiries and lets clients pay commission invoices by card.
 
