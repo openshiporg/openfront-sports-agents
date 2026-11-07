@@ -4,6 +4,7 @@ import {proportionalShare} from '../lib/commission';
 import {consumeManagerApproval} from '../utils/managerApproval';
 import {refundPayment,getPaymentStatus} from '../utils/paymentProviderAdapter';
 import {DomainError} from '../lib/errors';
+import {assertTransition} from '../lib/stateMachines';
 
 const clip=(v:unknown,n:number)=>String(v??'').trim().slice(0,n);
 const IN_FLIGHT=['processing','unknown'];
@@ -53,9 +54,13 @@ async function finalize(c:any,refundId:string,providerRefundId:string,data:any,r
   const swapped=await tx.refund.updateMany({where:{id:refundId,status:fresh.status},data:{status:'succeeded',providerRefundId,providerData:data,processedAt:new Date()}});
   if(swapped.count!==1)throw new DomainError('Refund changed concurrently');
   const before=payment.refundedAmount,after=before+refund.amount;
-  await tx.payment.update({where:{id:payment.id},data:{refundedAmount:after,status:after===payment.amount?'refunded':'partially_refunded'}});
+  const payNext=after===payment.amount?'refunded':'partially_refunded';assertTransition('payment',payment.status,payNext);
+  await tx.payment.update({where:{id:payment.id},data:{refundedAmount:after,status:payNext}});
   const paid=invoice.paidCents-refund.amount;if(paid<0)throw new DomainError('Refund exceeds invoice receipts');
-  await transition(tx,c,'commissionInvoice',invoice.id,['paid','partially_paid'],paid===0?'sent':'partially_paid',requestId,{paidCents:paid});
+  // A written-off invoice keeps its status (the write-off stands); the provider refund must still settle, never stay in flight.
+  if(['paid','partially_paid'].includes(invoice.status))await transition(tx,c,'commissionInvoice',invoice.id,['paid','partially_paid'],paid===0?'sent':'partially_paid',requestId,{paidCents:paid});
+  else if(invoice.status==='written_off')await tx.commissionInvoice.update({where:{id:invoice.id},data:{paidCents:paid}});
+  else throw new DomainError('Invoice is '+invoice.status.replaceAll('_',' ')+'; refund cannot be applied');
   const receipt=await tx.commissionLedgerEntry.findUnique({where:{entryKey:'receipt:payment:'+payment.id}});
   if(receipt){
    const whole=Number(-receipt.amountCents);

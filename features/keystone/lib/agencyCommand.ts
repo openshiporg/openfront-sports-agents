@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import {permissions, type Permission} from '../access';
 import {getOrCreateIdempotencyAttempt,updateIdempotencyAttempt} from '../utils/idempotency';
 import {DomainError} from './errors';
+import {assertTransition} from './stateMachines';
 // Gym classCapacity.ts lockTransactionKey pattern; all competing writers share athlete key.
 export async function lockTransactionKey(tx:any,key:string){await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${key}, 0))`;}
 export function humanCode(prefix:string){return prefix+'-'+crypto.randomBytes(8).toString('hex').toUpperCase();}
@@ -24,6 +25,7 @@ export async function command(context:any,permission:Permission,athleteId:string
 }
 export async function transition(tx:any,context:any,model:string,id:string,from:string[],to:string,requestId:string,extra:any={}){
  const before=await tx[model].findUnique({where:{id}});if(!before||!from.includes(before.status))throw new DomainError('Invalid state transition');
+ assertTransition(model,before.status,to);
  const changed=await tx[model].updateMany({where:{id,status:before.status},data:{status:to,...extra}});if(changed.count!==1)throw new DomainError('Record changed concurrently');
  const after=await tx[model].findUnique({where:{id}});await audit(tx,context,model+':'+to,model,id,before,after,requestId);return after;
 }

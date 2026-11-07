@@ -4,6 +4,7 @@ import {validateProspect} from '../lib/workload';
 import {validateLost} from '../lib/prospect';
 import {getOrCreateIdempotencyAttempt,updateIdempotencyAttempt} from '../utils/idempotency';
 import {DomainError} from '../lib/errors';
+import {assertTransition} from '../lib/stateMachines';
 
 export const prospectMutations={
  /** Adds an unsigned athlete to the recruiting pipeline. Duplicate names in the same league are refused. */
@@ -47,6 +48,7 @@ export const lostMutations={
    const l=validateLost(a);
    const before=await tx.athlete.findUnique({where:{id:a.athleteId}});
    if(!['prospect','recruiting'].includes(before.status))throw new DomainError('Only open prospects can be marked lost');
+   assertTransition('athlete',before.status,'lost');
    const swapped=await tx.athlete.updateMany({where:{id:before.id,status:before.status},data:{status:'lost',recruitingStage:'lost',lostReason:l.reason,lostNote:l.note,lostFromStage:before.recruitingStage||'identified',lostAt:new Date()}});
    if(swapped.count!==1)throw new DomainError('Record changed concurrently');
    const after=await tx.athlete.findUnique({where:{id:before.id}});
@@ -62,6 +64,7 @@ export const lostMutations={
    const before=await tx.athlete.findUnique({where:{id:a.athleteId}});
    if(before.status!=='lost')throw new DomainError('Only lost prospects can be reopened');
    const stage=before.lostFromStage&&before.lostFromStage!=='lost'&&before.lostFromStage!=='signed'?before.lostFromStage:'identified';
+   assertTransition('athlete','lost',stage==='identified'?'prospect':'recruiting');
    const swapped=await tx.athlete.updateMany({where:{id:before.id,status:'lost'},data:{status:stage==='identified'?'prospect':'recruiting',recruitingStage:stage,lostReason:'other',lostNote:'',lostFromStage:'',lostAt:null}});
    if(swapped.count!==1)throw new DomainError('Record changed concurrently');
    const after=await tx.athlete.findUnique({where:{id:before.id}});

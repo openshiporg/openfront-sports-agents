@@ -7,10 +7,12 @@ import {consumeManagerApproval} from '../utils/managerApproval';
 import {paymentDates} from '../lib/terms';
 import {commission,allocateCommission,installmentAmounts,trustBalance,exactReversal} from '../lib/commission';
 import {DomainError} from '../lib/errors';
+import {assertTransition} from '../lib/stateMachines';
 async function locate(context:any,model:string,id:string,include:any={}){if(!context.session)throw new DomainError('Not authorized');const row=await context.prisma[model].findUnique({where:{id},include});if(!row)throw new DomainError('Record not found');return row;}
 export const agencyMutations = {
  async draftRepresentationAgreement(_:unknown,a:any,c:any){return command(c,'canManageContracts',a.athleteId,'draftRepresentationAgreement',a,async tx=>{
  const agency=await tx.agency.findFirst({orderBy:{createdAt:'asc'}});if(!agency)throw new DomainError('Agency settings required');
+ {const ath=await tx.athlete.findUnique({where:{id:a.athleteId},select:{status:true}});if(ath?.status==='lost')throw new DomainError('This prospect is marked lost. Reopen the prospect before drafting an agreement');}
  if(!Number.isSafeInteger(a.capBps)||a.capBps<0||a.capBps>10000)throw new DomainError('Union cap must be between 0 and 10000 basis points');
  for(const rate of [agency.defaultPlayingCommissionBps,agency.defaultEndorsementCommissionBps])if(!Number.isSafeInteger(rate)||rate<0||rate>10000)throw new DomainError('Invalid agency default rate');
  if(agency.defaultPlayingCommissionBps>a.capBps)throw new DomainError('Agency playing rate exceeds union cap; update settings or cap');
@@ -23,7 +25,10 @@ export const agencyMutations = {
  if(agreement.playingCommissionBps>agreement.capBps)throw new DomainError('Playing commission exceeds union cap');
  const scopes=agreement.scope==='both'?['playing','marketing','both']:[agreement.scope,'both'];
  if(await tx.representationAgreement.findFirst({where:{athleteId:row.athleteId,id:{not:row.id},scope:{in:scopes},status:{in:['signed','filed_with_union','active']}}}))throw new DomainError('Active representation agreement already exists');
- return transition(tx,c,'representationAgreement',row.id,['draft','sent'],'signed',a.idempotencyKey);
+ const signedNow=await transition(tx,c,'representationAgreement',row.id,['draft','sent'],'signed',a.idempotencyKey);
+ const ath=await tx.athlete.findUnique({where:{id:row.athleteId},select:{status:true}});
+ if(ath?.status==='former'){assertTransition('athlete','former','client');await tx.athlete.update({where:{id:row.athleteId},data:{status:'client'}});await audit(tx,c,'athlete.reengaged','Athlete',row.athleteId,{status:'former'},{status:'client',agreementId:row.id},a.idempotencyKey);}
+ return signedNow;
  });},
  async recordContractSigned(_:unknown,a:any,c:any){const row=await locate(c,'playingContract',a.contractId);return command(c,'canManageContracts',row.athleteId,'recordContractSigned',a,async tx=>{
  const contract=await tx.playingContract.findUnique({where:{id:row.id},include:{representationAgreement:true}});const agreement=contract.representationAgreement;
@@ -55,7 +60,8 @@ export const agencyMutations = {
  const payment=await tx.scheduledPayment.findUnique({where:{id:row.id}});const math=commission(payment.grossCents,payment.commissionBps);
  const agencyRow=await tx.agency.findFirst({orderBy:{createdAt:'asc'},select:{currencyCode:true}});const fx=receiptFx(payment.currencyCode,agencyRow?.currencyCode||'USD',math.commissionCents,a.fxRate);
  const updated=await transition(tx,c,'scheduledPayment',row.id,['scheduled','late'],'received',a.idempotencyKey,{receivedAt:new Date(),...math,fxRateMicros:BigInt(fx.fxRateMicros),baseCurrencyCode:fx.baseCurrencyCode,baseCommissionCents:BigInt(fx.baseCommissionCents)});
- await tx.commissionLedgerEntry.create({data:{entryKey:'accrual:'+row.id,athleteId:row.athleteId,scheduledPaymentId:row.id,entryType:'accrual',amountCents:BigInt(math.commissionCents),reason:'Athlete payment received',preparedById:c.session.itemId,occurredAt:new Date(),currencyCode:payment.currencyCode}});
+ const priorAccruals=await tx.commissionLedgerEntry.count({where:{scheduledPaymentId:row.id,entryType:'accrual'}});
+ await tx.commissionLedgerEntry.create({data:{entryKey:priorAccruals?'accrual:'+row.id+':'+priorAccruals:'accrual:'+row.id,athleteId:row.athleteId,scheduledPaymentId:row.id,entryType:'accrual',amountCents:BigInt(math.commissionCents),reason:'Athlete payment received',preparedById:c.session.itemId,occurredAt:new Date(),currencyCode:payment.currencyCode}});
  return updated;
  });},
  async draftCommissionInvoice(_:unknown,a:any,c:any){return command(c,'canManageCommissions',a.athleteId,'draftCommissionInvoice',a,async tx=>{
@@ -67,19 +73,28 @@ export const agencyMutations = {
  });},
  async voidCommissionInvoice(_:unknown,a:any,c:any){const row=await locate(c,'commissionInvoice',a.invoiceId);return command(c,'canManageCommissions',row.athleteId,'voidCommissionInvoice',a,async tx=>{
  const inv=await tx.commissionInvoice.findUnique({where:{id:row.id}});if(inv.paidCents>0)throw new DomainError('Reverse payments before voiding a paid invoice');if(!a.reason?.trim())throw new DomainError('Void reason required');
+ for(const t of await tx.clientTrustEntry.findMany({where:{invoiceId:row.id,entryType:'commission_transfer'},select:{id:true}}))if(!await tx.clientTrustEntry.findUnique({where:{reversalKey:t.id}}))throw new DomainError('Client trust money was already moved against this invoice. Reverse the trust transfer first');
  const result=await transition(tx,c,'commissionInvoice',row.id,['draft','sent'],'void',a.idempotencyKey);
- await tx.scheduledPayment.updateMany({where:{invoiceId:row.id},data:{invoiceId:null}});return result;
+ await tx.scheduledPayment.updateMany({where:{invoiceId:row.id},data:{invoiceId:null}});
+ await tx.payment.updateMany({where:{orderId:row.id,status:{in:['pending','processing','authorized']}},data:{status:'cancelled',errorMessage:'Invoice voided before this card payment finished'}});
+ return result;
  });},
  async sendCommissionInvoice(_:unknown,a:any,c:any){const row=await locate(c,'commissionInvoice',a.invoiceId);return command(c,'canManageCommissions',row.athleteId,'sendCommissionInvoice',a,async tx=>transition(tx,c,'commissionInvoice',row.id,['draft'],'sent',a.idempotencyKey));},
  async recordInvoicePayment(_:unknown,a:any,c:any){const row=await locate(c,'commissionInvoice',a.invoiceId);return command(c,'canManageCommissions',row.athleteId,'recordInvoicePayment',a,async tx=>{
- return applyInvoiceReceipt(tx,c,row.id,a.amountCents,a.reference,'receipt:'+a.idempotencyKey,a.idempotencyKey);
+ const done=await applyInvoiceReceipt(tx,c,row.id,a.amountCents,a.reference,'receipt:'+a.idempotencyKey,a.idempotencyKey);
+ if(done.status==='paid')await tx.payment.updateMany({where:{orderId:row.id,status:{in:['pending','processing','authorized']}},data:{status:'cancelled',errorMessage:'Invoice paid in full by another receipt'}});
+ return done;
  });},
  async reverseLedgerEntry(_:unknown,a:any,c:any){const row=await locate(c,'commissionLedgerEntry',a.entryId);return command(c,'canManageCommissions',row.athleteId,'reverseLedgerEntry',a,async tx=>{
  const original=await tx.commissionLedgerEntry.findUnique({where:{id:row.id}});const reversed=await tx.commissionLedgerEntry.findUnique({where:{reversalKey:row.id}});if(!a.reason?.trim())throw new DomainError('Reversal reason required');if(await tx.commissionLedgerEntry.findFirst({where:{reversesId:row.id,entryType:'reversal'}}))throw new DomainError('Entry already has refund or reversal postings');
  const amount=exactReversal(original.amountCents,original.entryType==='reversal',Boolean(reversed));if(original.entryType==='accrual'&&original.scheduledPaymentId&&(await tx.scheduledPayment.findUnique({where:{id:original.scheduledPaymentId}})).invoiceId)throw new DomainError('Void the invoice before reversing its accrual');
  const reverseOne=(e:any,amt:bigint)=>tx.commissionLedgerEntry.create({data:{entryKey:'reversal:'+e.id,reversalKey:e.id,reversesId:e.id,athleteId:e.athleteId,invoiceId:e.invoiceId,scheduledPaymentId:e.scheduledPaymentId,payeeUserId:e.payeeUserId,entryType:'reversal',amountCents:amt,reason:a.reason,preparedById:c.session.itemId,occurredAt:new Date(),currencyCode:e.currencyCode}});
+ if(original.entryType==='receipt'&&original.invoiceId){const cur=await tx.commissionInvoice.findUnique({where:{id:original.invoiceId}});if(!['paid','partially_paid'].includes(cur.status))throw new DomainError('This receipt belongs to an invoice that is '+cur.status.replaceAll('_',' ')+'; it can no longer be reversed');}
+ if(!['accrual','receipt'].includes(original.entryType))throw new DomainError('Only an accrual or a receipt can be reversed here');
+ if(original.entryKey.startsWith('receipt:payment:'))throw new DomainError('This receipt is a card payment. Refund the card payment instead so the money goes back to the card');
  const result=await reverseOne(original,amount);
- if(original.entryType==='receipt'&&original.invoiceId){const inv=await tx.commissionInvoice.findUnique({where:{id:original.invoiceId}});const paid=Math.max(0,inv.paidCents+Number(original.amountCents));await tx.commissionInvoice.update({where:{id:inv.id},data:{paidCents:paid,status:paid===0?'sent':'partially_paid'}});
+ if(original.entryType==='accrual'&&original.scheduledPaymentId){const sp=await tx.scheduledPayment.findUnique({where:{id:original.scheduledPaymentId}});if(sp?.status==='received'){assertTransition('scheduledPayment','received','scheduled');await tx.scheduledPayment.update({where:{id:sp.id},data:{status:'scheduled',receivedAt:null}});}}
+ if(original.entryType==='receipt'&&original.invoiceId){const inv=await tx.commissionInvoice.findUnique({where:{id:original.invoiceId}});const paid=Math.max(0,inv.paidCents+Number(original.amountCents));const next=paid===0?'sent':'partially_paid';assertTransition('commissionInvoice',inv.status,next);await tx.commissionInvoice.update({where:{id:inv.id},data:{paidCents:paid,status:next}});
  for(const split of await tx.commissionLedgerEntry.findMany({where:{entryType:'split_to_agent',entryKey:{startsWith:'split:'+original.id+':'}}}))await reverseOne(split,exactReversal(split.amountCents,false,false));}
  await audit(tx,c,'ledger.reversed','CommissionLedgerEntry',result.id,original,result,a.idempotencyKey);return result;
  });},
@@ -92,7 +107,7 @@ export const agencyMutations = {
  const result=await tx.clientTrustEntry.create({data:{accountId:row.id,athleteId:row.athleteId,invoiceId:a.invoiceId||null,entryType:a.entryType,amountCents:amount,reference:a.reference,occurredAt:new Date(),currencyCode:row.currencyCode,reversalKey,reversesId:reversalKey}});await audit(tx,c,'trust.posted','ClientTrustEntry',result.id,null,result,a.idempotencyKey);return result;
  });},
  async moveRecruitingStage(_:unknown,a:any,c:any){return command(c,'canManageAthletes',a.athleteId,'moveRecruitingStage',a,async tx=>{
- const row=await tx.athlete.findUnique({where:{id:a.athleteId}});const stages=['identified','contacted','meeting','pitched','verbal','signed','lost'];if(!stages.includes(a.stage)||a.stage===row.recruitingStage)throw new DomainError('Invalid recruiting stage');if(a.stage==='lost')throw new DomainError('Use mark lost so a reason is recorded');if(a.stage==='signed')throw new DomainError('Use convert to client so the checklist runs');if(!['prospect','recruiting'].includes(row.status))throw new DomainError('Only prospects move through recruiting stages');if(row.contactAllowedFrom&&row.contactAllowedFrom>new Date()&&a.stage!=='lost')throw new DomainError('Contact window has not opened');const result=await tx.athlete.update({where:{id:row.id},data:{recruitingStage:a.stage}});await audit(tx,c,'recruiting.moved','Athlete',row.id,row,result,a.idempotencyKey);return result;
+ const row=await tx.athlete.findUnique({where:{id:a.athleteId}});const stages=['identified','contacted','meeting','pitched','verbal','signed','lost'];if(!stages.includes(a.stage)||a.stage===row.recruitingStage)throw new DomainError('Invalid recruiting stage');if(a.stage==='lost')throw new DomainError('Use mark lost so a reason is recorded');if(a.stage==='signed')throw new DomainError('Use convert to client so the checklist runs');if(!['prospect','recruiting'].includes(row.status))throw new DomainError('Only prospects move through recruiting stages');if(row.contactAllowedFrom&&row.contactAllowedFrom>new Date()&&a.stage!=='lost')throw new DomainError('Contact window has not opened');const nextStatus=a.stage==='identified'?'prospect':'recruiting';if(nextStatus!==row.status)assertTransition('athlete',row.status,nextStatus);const swapped=await tx.athlete.updateMany({where:{id:row.id,status:row.status,recruitingStage:row.recruitingStage},data:{recruitingStage:a.stage,status:nextStatus}});if(swapped.count!==1)throw new DomainError('Record changed concurrently');const result=await tx.athlete.findUnique({where:{id:row.id}});await audit(tx,c,'recruiting.moved','Athlete',row.id,row,result,a.idempotencyKey);return result;
  });},
 
  async activateEndorsementDeal(_:unknown,a:any,c:any){const row=await locate(c,'endorsementDeal',a.dealId);
@@ -114,13 +129,17 @@ export const agencyMutations = {
  return result;
  });},
  async generateAutoTasks(_:unknown,a:any,c:any){if(!c.session?.itemId||!permissions.canManageAthletes({session:c.session}))throw new DomainError('Not authorized');const db=c.prisma,now=Date.now(),day=86400000,out:any[]=[];
- const make=async(autoKey:string,title:string,dueAt:Date,extra:any,assigneeId?:string|null)=>{if(await db.task.findUnique({where:{autoKey}}))return;out.push(await db.task.create({data:{autoKey,title,dueAt,priority:'high',status:'open',...(assigneeId?{assigneeId}:{}),...extra}}));};
- for(const x of await db.agentCertification.findMany({where:{status:'active',expiresAt:{lte:new Date(now+60*day)}},take:200}))await make('cert:'+x.id,'Renew agent certification',x.expiresAt,{},x.userId);
+ const make=async(autoKey:string,title:string,dueAt:Date,extra:any,assigneeId?:string|null)=>{const was=await db.task.findUnique({where:{autoKey}});if(was){if(['completed','cancelled'].includes(was.status)&&was.dueAt&&dueAt&&new Date(was.dueAt).getTime()!==new Date(dueAt).getTime()){assertTransition('task',was.status,'open');out.push(await db.task.update({where:{id:was.id},data:{status:'open',dueAt}}));}return;}out.push(await db.task.create({data:{autoKey,title,dueAt,priority:'high',status:'open',...(assigneeId?{assigneeId}:{}),...extra}}));};
+ // Status follows the calendar: lapsed certifications become expired, payments 30+ days past due become late (both were only ever set by the seed).
+ assertTransition('agentCertification','active','expired');assertTransition('scheduledPayment','scheduled','late');
+ await db.agentCertification.updateMany({where:{status:'active',expiresAt:{lt:new Date(now)}},data:{status:'expired'}});
+ await db.scheduledPayment.updateMany({where:{status:'scheduled',invoiceId:null,dueAt:{lt:new Date(now-30*day)}},data:{status:'late'}});
+ for(const x of await db.agentCertification.findMany({where:{status:{in:['active','expired']},expiresAt:{lte:new Date(now+60*day)}},take:200}))await make('cert:'+x.id,'Renew agent certification',x.expiresAt,{},x.userId);
  for(const x of await db.representationAgreement.findMany({where:{status:{in:['signed','filed_with_union','active']},expiresAt:{lte:new Date(now+90*day)}},include:{athlete:true},take:200}))await make('agreement:'+x.id,'Agreement expiring',x.expiresAt,{athleteId:x.athleteId},x.athlete?.leadAgentId);
  for(const x of await db.deliverable.findMany({where:{status:'scheduled',dueAt:{lte:new Date(now+7*day)}},include:{deal:true},take:200}))await make('deliverable:'+x.id,'Deliverable due',x.dueAt,{athleteId:x.deal?.athleteId,dealId:x.dealId},x.deal?.ownerId);
  for(const x of await db.scheduledPayment.findMany({where:{status:{in:['scheduled','late']},dueAt:{lt:new Date(now)}},include:{athlete:true},take:200}))await make('payment:'+x.id,'Overdue payment follow-up',x.dueAt,{athleteId:x.athleteId},x.athlete?.leadAgentId);
  return {created:out.length};},
- async completeDeliverable(_:unknown,a:any,c:any){const row=await locate(c,'deliverable',a.deliverableId,{deal:true});return command(c,'canManageEndorsements',row.deal.athleteId,'completeDeliverable',a,async tx=>{if(!a.proofLink?.startsWith('https://'))throw new DomainError('HTTPS proof required');return transition(tx,c,'deliverable',row.id,['scheduled','missed'],'completed',a.idempotencyKey,{completedAt:new Date(),proofLink:a.proofLink});});},
+ async completeDeliverable(_:unknown,a:any,c:any){const row=await locate(c,'deliverable',a.deliverableId,{deal:true});return command(c,'canManageEndorsements',row.deal.athleteId,'completeDeliverable',a,async tx=>{if(!a.proofLink?.startsWith('https://'))throw new DomainError('HTTPS proof required');const dl=await tx.endorsementDeal.findUnique({where:{id:row.dealId},select:{status:true}});if(!['signed','active'].includes(dl?.status))throw new DomainError('Only a signed or active deal has deliverables to complete');return transition(tx,c,'deliverable',row.id,['scheduled','missed'],'completed',a.idempotencyKey,{completedAt:new Date(),proofLink:a.proofLink});});},
 };
 export const agencyQueries={
  async checkEndorsementConflicts(_:unknown,a:any,c:any){return c.prisma.$transaction(async(tx:any)=>{await authorizeAthlete(tx,c,a.athleteId,'canManageEndorsements');const start=new Date(a.start),end=new Date(a.end);if(!Number.isFinite(start.getTime())||!Number.isFinite(end.getTime())||end<start)throw new DomainError('Invalid term');return tx.endorsementDeal.findMany({where:{athleteId:a.athleteId,exclusivityCategory:a.category,status:{in:['signed','active']},termStart:{lte:end},termEnd:{gte:start}},select:{id:true,status:true,termStart:true,termEnd:true},take:100});});},

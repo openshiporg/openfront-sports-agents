@@ -2,6 +2,7 @@ import {permissions} from '../access';
 import {audit,lockTransactionKey} from '../lib/agencyCommand';
 import {netOwed,validatePayout,checkSettlement,agentStatement,validateVoid} from '../lib/payout';
 import {DomainError} from '../lib/errors';
+import {assertTransition} from '../lib/stateMachines';
 import {getOrCreateIdempotencyAttempt,updateIdempotencyAttempt} from '../utils/idempotency';
 
 function gate(c:any){
@@ -62,6 +63,7 @@ export const voidMutations={
    const payout=await tx.agentPayout.findUnique({where:{id:v.payoutId},include:{entries:{select:{ledgerEntryId:true,amountCents:true}},payee:{select:{name:true}}}});
    if(!payout)throw new DomainError('Payment not found');
    if(payout.status!=='paid')throw new DomainError('This payment is already voided');
+   assertTransition('agentPayout',payout.status,'voided');
    const released=payout.entries.map((e:any)=>({ledgerEntryId:e.ledgerEntryId,amountCents:Number(e.amountCents)}));
    const flipped=await tx.agentPayout.updateMany({where:{id:payout.id,status:'paid'},data:{status:'voided',voidedAt:new Date(),voidReason:v.reason,voidedById:c.session.itemId,releasedEntries:released}});
    if(flipped.count!==1)throw new DomainError('This payment is already voided');

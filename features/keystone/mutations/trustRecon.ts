@@ -2,6 +2,7 @@ import {permissions} from '../access';
 import {audit,lockTransactionKey} from '../lib/agencyCommand';
 import {planTrustRecon,reopenReason} from '../lib/trustRecon';
 import {DomainError} from '../lib/errors';
+import {assertTransition} from '../lib/stateMachines';
 import {getOrCreateIdempotencyAttempt,updateIdempotencyAttempt} from '../utils/idempotency';
 
 /** The trust bank account is pooled across every client, so reconciling it needs trust rights over all clients. */
@@ -64,6 +65,7 @@ export const trustReconMutations={
    if(replay){if(attempt.recoveryPoint==='completed')return attempt.responseBody;throw new DomainError('Command already processing');}
    const r=await tx.trustReconciliation.findUnique({where:{id:ref.id}});
    if(r.status==='reopened')throw new DomainError('Already reopened');
+   assertTransition('trustReconciliation',r.status,'reopened');
    const last=await lastReconciled(tx,ref.currencyCode);
    if(last?.id!==r.id)throw new DomainError('Only the latest reconciliation can be reopened. Reopen the later ones first');
    const released=await tx.clientTrustEntry.updateMany({where:{clearedInId:r.id},data:{clearedInId:null}});

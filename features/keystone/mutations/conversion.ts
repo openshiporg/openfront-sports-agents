@@ -2,6 +2,7 @@ import {command,audit,authorizeAthlete} from '../lib/agencyCommand';
 import {conversionChecklist} from '../lib/conversion';
 import {objectStorageConfigured} from '../../integrations/storage';
 import {DomainError} from '../lib/errors';
+import {assertTransition} from '../lib/stateMachines';
 
 async function load(db:any,athleteId:string){
  const a=await db.athlete.findUnique({where:{id:athleteId},select:{id:true,status:true,leadAgentId:true,contactAllowedFrom:true,representationStartedAt:true}});if(!a)throw new DomainError('Athlete not found');
@@ -23,6 +24,7 @@ export const conversionMutations={
   return command(c,'canManageAthletes',String(a.athleteId||''),'convertProspectToClient',a,async tx=>{
    const {a:ath,signed,result}=await load(tx,a.athleteId);
    if(!result.ready)throw new DomainError('Not ready to convert: '+result.blockers.join(', '));
+   assertTransition('athlete',ath.status,'client');
    const swapped=await tx.athlete.updateMany({where:{id:ath.id,status:ath.status},data:{status:'client',recruitingStage:'signed',representationStartedAt:ath.representationStartedAt??signed.effectiveAt??new Date()}});
    if(swapped.count!==1)throw new DomainError('Record changed concurrently');
    const after=await tx.athlete.findUnique({where:{id:ath.id}});

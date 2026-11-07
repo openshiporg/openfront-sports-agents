@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import {handleWebhook} from '../utils/paymentProviderAdapter';
-import {webhookPaymentStatus} from '../utils/paymentState';
+import {webhookPaymentStatus,nextPaymentStatus} from '../utils/paymentState';
+import {canTransition} from '../lib/stateMachines';
 import {finalizeInvoicePayment} from './portal';
 import {applyRefundWebhook} from './refunds';
 
@@ -27,6 +28,12 @@ export default async function handlePaymentProviderWebhook(context:any,{provider
   const payment=observed==='succeeded'&&resource.id?await db.payment.findFirst({where:{providerPaymentId:String(resource.id),paymentProviderId:provider.id}}):null;
   if(observed==='succeeded'&&!payment)throw new Error('Payment correlation pending; retry webhook');
   if(payment)await finalizeInvoicePayment(context,payment.id);
+  // A failed or cancelled attempt must leave Pending, or the invoice keeps showing a card payment in progress forever.
+  if((observed==='failed'||observed==='cancelled')&&resource.id){
+   const open=await db.payment.findFirst({where:{providerPaymentId:String(resource.id),paymentProviderId:provider.id}});
+   if(open&&nextPaymentStatus(open.status,observed)===observed&&canTransition('payment',open.status,observed))
+    await db.payment.updateMany({where:{id:open.id,status:open.status},data:{status:observed,errorMessage:'Provider reported '+observed}});
+  }
   await db.paymentWebhookEvent.update({where:{id:inbox.id},data:{status:payment?'processed':'ignored',attempts:{increment:1},processedAt:new Date(),error:'',...(payment?{paymentId:payment.id}:{})}});
   return {success:true};
  }catch(e:any){

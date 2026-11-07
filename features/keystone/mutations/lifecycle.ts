@@ -2,6 +2,7 @@ import {permissions} from '../access';
 import {command,audit,transition} from '../lib/agencyCommand';
 import {validateTermination,validateRenewal,validateLapse,OPEN_AGREEMENT} from '../lib/lifecycle';
 import {DomainError} from '../lib/errors';
+import {assertTransition} from '../lib/stateMachines';
 
 async function agreementFor(c:any,id:unknown){
  if(!c.session?.itemId||!permissions.canManageContracts({session:c.session}))throw new DomainError('Not authorized');
@@ -15,7 +16,8 @@ async function closeOut(tx:any,agreementId:string,athleteId:string,why:string,re
  if(other>0)return {athleteStatus:null as string|null};
  const ath=await tx.athlete.findUnique({where:{id:athleteId},select:{status:true}});
  if(ath?.status!=='client')return {athleteStatus:null};
- await tx.athlete.update({where:{id:athleteId},data:{status:'former'}});
+ assertTransition('athlete','client','former');
+ const fm=await tx.athlete.updateMany({where:{id:athleteId,status:'client'},data:{status:'former'}});if(fm.count!==1)throw new DomainError('Record changed concurrently');
  await audit(tx,c,'athlete.became_former','Athlete',athleteId,{status:'client'},{status:'former',because:why,agreementId},requestId);
  return {athleteStatus:'former'};
 }
