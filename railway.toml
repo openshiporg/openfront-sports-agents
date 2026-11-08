@@ -4,4 +4,4 @@
 buildCommand = "keystone build --no-ui && next build"
 
 [deploy]
-startCommand = "npx prisma migrate resolve --rolled-back 20261108140000_sports_agents_invariants; npm run migrate && next start"
+startCommand = "npm run migrate && next start"
