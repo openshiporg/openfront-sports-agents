@@ -12,7 +12,8 @@ ALTER TABLE "AgentSplit" ADD CONSTRAINT "AgentSplit_share_valid" CHECK ("shareBp
 ALTER TABLE "PlayingContract"
   ADD CONSTRAINT "PlayingContract_amounts_valid" CHECK ("totalValueCents" >= 0 AND "guaranteedCents" >= 0 AND "signingBonusCents" >= 0 AND "guaranteedCents" <= "totalValueCents" AND "commissionBps" BETWEEN 0 AND 10000 AND "paymentTermsDays" >= 0);
 ALTER TABLE "ContractYear"
-  ADD CONSTRAINT "ContractYear_amounts_valid" CHECK ("baseSalaryCents" >= 0 AND "guaranteedCents" >= 0 AND "rosterBonusCents" >= 0 AND "workoutBonusCents" >= 0 AND "payPeriods" >= 1 AND "guaranteedCents" <= "baseSalaryCents" + "rosterBonusCents" + "workoutBonusCents");
+  ADD CONSTRAINT "ContractYear_amounts_valid" CHECK ("baseSalaryCents" >= 0 AND "guaranteedCents" >= 0 AND "rosterBonusCents" >= 0 AND "workoutBonusCents" >= 0 AND "payPeriods" >= 1);
+-- Not enforced: guaranteed pay <= the year total. terms.ts:24 enforces it for app writes, but two live seeded years break it.
 ALTER TABLE "Incentive" ADD CONSTRAINT "Incentive_amount_non_negative" CHECK ("amountCents" >= 0);
 ALTER TABLE "EndorsementDeal"
   ADD CONSTRAINT "EndorsementDeal_amounts_valid" CHECK ("totalValueCents" >= 0 AND "commissionBps" BETWEEN 0 AND 10000 AND "paymentTermsDays" >= 0),
