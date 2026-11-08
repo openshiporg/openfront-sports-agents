@@ -814,7 +814,7 @@
           {
             "season": "2026",
             "baseSalaryCents": 150000000,
-            "guaranteedCents": 750000000,
+            "guaranteedCents": 75000000,
             "rosterBonusCents": 0,
             "workoutBonusCents": 0,
             "payPeriods": 17,
@@ -823,7 +823,7 @@
           {
             "season": "2027",
             "baseSalaryCents": 170000000,
-            "guaranteedCents": 850000000,
+            "guaranteedCents": 85000000,
             "rosterBonusCents": 0,
             "workoutBonusCents": 0,
             "payPeriods": 17,

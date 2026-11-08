@@ -13,6 +13,7 @@ export const CONSTRAINT_MESSAGES: Record<string, Rule> = {
   AgentSplit_share_valid: { code: 'SPORTS_INVALID_RATE', message: 'An agent’s share must be between 0% and 100%.' },
   PlayingContract_amounts_valid: { code: AMOUNT, message: 'Contract values can’t be negative, guaranteed money can’t exceed the total value, and commission must be between 0% and 100%.' },
   ContractYear_amounts_valid: { code: AMOUNT, message: 'Salary and bonuses can’t be negative, and a year needs at least one pay period.' },
+  ContractYear_guaranteed_within_total: { code: AMOUNT, message: 'Guaranteed pay can’t be more than that year’s total pay (base salary plus bonuses).' },
   Incentive_amount_non_negative: { code: AMOUNT, message: 'An incentive amount can’t be negative.' },
   EndorsementDeal_amounts_valid: { code: AMOUNT, message: 'Deal value can’t be negative, and commission must be between 0% and 100%.' },
   EndorsementDeal_term_order: { code: TIME, message: 'A deal term must end on or after its start.' },

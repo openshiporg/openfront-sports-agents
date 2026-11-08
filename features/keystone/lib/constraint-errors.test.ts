@@ -5,7 +5,7 @@ import { GraphQLError } from 'graphql'
 import { CONSTRAINT_MESSAGES, constraintGraphQLError, constraintRefusal } from './constraint-errors'
 
 test('every rule in the migration has a readable message, and no message is orphaned', () => {
-  const sql = readFileSync(new URL('../../../migrations/20261108140000_sports_agents_invariants/migration.sql', import.meta.url), 'utf8')
+  const sql = ['20261108140000_sports_agents_invariants', '20261108170000_contract_year_guaranteed_within_total'].map(m => readFileSync(new URL(`../../../migrations/${m}/migration.sql`, import.meta.url), 'utf8')).join('\n')
   const names = [...sql.matchAll(/(?:ADD CONSTRAINT|CREATE (?:UNIQUE INDEX|CONSTRAINT TRIGGER|TRIGGER)) "([^"]+)"/g)].map(m => m[1])
   assert(names.length >= 40)
   for (const name of names) assert(CONSTRAINT_MESSAGES[name], `${name} has no message`)
@@ -35,4 +35,16 @@ test('unknown errors are left alone and the refusal keeps the path', () => {
   assert.equal(constraintRefusal(new Error('connection reset')), null)
   const out = constraintGraphQLError(new GraphQLError('Prisma error', { path: ['updateAgency'] }), { code: 'SPORTS_INVALID_RATE', message: 'm' })
   assert.deepEqual([out.message, out.extensions.code, out.path], ['m', 'SPORTS_INVALID_RATE', ['updateAgency']])
+})
+
+test('seed contract years never guarantee more than the year pays', () => {
+  const seed = JSON.parse(readFileSync(new URL('../../platform/onboarding/lib/seed.json', import.meta.url), 'utf8'))
+  for (const set of Object.values<any>(seed)) for (const c of set.contracts ?? []) {
+    let guaranteed = 0
+    for (const y of c.years ?? []) {
+      assert(y.guaranteedCents <= y.baseSalaryCents + y.rosterBonusCents + y.workoutBonusCents, `${c.startSeason ?? ''} year ${y.season} guarantees more than it pays`)
+      guaranteed += y.guaranteedCents
+    }
+    assert(guaranteed <= c.totalValueCents, 'year guarantees exceed contract total')
+  }
 })
