@@ -16,7 +16,7 @@ export async function loadForecast(prisma:any,all:boolean,me:string|null){
  return {forecast:forecastDeals(deals,probs,currency,new Date()),probs};
 }
 /** Records this month's forecast once. Safe to call repeatedly: the first call wins and later calls return the stored snapshot. */
-export async function takeForecastSnapshot(prisma:any,actorId:string|null,source:'manual'|'cron',idempotencyKey:string){
+export async function takeForecastSnapshot(prisma:any,actorId:string|null,source:'manual',idempotencyKey:string){
  const now=new Date();const month=snapshotData({months:[],stages:[],agents:[],totals:{grossCents:0,weightedCents:0,deals:0},currency:'USD',excludedOtherCurrency:0,placement:{scheduledCents:0,unscheduledCents:0}},now).month;
  const {forecast,probs}=await loadForecast(prisma,true,null);const data=snapshotData(forecast,now);
  return prisma.$transaction(async(tx:any)=>{

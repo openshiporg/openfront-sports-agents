@@ -1,6 +1,6 @@
 import { text, integer, bigInt, timestamp, json } from "@keystone-6/core/fields";
 import {domainList, currencyCode, rel, state} from "./domainFields";
-// Append-only monthly copy of the deal forecast, one per calendar month. Created only by the snapshot command or the cron route.
+// Append-only monthly copy of the deal forecast, one per calendar month. Created only by the staff "Take snapshot" button (the 'cron' source value is kept for rows written before the cron route was removed).
 export const ForecastSnapshot = domainList({
     month: text({validation:{isRequired:true,match:{regex:/^\d{4}-\d{2}$/,explanation:'YYYY-MM'}},isIndexed:'unique'}),
     takenAt: timestamp({defaultValue:{kind:'now'}}),
