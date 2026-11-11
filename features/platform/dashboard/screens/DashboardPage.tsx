@@ -3,6 +3,8 @@ import { PlatformPage, Section, Row, Cell, Empty, Stat, ErrorState } from '../..
 import { StatusLabel } from '../../components/StatusLabel'
 import { PastTermList } from '../../components/PastTermList'
 import { platformQuery, money, day, commissionOf } from '../../lib/query'
+import { getAdminMetaAction } from '@/features/dashboard/actions/getAdminMetaAction'
+import { isPlatformPageHidden } from '@/features/dashboard/lib/sidebarAccess'
 
 const QUERY = `query MoneyView($now: DateTime!, $d7: DateTime!, $d60: DateTime!, $d90: DateTime!) {
   open: commissionInvoices(where: { status: { in: [sent, partially_paid] } }, take: 200) { id number status totalCents paidCents dueAt currencyCode athlete { id fullName } }
@@ -18,6 +20,10 @@ const QUERY = `query MoneyView($now: DateTime!, $d7: DateTime!, $d60: DateTime!,
 export default async function DashboardPage() {
   const now = new Date()
   const plus = (n: number) => new Date(now.getTime() + n * 86400000).toISOString()
+  const meta = await getAdminMetaAction()
+  const lists: { path: string; isHidden?: boolean | null }[] = meta.success ? meta.data?.lists ?? [] : []
+  // Only link to platform pages this role can open.
+  const link = (href: string) => (isPlatformPageHidden(href.split('/platform/')[1]?.split(/[/?#]/)[0] ?? '', lists) ? undefined : href)
   let data: any
   try {
     data = await platformQuery(QUERY, { now: now.toISOString(), d7: plus(7), d60: plus(60), d90: plus(90) })
@@ -40,7 +46,7 @@ export default async function DashboardPage() {
       {data.missing.deals.length > 0 && (
         <Section title="Active deals with no payment schedule" hint={String(data.missing.deals.length)}>
           {data.missing.deals.slice(0, 6).map((d: any) => (
-            <Row key={d.id} href={`/dashboard/platform/endorsements/${d.id}`}>
+            <Row key={d.id} href={link(`/dashboard/platform/endorsements/${d.id}`)}>
               <Cell>{d.athleteName} <span className="text-muted-foreground">for {d.brandName}</span></Cell>
               <Cell muted>Commission {money(d.commissionCents, d.currencyCode)} not expected</Cell>
             </Row>
@@ -51,9 +57,9 @@ export default async function DashboardPage() {
 
       <PastTermList data={data.pastTerm} />
 
-      <Section title="Open invoices" hint={<Link href="/dashboard/platform/commissions" className="underline">All commissions</Link>}>
+      <Section title="Open invoices" hint={link('/dashboard/platform/commissions') ? <Link href="/dashboard/platform/commissions" className="underline">All commissions</Link> : undefined}>
         {data.open.length ? data.open.slice(0, 8).map((i: any) => (
-          <Row key={i.id} href="/dashboard/platform/commissions?tab=invoices">
+          <Row key={i.id} href={link('/dashboard/platform/commissions?tab=invoices')}>
             <Cell><StatusLabel value={i.status} className="mr-2" />{i.number}</Cell>
             <Cell muted>{i.athlete?.fullName}</Cell>
             <Cell className="tabular-nums">{money(i.totalCents - i.paidCents, i.currencyCode)}</Cell>
@@ -63,7 +69,7 @@ export default async function DashboardPage() {
 
       <Section title="Overdue payments">
         {data.overdue.length ? data.overdue.slice(0, 8).map((p: any) => (
-          <Row key={p.id} href={p.athlete?.id ? `/dashboard/platform/clients/${p.athlete.id}?tab=payments` : '/dashboard/platform/commissions?tab=payments'}>
+          <Row key={p.id} href={link(p.athlete?.id ? `/dashboard/platform/clients/${p.athlete.id}?tab=payments` : '/dashboard/platform/commissions?tab=payments')}>
             <Cell>{p.athlete?.fullName ?? 'Scheduled payment'}</Cell>
             <Cell muted>Due {day(p.dueAt)}</Cell>
             <Cell className="tabular-nums">{money(p.grossCents)}</Cell>
@@ -74,7 +80,7 @@ export default async function DashboardPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <Section title="Deliverables due this week">
           {data.deliverables.length ? data.deliverables.map((d: any) => (
-            <Row key={d.id} href="/dashboard/platform/endorsements?tab=deliverables">
+            <Row key={d.id} href={link('/dashboard/platform/endorsements?tab=deliverables')}>
               <Cell>{d.deal?.athlete?.fullName} <span className="text-muted-foreground">for {d.deal?.brand?.name}</span></Cell>
               <Cell muted>{d.kind.replaceAll('_', ' ')} · {day(d.dueAt)}</Cell>
             </Row>
@@ -82,13 +88,13 @@ export default async function DashboardPage() {
         </Section>
         <Section title="Expiring">
           {data.certs.map((c: any) => (
-            <Row key={c.id} href="/dashboard/platform/certifications">
+            <Row key={c.id} href={link('/dashboard/platform/certifications')}>
               <Cell>{c.user?.name} · {c.body} {c.number}</Cell>
               <Cell muted>Expires {day(c.expiresAt)}</Cell>
             </Row>
           ))}
           {data.agreements.map((a: any) => (
-            <Row key={a.id} href={a.athlete?.id ? `/dashboard/platform/clients/${a.athlete.id}?tab=agreements` : '/dashboard/platform/clients'}>
+            <Row key={a.id} href={link(a.athlete?.id ? `/dashboard/platform/clients/${a.athlete.id}?tab=agreements` : '/dashboard/platform/clients')}>
               <Cell>{a.athlete?.fullName ?? 'Client'} · {a.scope} agreement</Cell>
               <Cell muted>Expires {day(a.expiresAt)}</Cell>
             </Row>
