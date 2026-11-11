@@ -44,7 +44,7 @@ export default async function CommissionsPage({ searchParams }: { searchParams: 
   data.baseCurrency = data.agencies?.[0]?.currencyCode || 'USD'
   const received = data.scheduledPayments.filter((p: any) => p.status === 'received' && !p.invoice)
   const byAthlete = new Map<string, { id: string; name: string; ids: string[] }>()
-  for (const p of received) { const k = p.athlete.id; const cur = byAthlete.get(k) || { id: k, name: p.athlete.fullName, ids: [] as string[] }; cur.ids.push(p.id); byAthlete.set(k, cur) }
+  for (const p of received) { if (!p.athlete) continue; const k = p.athlete.id; const cur = byAthlete.get(k) || { id: k, name: p.athlete.fullName, ids: [] as string[] }; cur.ids.push(p.id); byAthlete.set(k, cur) }
   return (
     <PlatformPage title="Commissions">
       <ScrollTabs items={TABS.map((x) => ({ href: `/dashboard/platform/commissions?tab=${x}`, label: x, active: x === tab }))} />

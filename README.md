@@ -86,3 +86,7 @@ npm install
 npm run dev            # applies migrations, then starts Next.js
 ```
 Open `/dashboard/init` to create the first admin, then run setup from the sidebar.
+
+## No background jobs
+
+There is no cron route, timer or worker. The monthly forecast snapshot is taken by the staff "Take snapshot" button on Endorsements (idempotent per month). See AGENTS.md.
