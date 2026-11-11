@@ -63,8 +63,8 @@ export default async function DashboardPage() {
 
       <Section title="Overdue payments">
         {data.overdue.length ? data.overdue.slice(0, 8).map((p: any) => (
-          <Row key={p.id} href={`/dashboard/platform/clients/${p.athlete?.id}?tab=payments`}>
-            <Cell>{p.athlete?.fullName}</Cell>
+          <Row key={p.id} href={p.athlete?.id ? `/dashboard/platform/clients/${p.athlete.id}?tab=payments` : '/dashboard/platform/commissions?tab=payments'}>
+            <Cell>{p.athlete?.fullName ?? 'Scheduled payment'}</Cell>
             <Cell muted>Due {day(p.dueAt)}</Cell>
             <Cell className="tabular-nums">{money(p.grossCents)}</Cell>
           </Row>
@@ -88,8 +88,8 @@ export default async function DashboardPage() {
             </Row>
           ))}
           {data.agreements.map((a: any) => (
-            <Row key={a.id} href={`/dashboard/platform/clients/${a.athlete?.id}?tab=agreements`}>
-              <Cell>{a.athlete?.fullName} · {a.scope} agreement</Cell>
+            <Row key={a.id} href={a.athlete?.id ? `/dashboard/platform/clients/${a.athlete.id}?tab=agreements` : '/dashboard/platform/clients'}>
+              <Cell>{a.athlete?.fullName ?? 'Client'} · {a.scope} agreement</Cell>
               <Cell muted>Expires {day(a.expiresAt)}</Cell>
             </Row>
           ))}
