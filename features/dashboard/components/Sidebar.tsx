@@ -39,7 +39,7 @@ import { AdminMeta } from '../hooks/useAdminMeta'
 import { Home, Database, ChevronRight, Package } from 'lucide-react'
 import { Logo, LogoIcon } from '@/features/dashboard/components/Logo'
 import { UserProfileClient } from './UserProfileClient'
-import { visibleSidebarLists } from '../lib/sidebarAccess'
+import { visiblePlatformItems, visibleSidebarLists } from '../lib/sidebarAccess'
 import { platformNavGroups } from '@/features/platform/lib/navigation'
 import { OnboardingCards, dismissOnboarding } from '@/features/platform/onboarding'
 
@@ -136,7 +136,7 @@ export function Sidebar({ adminMeta, user, athletesCount, agencyName, onOpenOnbo
         </SidebarGroup>
 
         {/* Agency workflow slices */}
-        {platformNavGroups.map((group) => (
+        {platformNavGroups.map((group) => ({ ...group, items: visiblePlatformItems(group.items, listsArray as any[], user) })).filter((group) => group.items.length > 0).map((group) => (
           <SidebarGroup key={group.id}>
             <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
             <SidebarMenu>
