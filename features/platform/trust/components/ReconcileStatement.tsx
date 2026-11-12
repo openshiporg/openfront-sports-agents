@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { useCommand, toCents } from '../../components/useCommand'
+import { useCommand, toCents, fromCents } from '../../components/useCommand'
+import { parseStatement, matchStatement, type ParsedStatement } from '@/features/keystone/lib/statementImport'
 
 type Open = { id: string; entryType: string; amountCents: number; reference: string; occurredOn: string; athlete: string }
 const fmt = (c: number, cur: string) => new Intl.NumberFormat('en-US', { style: 'currency', currency: cur }).format(c / 100)
@@ -19,6 +20,27 @@ export function ReconcileStatement({ currency, open, clearedBefore, lastDate }: 
   const [ticked, setTicked] = useState<Set<string>>(new Set())
   const [accept, setAccept] = useState(false)
   const [note, setNote] = useState('')
+  const [fileInfo, setFileInfo] = useState<{ name: string; unmatched: { date: string; cents: number; description: string }[]; matched: number; skipped: number; after: number } | null>(null)
+  const [fileError, setFileError] = useState('')
+  const onFile = async (f: File | undefined) => {
+    setFileError(''); setFileInfo(null)
+    if (!f) return
+    let p: ParsedStatement
+    try {
+      if (f.size > 2_000_000) throw new Error('The file is larger than 2 MB.')
+      p = parseStatement(await f.text())
+    } catch (e) { setFileError(e instanceof Error && e.message ? e.message : 'Could not read the file.'); return }
+    const today = ymd(new Date())
+    const newest = p.lines.reduce((m, l) => (l.date > m ? l.date : m), '')
+    let d = day || p.closingDate || newest
+    if (d > today) d = today
+    if (lastDate && d <= lastDate) { setFileError(`The file ends on ${d}, which is not after the last reconciliation (${lastDate}).`); return }
+    const matches = matchStatement(p.lines, open, d)
+    const ids = new Set(matches.flatMap((m) => (m.entryId ? [m.entryId] : [])))
+    setDate(new Date(`${d}T12:00:00`)); setTicked(ids)
+    if (p.closingCents != null && p.closingCents >= 0 && (!day || p.closingDate === d)) setBalance(fromCents(p.closingCents))
+    setFileInfo({ name: f.name, matched: ids.size, unmatched: matches.filter((m) => !m.entryId).map((m) => m.line), skipped: p.skipped, after: p.lines.length - matches.length })
+  }
   const { run, pending, error } = useCommand('reconcileTrustStatement', () => { setTicked(new Set()); setBalance(''); setNote(''); setAccept(false) })
   const day = date ? ymd(date) : ''
   const inPeriod = useMemo(() => (day ? open.filter((e) => e.occurredOn <= day) : []), [open, day])
@@ -28,7 +50,7 @@ export function ReconcileStatement({ currency, open, clearedBefore, lastDate }: 
   const cleared = clearedBefore + sum(inPeriod.filter((e) => ticked.has(e.id)))
   const book = clearedBefore + sum(inPeriod)
   const diff = cents == null ? null : cents - cleared
-  const toggle = (id: string, on: boolean) => { const n = new Set(ticked); on ? n.add(id) : n.delete(id); setTicked(n) }
+  const toggle = (id: string, on: boolean) => { const n = new Set(ticked); if (on) n.add(id); else n.delete(id); setTicked(n) }
   const ready = !!day && cents != null && (diff === 0 || (accept && note.trim().length >= 3))
   const submit = () => run({ currencyCode: currency, statementDate: day, statementBalanceCents: cents, clearIds: inPeriod.filter((e) => ticked.has(e.id)).map((e) => e.id), acceptDifference: diff !== 0 && accept, note: note.trim() })
   return (
@@ -39,6 +61,24 @@ export function ReconcileStatement({ currency, open, clearedBefore, lastDate }: 
             <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={date} onSelect={(d) => { setDate(d); setTicked(new Set()) }} disabled={(d) => d > new Date() || (!!lastDate && ymd(d) <= lastDate)} /></PopoverContent></Popover>
         </div>
         <label className="min-w-0">Closing balance ({currency})<Input inputMode="decimal" value={balance} onChange={(e) => setBalance(e.target.value)} placeholder="0.00" className="mt-1 w-40" /></label>
+      </div>
+      <div className="flex flex-col gap-1">
+        <label className="text-sm">Import statement (CSV or OFX)
+          <input type="file" accept=".csv,.ofx,.qfx,text/csv" onChange={(e) => { onFile(e.target.files?.[0]); e.target.value = '' }} className="mt-1 block min-h-11 w-full max-w-full cursor-pointer rounded-md border px-3 py-2 text-sm file:mr-3 file:text-sm" />
+        </label>
+        <p className="text-xs text-muted-foreground">The file is read in your browser and nothing is saved. It sets the date and closing balance when it has them and ticks entries with the same amount within 7 days. Check the ticks before you record.</p>
+        {fileError && <p role="alert" className="text-sm text-destructive">{fileError}</p>}
+        {fileInfo && (
+          <div className="rounded-md border p-3 text-sm">
+            <p>{fileInfo.name}: {fileInfo.matched} {fileInfo.matched === 1 ? 'entry' : 'entries'} ticked{fileInfo.unmatched.length ? `, ${fileInfo.unmatched.length} statement ${fileInfo.unmatched.length === 1 ? 'line has' : 'lines have'} no trust entry` : ''}{fileInfo.after ? `, ${fileInfo.after} after the statement date ignored` : ''}{fileInfo.skipped ? `, ${fileInfo.skipped} unreadable ${fileInfo.skipped === 1 ? 'row' : 'rows'} skipped` : ''}.</p>
+            {fileInfo.unmatched.length > 0 && (
+              <ul className="mt-2 divide-y">
+                {fileInfo.unmatched.slice(0, 20).map((l, i) => <li key={i} className="flex min-w-0 items-baseline justify-between gap-3 py-1"><span className="min-w-0 flex-1 break-words">{l.date} · {l.description || 'No description'}</span><span className="shrink-0 tabular-nums">{fmt(l.cents, currency)}</span></li>)}
+              </ul>
+            )}
+            {fileInfo.unmatched.length > 20 && <p className="mt-1 text-xs text-muted-foreground">and {fileInfo.unmatched.length - 20} more</p>}
+          </div>
+        )}
       </div>
       {lastDate && <p className="text-xs text-muted-foreground">Last reconciled to {lastDate}. Entries cleared then count as already on the bank side ({fmt(clearedBefore, currency)}).</p>}
       {!day ? <p className="text-muted-foreground">Choose the statement date to list the entries to tick.</p> : (
