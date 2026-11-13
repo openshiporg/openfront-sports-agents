@@ -1,6 +1,6 @@
 'use server' 
 
-import { createTransport, getTestMessageUrl } from "nodemailer";
+import { createTransport } from "nodemailer";
 import { emailButton, emailLayout, emailMuted, emailParagraph } from "./email-layout";
 
 // Utility function to get base URL for emails
@@ -15,7 +15,7 @@ function getBaseUrlForEmails(): string {
 }
 
 const transport = createTransport({
-  // @ts-ignore
+  // @ts-expect-error nodemailer types reject a string port
   host: process.env.SMTP_HOST,
   port: process.env.SMTP_PORT,
   auth: {
@@ -39,7 +39,7 @@ export async function sendPasswordResetEmail(resetToken: string, to: string, bas
   const frontendUrl = baseUrl || getBaseUrlForEmails();
   
   // email the user a token
-  const info = await transport.sendMail({
+  await transport.sendMail({
     to,
     from: process.env.SMTP_FROM,
     subject: "Your password reset token!",
@@ -47,7 +47,4 @@ export async function sendPasswordResetEmail(resetToken: string, to: string, bas
       url: `${frontendUrl}/dashboard/reset?token=${resetToken}`,
     }),
   });
-  if (process.env.MAIL_USER?.includes("ethereal.email")) {
-    console.log(`📧 Message Sent!  Preview it at ${getTestMessageUrl(info as any)}`);
-  }
 }
