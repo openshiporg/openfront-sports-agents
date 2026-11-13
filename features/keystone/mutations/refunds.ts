@@ -67,7 +67,12 @@ async function finalize(c:any,refundId:string,providerRefundId:string,data:any,r
    const mk=(entryKey:string,src:any,amount:bigint,why:string)=>tx.commissionLedgerEntry.create({data:{entryKey,athleteId:src.athleteId,invoiceId:src.invoiceId,payeeUserId:src.payeeUserId,reversesId:src.id,entryType:'reversal',amountCents:amount,reason:why,preparedById:c.session?.itemId||refund.requestedById,...(refund.approvedById?{approvedById:refund.approvedById}:{}),occurredAt:new Date(),currencyCode:src.currencyCode}});
    await mk('refund:'+refund.id,receipt,BigInt(refund.amount),'Card refund: '+refund.reason);
    const splits=await tx.commissionLedgerEntry.findMany({where:{entryType:'split_to_agent',entryKey:{startsWith:'split:'+receipt.id+':'}}});
-   for(const s of splits){const orig=Number(s.amountCents);const delta=proportionalShare(after,orig,whole)-proportionalShare(before,orig,whole);if(delta>0)await mk('refund:'+refund.id+':'+s.payeeUserId,s,-BigInt(delta),'Card refund allocation');}
+   splits.sort((x:any,y:any)=>String(x.id)<String(y.id)?-1:1);
+   const total=splits.reduce((n:number,s:any)=>n+Number(s.amountCents),0);
+   // Floor every payee but the last; the last takes the remainder so the reversals sum exactly to the refund.
+   const cum=(t:number)=>{const out:number[]=[];let used=0;splits.forEach((s:any,i:number)=>{const v=i===splits.length-1?proportionalShare(t,total,whole)-used:proportionalShare(t,Number(s.amountCents),whole);out.push(v);used+=v;});return out;};
+   const cb=cum(before),ca=cum(after);
+   for(const [i,s] of splits.entries()){const delta=ca[i]-cb[i];if(delta>0)await mk('refund:'+refund.id+':'+s.payeeUserId,s,-BigInt(delta),'Card refund allocation');}
   }
   await audit(tx,c,'refund.succeeded','Payment',payment.id,{refundedAmount:before},{refundedAmount:after,refundId:refund.id},requestId);
   return tx.refund.findUnique({where:{id:refundId}});
