@@ -11,8 +11,16 @@ import {
   json
 } from "@keystone-6/core/fields";
 
-import { isSignedIn, permissions } from "../access";
+import { isSignedIn, permissions, athleteScope } from "../access";
+
+export const paymentOwnerFilter = (args: any): any => {
+  const scope = athleteScope(args);
+  return typeof scope === "boolean" ? scope : { order: { athlete: scope } };
+};
 import { trackingFields } from "./trackingFields";
+
+export const canSeePayments = ({ session }: any) =>
+  permissions.canReadPayments({ session }) || permissions.canManagePayments({ session });
 
 export const Payment = list({
   access: {
@@ -24,8 +32,10 @@ export const Payment = list({
       update: () => false,
       delete: () => false,
     },
+    filter: { query: paymentOwnerFilter },
   },
   ui: {
+    isHidden: ({ session }) => !canSeePayments({ session }),
     listView: {
       initialColumns: ["amount", "status", "paymentMethod", "order", "createdAt"],
     },
@@ -42,6 +52,7 @@ export const Payment = list({
     }),
 
     data: json({
+      access: { read: () => false },
       ui: {
         description: "Payment provider data (clientSecret, paymentIntentId, orderId, etc.)",
       },

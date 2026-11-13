@@ -1,6 +1,7 @@
 import { list } from "@keystone-6/core";
 import { integer, json, relationship, select, text, timestamp } from "@keystone-6/core/fields";
 import { permissions } from "../access";
+import { paymentOwnerFilter, canSeePayments } from "./Payment";
 import { trackingFields } from "./trackingFields";
 
 export const Refund = list({
@@ -11,7 +12,9 @@ export const Refund = list({
       update: () => false,
       delete: () => false,
     },
+    filter: { query: paymentOwnerFilter },
   },
+  ui: { isHidden: ({ session }) => !canSeePayments({ session }) },
   fields: {
     idempotencyKey: text({ validation: { isRequired: true }, isIndexed: "unique" }),
     amount: integer({ validation: { isRequired: true, min: 1 } }),
@@ -29,7 +32,7 @@ export const Refund = list({
     }),
     reason: text({ validation: { isRequired: true }, ui: { displayMode: "textarea" } }),
     providerRefundId: text(),
-    providerData: json(),
+    providerData: json({ access: { read: () => false } }),
     processedAt: timestamp(),
     payment: relationship({ ref: "Payment" }),
     order: relationship({ ref: "CommissionInvoice" }),

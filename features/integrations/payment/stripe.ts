@@ -66,7 +66,7 @@ export async function refundPaymentFunction({ paymentId, amount, idempotencyKey,
 export async function getPaymentStatusFunction({ paymentId }: { paymentId: string }) {
   const stripe = getStripeClient();
 
-  const paymentIntent = await stripe.paymentIntents.retrieve(paymentId);
+  const paymentIntent = await stripe.paymentIntents.retrieve(paymentId, { expand: ["latest_charge"] });
   const refunds: Stripe.Refund[] = [];
   let refundsComplete = true;
   for await (const refund of stripe.refunds.list({ payment_intent: paymentId, limit: 100 })) {
