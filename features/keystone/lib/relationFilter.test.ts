@@ -13,12 +13,14 @@ const stamp = Date.now().toString(36)
 const perms = (on: string[]) => Object.fromEntries(permissionNames.map(n => [n, on.includes(n)]))
 // Limited roles hold every permission that opens a list, but not canViewAllClients (so their athlete scope is empty).
 const limited = permissionNames.filter(n => n !== 'canViewAllClients' && n !== 'canManageRoles')
+// Accountant: sees every client scope and the money lists, but cannot read athletes.
+const accountant = ['canAccessDashboard', 'canViewAllClients', 'canManageCommissions', 'canReadPayments', 'canSeeOtherPeople']
 const ids: Record<string, string> = {}
 const sessionFor = (key: string, roleName: string, on: string[]) => base.withSession({ itemId: ids[key], listKey: 'User', data: { name: key, role: { id: ids['role' + roleName], name: roleName, ...perms(on) } } })
 
 test('setup', async () => {
   const mk = async (name: string, on: string[]) => (ids['role' + name] = (await sudo.db.Role.createOne({ data: { name, ...perms(on) } })).id)
-  await mk('Admin', [...permissionNames]); await mk('Agent', limited); await mk('Accountant', limited)
+  await mk('Admin', [...permissionNames]); await mk('Agent', limited); await mk('Accountant', accountant)
   for (const [k, r] of [['admin', 'Admin'], ['agent', 'Agent'], ['acct', 'Accountant']]) ids[k] = (await sudo.db.User.createOne({ data: { name: k + stamp, email: `${k}${stamp}@example.com`, password: 'passw0rd-passw0rd', role: { connect: { id: ids['role' + r] } } } })).id
   const team = await sudo.db.Team.createOne({ data: { name: 'Zeta' + stamp } })
   const ath = await sudo.db.Athlete.createOne({ data: { fullName: 'Hidden Athlete', email: 'hidden@clients.example', phone: '+1 512 555 0100', team: { connect: { id: team.id } } } })
@@ -46,7 +48,7 @@ const run = async (ctx: any, q: string) => { const r = await ctx.graphql.raw({ q
 
 for (const who of ['anon', 'agent', 'acct'] as const) {
   test(`${who} cannot tell a present value from a missing one through relation filters`, async () => {
-    const ctx = who === 'anon' ? base : sessionFor(who, who === 'agent' ? 'Agent' : 'Accountant', limited)
+    const ctx = who === 'anon' ? base : sessionFor(who, who === 'agent' ? 'Agent' : 'Accountant', who === 'agent' ? limited : accountant)
     const a = probes(true), b = probes(false)
     for (let i = 0; i < a.length; i++) {
       const [x, y] = [await run(ctx, a[i]), await run(ctx, b[i])]
