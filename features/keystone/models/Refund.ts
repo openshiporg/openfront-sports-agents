@@ -1,6 +1,6 @@
 import { list } from "@keystone-6/core";
 import { integer, json, relationship, select, text, timestamp } from "@keystone-6/core/fields";
-import { permissions } from "../access";
+import { permissions, canFilterRelations } from "../access";
 import { paymentOwnerFilter, canSeePayments } from "./Payment";
 import { trackingFields } from "./trackingFields";
 
@@ -34,10 +34,10 @@ export const Refund = list({
     providerRefundId: text(),
     providerData: json({ access: { read: () => false } }),
     processedAt: timestamp(),
-    payment: relationship({ ref: "Payment" }),
-    order: relationship({ ref: "CommissionInvoice" }),
-    requestedBy: relationship({ ref: "User" }),
-    approvedBy: relationship({ ref: "User" }),
+    payment: relationship({ isFilterable: canFilterRelations, ref: "Payment" }),
+    order: relationship({ isFilterable: canFilterRelations, ref: "CommissionInvoice" }),
+    requestedBy: relationship({ isFilterable: canFilterRelations, ref: "User" }),
+    approvedBy: relationship({ isFilterable: canFilterRelations, ref: "User" }),
     ...trackingFields,
   },
 });

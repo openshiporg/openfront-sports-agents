@@ -1,6 +1,6 @@
 import { list } from "@keystone-6/core";
 import { integer, json, relationship, select, text, timestamp } from "@keystone-6/core/fields";
-import { permissions } from "../access";
+import { permissions, canFilterRelations } from "../access";
 import { trackingFields } from "./trackingFields";
 
 // Adapted from the Restaurant lineage (openfront-comedy-club ManagerApproval): action-bound, independent approver, single use.
@@ -49,8 +49,8 @@ export const ManagerApproval = list({
     expiresAt: timestamp({ validation: { isRequired: true }, isIndexed: true }),
     consumedEntityType: text(),
     consumedEntityId: text(),
-    requestedBy: relationship({ ref: "User.requestedApprovals" }),
-    approvedBy: relationship({ ref: "User.approvedApprovals" }),
+    requestedBy: relationship({ isFilterable: canFilterRelations, ref: "User.requestedApprovals" }),
+    approvedBy: relationship({ isFilterable: canFilterRelations, ref: "User.approvedApprovals" }),
     ...trackingFields,
   },
 });

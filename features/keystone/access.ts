@@ -9,6 +9,9 @@ export function athleteScope({session}: Args): any {
   if (session.data.role?.canViewAllClients) return true;
   return { OR: [{leadAgent: {id: {equals: session.itemId}}}, {supportStaff: {some: {id: {equals: session.itemId}}}}] };
 }
+// Relation filters must not read through to a list the session cannot read in full.
+export const canFilterRelations = ({session}: Args) => Boolean(session?.data.role?.canViewAllClients);
+export const canFilterPeople = ({session}: Args) => Boolean(session?.data.role?.canSeeOtherPeople);
 export const rules = {
   canReadPeople: ({session}: Args): any => !session ? false : session.data.role?.canSeeOtherPeople ? true : {id: {equals: session.itemId}},
   canUpdatePeople: ({session}: Args): any => !session ? false : session.data.role?.canEditOtherPeople ? true : {id: {equals: session.itemId}},

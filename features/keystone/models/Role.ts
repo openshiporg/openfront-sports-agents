@@ -3,7 +3,7 @@ import { list } from '@keystone-6/core'
 import { allOperations } from '@keystone-6/core/access'
 import { checkbox, relationship, text } from '@keystone-6/core/fields'
 
-import { isSignedIn, permissions, permissionNames } from '../access'
+import { isSignedIn, permissions, permissionNames, canFilterPeople } from '../access'
 
 export const Role = list({
   access: {
@@ -28,6 +28,7 @@ export const Role = list({
     ...Object.fromEntries(permissionNames.map(name => [name, checkbox({defaultValue:false})])),
     assignedTo: relationship({
       ref: 'User.role',
+      isFilterable: canFilterPeople,
       many: true,
       ui: {
         itemView: { fieldMode: 'read' },

@@ -8,7 +8,7 @@ import {
   timestamp,
   relationship,
 } from "@keystone-6/core/fields";
-import { permissions } from "../access";
+import { permissions, canFilterRelations } from "../access";
 import { trackingFields } from "./trackingFields";
 
 export const PaymentSession = list({
@@ -39,10 +39,10 @@ export const PaymentSession = list({
       isIndexed: "unique",
     }),
     paymentCollection: relationship({
-      ref: "PaymentCollection.paymentSessions",
+      isFilterable: canFilterRelations, ref: "PaymentCollection.paymentSessions",
     }),
     paymentProvider: relationship({
-      ref: "PaymentProvider.sessions",
+      isFilterable: canFilterRelations, ref: "PaymentProvider.sessions",
       many: false,
     }),
     paymentAuthorizedAt: timestamp(),

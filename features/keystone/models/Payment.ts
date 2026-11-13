@@ -11,7 +11,7 @@ import {
   json
 } from "@keystone-6/core/fields";
 
-import { isSignedIn, permissions, athleteScope } from "../access";
+import { isSignedIn, permissions, athleteScope, canFilterRelations } from "../access";
 
 export const paymentOwnerFilter = (args: any): any => {
   const scope = athleteScope(args);
@@ -96,7 +96,7 @@ export const Payment = list({
     }),
 
     paymentProvider: relationship({
-      ref: "PaymentProvider",
+      isFilterable: canFilterRelations, ref: "PaymentProvider",
       ui: {
         displayMode: "select",
         description: "Optional provider backing this payment",
@@ -172,14 +172,14 @@ export const Payment = list({
 
     // Relationships
     order: relationship({
-      ref: "CommissionInvoice.payment_order",
+      isFilterable: canFilterRelations, ref: "CommissionInvoice.payment_order",
       ui: {
         displayMode: "select",
       },
     }),
 
     paymentCollection: relationship({
-      ref: "PaymentCollection.payments",
+      isFilterable: canFilterRelations, ref: "PaymentCollection.payments",
       ui: {
         displayMode: "select",
         description: "Payment collection this payment belongs to",
@@ -187,7 +187,7 @@ export const Payment = list({
     }),
 
     processedBy: relationship({
-      ref: "User",
+      isFilterable: canFilterRelations, ref: "User",
       ui: {
         displayMode: "select",
         description: "Staff member who processed payment",

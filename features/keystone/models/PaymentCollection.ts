@@ -6,7 +6,7 @@ import {
   select,
   relationship,
 } from "@keystone-6/core/fields";
-import { permissions } from "../access";
+import { permissions, canFilterRelations } from "../access";
 import { trackingFields } from "./trackingFields";
 
 export const PaymentCollection = list({
@@ -39,15 +39,15 @@ export const PaymentCollection = list({
     }),
     metadata: json(),
     paymentSessions: relationship({
-      ref: "PaymentSession.paymentCollection",
+      isFilterable: canFilterRelations, ref: "PaymentSession.paymentCollection",
       many: true,
     }),
     payments: relationship({
-      ref: "Payment.paymentCollection",
+      isFilterable: canFilterRelations, ref: "Payment.paymentCollection",
       many: true,
     }),
     invoice: relationship({
-      ref: "CommissionInvoice.paymentCollection",
+      isFilterable: canFilterRelations, ref: "CommissionInvoice.paymentCollection",
     }),
     ...trackingFields,
   },
