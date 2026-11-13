@@ -23,7 +23,8 @@ export async function getListByPath(path: string) {
     // Find the list by path
     const rawList = adminMeta.lists.find((l: any) => l.path === path)
     
-    if (!rawList) {
+    // A list hidden for this session (no access, or hidden in the schema) is not addressable.
+    if (!rawList || rawList.isHidden) {
       return undefined
     }
 
