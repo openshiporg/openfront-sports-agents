@@ -1,7 +1,7 @@
 import { list } from "@keystone-6/core";
 import { text, checkbox, json, relationship } from "@keystone-6/core/fields";
 
-import { isSignedIn, permissions } from "../access";
+import { isSignedIn, permissions, canFilterRelations } from "../access";
 import { trackingFields } from "./trackingFields";
 
 const canConfigureProvider = (args: any) => isSignedIn(args) && permissions.canManagePayments(args);
@@ -84,7 +84,7 @@ export const PaymentProvider = list({
       },
     }),
     sessions: relationship({
-      ref: "PaymentSession.paymentProvider",
+      isFilterable: canFilterRelations, ref: "PaymentSession.paymentProvider",
       many: true,
     }),
     ...trackingFields,

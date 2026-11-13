@@ -1,6 +1,6 @@
 import { list } from "@keystone-6/core";
 import { text, timestamp, select, json, relationship } from "@keystone-6/core/fields";
-import { permissions } from "../access";
+import { permissions, canFilterRelations } from "../access";
 import { trackingFields } from "./trackingFields";
 import { digestToken } from "../mcp-oauth/core";
 
@@ -46,7 +46,7 @@ export const OAuthToken = list({
       isIndexed: true,
     }),
     user: relationship({
-      ref: "User",
+      isFilterable: canFilterRelations, ref: "User",
       ui: {
         description: "The user who authorized this token",
       },

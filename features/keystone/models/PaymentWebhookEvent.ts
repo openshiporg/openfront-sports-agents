@@ -1,6 +1,6 @@
 import { list } from "@keystone-6/core";
 import { integer, json, relationship, select, text, timestamp } from "@keystone-6/core/fields";
-import { permissions } from "../access";
+import { permissions, canFilterRelations } from "../access";
 import { trackingFields } from "./trackingFields";
 
 export const PaymentWebhookEvent = list({
@@ -33,7 +33,7 @@ export const PaymentWebhookEvent = list({
     attempts: integer({ defaultValue: 0 }),
     receivedAt: timestamp({ defaultValue: { kind: "now" }, isIndexed: true }),
     processedAt: timestamp(),
-    payment: relationship({ ref: "Payment" }),
+    payment: relationship({ isFilterable: canFilterRelations, ref: "Payment" }),
     ...trackingFields,
   },
 });
