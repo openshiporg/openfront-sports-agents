@@ -6,16 +6,16 @@ import { Input } from '@/components/ui/input'
 import { lookupInvoiceAction } from '../lib/data'
 import { Shell } from './Shell'
 
-export default function LookupPage({ mark }: { mark?: React.ReactNode }) {
-  const [state, action, pending] = useActionState(lookupInvoiceAction, { error: null as string | null })
+export default function LookupPage({ name, mark }: { name?: string | null; mark?: React.ReactNode }) {
+  const [state, action, pending] = useActionState(lookupInvoiceAction, { error: null as string | null, email: '', number: '' })
   return (
-    <Shell mark={mark}>
+    <Shell name={name} mark={mark}>
       <h1 className="mb-4 text-2xl font-semibold">Find your invoice</h1>
       <form action={action} className="max-w-sm space-y-3">
-        <Input name="email" type="email" placeholder="Email" required />
-        <Input name="number" placeholder="Invoice number" required />
+        <Input key={'e' + state?.email} name="email" type="email" placeholder="Email" defaultValue={state?.email || ''} required />
+        <Input key={'n' + state?.number} name="number" placeholder="Invoice number" defaultValue={state?.number || ''} required />
         {state?.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
-        <Button type="submit" disabled={pending}>{pending ? 'Looking up' : 'Find invoice'}</Button>
+        <Button type="submit" className="h-11" disabled={pending}>{pending ? 'Looking up' : 'Find invoice'}</Button>
       </form>
     </Shell>
   )

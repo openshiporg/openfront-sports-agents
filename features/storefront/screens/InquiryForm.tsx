@@ -19,7 +19,7 @@ export function InquiryForm({ athleteId }: { athleteId: string }) {
       <Input name="organization" placeholder="Brand or organization" maxLength={160} />
       <Textarea name="message" placeholder="Message" required maxLength={2000} />
       {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
-      <Button type="submit" disabled={pending}>{pending ? 'Sending' : 'Send inquiry'}</Button>
+      <Button type="submit" className="h-11" disabled={pending}>{pending ? 'Sending' : 'Send inquiry'}</Button>
     </form>
   )
 }

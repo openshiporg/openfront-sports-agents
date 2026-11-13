@@ -52,14 +52,14 @@ export function InvoicePayment({ invoiceId, proof, balanceLabel }: { invoiceId: 
     if (result.error) { setError(result.error.message || 'Payment failed'); setBusy(false); return }
     const done = await confirmPayment(paymentId.current, proof)
     if (!done.ok) { setError(done.error); setBusy(false); return }
-    router.push(`/invoice/${invoiceId}/confirmation?proof=${encodeURIComponent(proof)}`)
+    router.replace(`/invoice/${invoiceId}/confirmation?proof=${encodeURIComponent(proof)}`)
   }
 
   return (
     <div className="space-y-3">
       <div id="payment-element" className="min-h-24 rounded-lg border p-3" />
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
-      <Button onClick={pay} disabled={!ready || busy}>{busy ? 'Paying' : `Pay ${balanceLabel}`}</Button>
+      <Button className="h-11" onClick={pay} disabled={!ready || busy}>{busy ? 'Paying' : `Pay ${balanceLabel}`}</Button>
     </div>
   )
 }

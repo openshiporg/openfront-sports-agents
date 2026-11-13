@@ -36,6 +36,7 @@ export const Payment = list({
   },
   ui: {
     isHidden: ({ session }) => !canSeePayments({ session }),
+    hideCreate: true,
     listView: {
       initialColumns: ["amount", "status", "paymentMethod", "order", "createdAt"],
     },

@@ -24,10 +24,16 @@ export async function sendInquiry(_prev: any, form: FormData) {
 }
 
 export async function lookupInvoiceAction(_prev: any, form: FormData) {
-  const r = await keystoneClient('query($e: String!, $n: String!) { lookupInvoice(email: $e, number: $n) }', { e: String(form.get('email') || ''), n: String(form.get('number') || '') })
-  if (!r.success) return { error: r.error }
+  const email = String(form.get('email') || ''), number = String(form.get('number') || '')
+  const r = await keystoneClient('query($e: String!, $n: String!) { lookupInvoice(email: $e, number: $n) }', { e: email, n: number })
+  if (!r.success) return { error: r.error, email, number }
   const { invoiceId, proof } = r.data.lookupInvoice
   redirect(`/invoice/${invoiceId}?proof=${encodeURIComponent(proof)}`)
+}
+
+export async function getAgencyName() {
+  const r = await keystoneClient('{ agencyName }')
+  return r.success ? ((r.data.agencyName as string) || null) : null
 }
 
 export async function getInvoice(id: string, proof: string) {

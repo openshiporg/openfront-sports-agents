@@ -4,6 +4,9 @@ import { Shell } from './Shell'
 import { StoreLogoMark } from '../components/StoreLogoMark'
 import { usd } from './InvoicePage'
 
+const BRANDS: Record<string, string> = { amex: 'American Express', diners: 'Diners Club', jcb: 'JCB', unionpay: 'UnionPay', mastercard: 'Mastercard' }
+const cardBrand = (b?: string | null) => (b ? BRANDS[b] || b.charAt(0).toUpperCase() + b.slice(1) : '')
+
 export default async function ConfirmationPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ proof?: string }> }) {
   const { id } = await params
   const { proof = '' } = await searchParams
@@ -19,7 +22,7 @@ export default async function ConfirmationPage({ params, searchParams }: { param
         <li className="flex justify-between px-3 py-2"><span>Total</span><span>{usd(i.totalCents, i.currencyCode)}</span></li>
         <li className="flex justify-between px-3 py-2"><span>Paid</span><span>{usd(i.paidCents, i.currencyCode)}</span></li>
         <li className="flex justify-between px-3 py-2 font-medium"><span>Balance</span><span>{usd(i.balanceCents, i.currencyCode)}</span></li>
-        {i.payments.map((p: any) => <li key={p.id} className="flex justify-between px-3 py-2"><span>{[p.cardBrand, p.cardLast4 && `ending ${p.cardLast4}`].filter(Boolean).join(' ') || 'Card payment'}</span><span>{usd(p.amount, i.currencyCode)}</span></li>)}
+        {i.payments.map((p: any) => <li key={p.id} className="flex justify-between px-3 py-2"><span>{[cardBrand(p.cardBrand), p.cardLast4 && `ending ${p.cardLast4}`].filter(Boolean).join(' ') || 'Card payment'}</span><span>{usd(p.amount - (p.refundedAmount || 0), i.currencyCode)}</span></li>)}
       </ul>
     </Shell>
   )

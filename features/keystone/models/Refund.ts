@@ -14,7 +14,7 @@ export const Refund = list({
     },
     filter: { query: paymentOwnerFilter },
   },
-  ui: { isHidden: ({ session }) => !canSeePayments({ session }) },
+  ui: { isHidden: ({ session }) => !canSeePayments({ session }), hideCreate: true },
   fields: {
     idempotencyKey: text({ validation: { isRequired: true }, isIndexed: "unique" }),
     amount: integer({ validation: { isRequired: true, min: 1 } }),

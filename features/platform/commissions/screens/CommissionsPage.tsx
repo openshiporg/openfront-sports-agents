@@ -131,7 +131,7 @@ export default async function CommissionsPage({ searchParams }: { searchParams: 
           {data.commissionLedgerEntries.length ? data.commissionLedgerEntries.map((e: any) => (
             <Row key={e.id}>
               <Cell className="font-mono text-xs uppercase">{e.entryType.replaceAll('_', ' ')}</Cell>
-              <Cell muted>{e.athlete?.fullName}{e.payeeUser ? ` → ${e.payeeUser.name}` : ''} · {e.reason}</Cell>
+              <Cell muted>{e.athlete?.fullName}{e.payeeUser ? ` → ${e.payeeUser.name}` : ''} · {String(e.reason ?? '').replace(/^Card payment (pi|ch)_\S+$/, 'Card payment')}</Cell>
               <Cell className="tabular-nums">{moneyExact(e.amountCents)}</Cell>
               {!e.reverses && e.entryType !== 'reversal' && ['receipt', 'accrual'].includes(e.entryType) && <CommandButton operation="reverseLedgerEntry" args={{ entryId: e.id, reason: 'Corrected by accounting' }} label="Reverse" />}
             </Row>

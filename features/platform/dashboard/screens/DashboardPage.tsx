@@ -6,6 +6,8 @@ import { platformQuery, money, day, commissionOf } from '../../lib/query'
 import { getAdminMetaAction } from '@/features/dashboard/actions/getAdminMetaAction'
 import { isPlatformPageHidden } from '@/features/dashboard/lib/sidebarAccess'
 
+const SCOPE: Record<string, string> = { playing: 'playing', marketing: 'marketing', both: 'playing and marketing' }
+
 const QUERY = `query MoneyView($now: DateTime!, $d7: DateTime!, $d60: DateTime!, $d90: DateTime!) {
   open: commissionInvoices(where: { status: { in: [sent, partially_paid] } }, take: 200) { id number status totalCents paidCents dueAt currencyCode athlete { id fullName } }
   upcoming: scheduledPayments(where: { status: { equals: scheduled }, dueAt: { gte: $now, lte: $d90 } }, take: 500) { grossCents commissionBps }
@@ -95,7 +97,7 @@ export default async function DashboardPage() {
           ))}
           {data.agreements.map((a: any) => (
             <Row key={a.id} href={link(a.athlete?.id ? `/dashboard/platform/clients/${a.athlete.id}?tab=agreements` : '/dashboard/platform/clients')}>
-              <Cell>{a.athlete?.fullName ?? 'Client'} · {a.scope} agreement</Cell>
+              <Cell>{a.athlete?.fullName ?? 'Client'} · {SCOPE[a.scope] ?? a.scope} agreement</Cell>
               <Cell muted>Expires {day(a.expiresAt)}</Cell>
             </Row>
           ))}

@@ -47,7 +47,7 @@ export const portalQueries={
   const invoice=await invoiceAccess(c,a.invoiceId,a.proof);
   const [lines,payments]=await Promise.all([
    c.prisma.commissionInvoiceLine.findMany({where:{invoiceId:invoice.id},select:{description:true,grossCents:true,commissionBps:true,commissionCents:true},orderBy:{id:'asc'},take:200}),
-   c.prisma.payment.findMany({where:{orderId:invoice.id,status:'succeeded'},select:{id:true,amount:true,cardBrand:true,cardLast4:true,processedAt:true},orderBy:{processedAt:'asc'},take:50}),
+   c.prisma.payment.findMany({where:{orderId:invoice.id,status:{in:['succeeded','partially_refunded']}},select:{id:true,amount:true,refundedAmount:true,cardBrand:true,cardLast4:true,processedAt:true},orderBy:{processedAt:'asc'},take:50}),
   ]);
   return {...invoiceView(invoice),lines,payments};
  },
