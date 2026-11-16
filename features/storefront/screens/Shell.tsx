@@ -16,18 +16,19 @@ export function Shell({ name, mark, children }: { name?: string | null; mark?: R
           <nav className={`${card} flex items-center gap-1 !rounded-full px-3 py-2 text-xs font-medium sm:gap-3`}>
             <Link href="/" className="mr-1 flex items-center gap-2 pr-2 text-[13px] font-semibold">
               {mark}
-              <span className="max-w-[9rem] truncate">{brand}</span>
+              <span className="max-w-[7rem] truncate sm:max-w-[9rem]">{brand}</span>
             </Link>
-            <Link href="/" className="rounded-full bg-zinc-200/70 px-3 py-1.5">Athletes</Link>
+            <Link href="/" className="hidden rounded-full px-3 py-1.5 text-zinc-600 sm:block">Home</Link>
+            <Link href="/#roster" className="rounded-full bg-zinc-200/70 px-3 py-1.5">Athletes</Link>
             <Link href="/#services" className="hidden rounded-full px-3 py-1.5 text-zinc-600 sm:block">Services</Link>
           </nav>
-          <Link href="/invoice" className={`${pillDark} h-9 !px-4 text-xs`}>Pay an invoice</Link>
+          <Link href="/invoice" className={`${pillDark} h-9 shrink-0 whitespace-nowrap !px-4 text-xs`}>Pay an invoice</Link>
         </header>
         {children}
         <footer className={`${card} flex flex-wrap items-center justify-between gap-4 px-6 py-5 sm:px-8`}>
           <Link href="/" className="flex items-center gap-2 text-sm font-semibold">{mark}{brand}</Link>
           <nav className="flex gap-5 text-xs font-medium text-zinc-700">
-            <Link href="/">Athletes</Link>
+            <Link href="/#roster">Athletes</Link>
             <Link href="/#services">Services</Link>
             <Link href="/invoice">Pay an invoice</Link>
           </nav>
