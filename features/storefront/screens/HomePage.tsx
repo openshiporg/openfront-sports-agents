@@ -22,7 +22,7 @@ export default async function HomePage() {
         <div className="pointer-events-none absolute inset-y-0 right-0 w-2/3 bg-[radial-gradient(ellipse_at_80%_30%,#d4d4d8,#52525b_45%,#18181b)] opacity-90 [mask-image:linear-gradient(to_left,black,transparent)]" />
         <div className="relative max-w-xl">
           <p className={eyebrow}>Sports Agency</p>
-          <h1 className="mt-5 text-4xl font-bold leading-[1.05] tracking-tight sm:text-6xl">Representing Athletes. Building Legacies.</h1>
+          <h1 className="mt-5 text-4xl font-bold leading-[1.05] tracking-[-0.02em] sm:text-6xl">Representing<br />Athletes.<br />Building Legacies.</h1>
           <p className="mt-5 max-w-md text-sm text-zinc-600 sm:text-base">Elite representation, strategic career management, and holistic support for world-class athletes.</p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link href="/#services" className={pillDark}>Our Services <ArrowRight className="size-4" /></Link>
