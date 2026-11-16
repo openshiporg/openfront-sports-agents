@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { getInvoice } from '../lib/data'
-import { Shell } from './Shell'
+import { Shell, card } from './Shell'
 import { StoreLogoMark } from '../components/StoreLogoMark'
 import { InvoicePayment } from './InvoicePayment'
 
@@ -14,9 +14,10 @@ export default async function InvoicePage({ params, searchParams }: { params: Pr
   const i = data.invoice
   return (
     <Shell name={data.name} mark={<StoreLogoMark />}>
-      <h1 className="text-2xl font-semibold">Invoice {i.number}</h1>
+      <section className={`${card} p-6 sm:p-10`}>
+      <h1 className="text-3xl font-bold tracking-tight">Invoice {i.number}</h1>
       <p className="mb-4 text-sm text-muted-foreground">{i.athleteName} · {i.status.replaceAll('_', ' ')}</p>
-      <ul className="mb-4 divide-y rounded-lg border text-sm">
+      <ul className="mb-4 divide-y rounded-2xl bg-white ring-1 ring-zinc-200 text-sm">
         {i.lines.map((l: any, n: number) => (
           <li key={n} className="flex flex-wrap justify-between gap-2 px-3 py-2"><span>{l.description}</span><span>{usd(l.commissionCents, i.currencyCode)}</span></li>
         ))}
@@ -27,6 +28,7 @@ export default async function InvoicePage({ params, searchParams }: { params: Pr
       {i.balanceCents > 0 && ['sent', 'partially_paid'].includes(i.status)
         ? <InvoicePayment invoiceId={i.id} proof={proof} balanceLabel={usd(i.balanceCents, i.currencyCode)} />
         : <p className="text-sm">This invoice is settled.</p>}
+      </section>
     </Shell>
   )
 }

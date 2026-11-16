@@ -57,9 +57,9 @@ export function InvoicePayment({ invoiceId, proof, balanceLabel }: { invoiceId: 
 
   return (
     <div className="space-y-3">
-      <div id="payment-element" className="min-h-24 rounded-lg border p-3" />
+      <div id="payment-element" className="min-h-24 rounded-2xl bg-white p-3 ring-1 ring-zinc-200" />
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
-      <Button onClick={pay} disabled={!ready || busy}>{busy ? 'Paying' : `Pay ${balanceLabel}`}</Button>
+      <Button onClick={pay} disabled={!ready || busy} className="rounded-full px-6">{busy ? 'Paying' : `Pay ${balanceLabel}`}</Button>
     </div>
   )
 }
