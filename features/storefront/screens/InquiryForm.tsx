@@ -9,7 +9,7 @@ import { sendInquiry } from '../lib/data'
 export function InquiryForm({ athleteId }: { athleteId: string }) {
   const key = useRef(typeof crypto !== 'undefined' ? crypto.randomUUID() : String(Math.random()))
   const [state, action, pending] = useActionState(sendInquiry, { ok: false, error: null as string | null })
-  if (state.ok) return <p className="text-sm">Inquiry received.</p>
+  if (state.ok) return <p className="rounded-2xl bg-white p-4 text-sm font-medium ring-1 ring-zinc-200">Inquiry received.</p>
   return (
     <form action={action} className="space-y-3">
       <input type="hidden" name="athleteId" value={athleteId} />
@@ -19,7 +19,7 @@ export function InquiryForm({ athleteId }: { athleteId: string }) {
       <Input name="organization" placeholder="Brand or organization" maxLength={160} />
       <Textarea name="message" placeholder="Message" required maxLength={2000} />
       {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
-      <Button type="submit" disabled={pending}>{pending ? 'Sending' : 'Send inquiry'}</Button>
+      <Button type="submit" disabled={pending} className="rounded-full px-6">{pending ? 'Sending' : 'Send inquiry'}</Button>
     </form>
   )
 }

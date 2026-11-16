@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { getInvoice } from '../lib/data'
-import { Shell } from './Shell'
+import { Shell, card } from './Shell'
 import { StoreLogoMark } from '../components/StoreLogoMark'
 import { usd } from './InvoicePage'
 
@@ -12,15 +12,17 @@ export default async function ConfirmationPage({ params, searchParams }: { param
   const i = data.invoice
   return (
     <Shell name={data.name} mark={<StoreLogoMark />}>
-      <h1 className="text-2xl font-semibold">{i.balanceCents === 0 ? 'Payment received' : i.payments.length ? 'Payment recorded' : 'No payment recorded'}</h1>
+      <section className={`${card} p-6 sm:p-10`}>
+      <h1 className="text-3xl font-bold tracking-tight">{i.balanceCents === 0 ? 'Payment received' : i.payments.length ? 'Payment recorded' : 'No payment recorded'}</h1>
       <p className="mb-4 text-sm text-muted-foreground">Confirmation code</p>
       <p className="mb-6 font-mono text-xl tracking-wide" data-testid="confirmation-code">{i.number}</p>
-      <ul className="divide-y rounded-lg border text-sm">
+      <ul className="divide-y rounded-2xl bg-white ring-1 ring-zinc-200 text-sm">
         <li className="flex justify-between px-3 py-2"><span>Total</span><span>{usd(i.totalCents, i.currencyCode)}</span></li>
         <li className="flex justify-between px-3 py-2"><span>Paid</span><span>{usd(i.paidCents, i.currencyCode)}</span></li>
         <li className="flex justify-between px-3 py-2 font-medium"><span>Balance</span><span>{usd(i.balanceCents, i.currencyCode)}</span></li>
         {i.payments.map((p: any) => <li key={p.id} className="flex justify-between px-3 py-2"><span>{[p.cardBrand, p.cardLast4 && `ending ${p.cardLast4}`].filter(Boolean).join(' ') || 'Card payment'}</span><span>{usd(p.amount, i.currencyCode)}</span></li>)}
       </ul>
+      </section>
     </Shell>
   )
 }
