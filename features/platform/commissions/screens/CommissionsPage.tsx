@@ -25,7 +25,8 @@ export default async function CommissionsPage({ searchParams }: { searchParams: 
   let data: any
   try {
     data = await platformQuery(`{
-      scheduledPayments(orderBy: { dueAt: asc }, take: 300) { id status dueAt grossCents commissionBps commissionCents currencyCode fxRateMicros baseCurrencyCode baseCommissionCents invoice { id } athlete { id fullName } }
+      scheduledPayments(where: { status: { in: [scheduled, late] } }, orderBy: { dueAt: asc }, take: 300) { id status dueAt grossCents commissionBps commissionCents currencyCode fxRateMicros baseCurrencyCode baseCommissionCents invoice { id } athlete { id fullName } }
+      readyToInvoice: scheduledPayments(where: { status: { equals: received }, invoice: null }, orderBy: { dueAt: asc }, take: 1000) { id currencyCode athlete { id fullName } }
       commissionInvoices(orderBy: { createdAt: desc }, take: 100) { id number status totalCents paidCents currencyCode athlete { fullName } payment_order(where: { status: { in: ["succeeded", "partially_refunded"] } }) { id amount refundedAmount cardBrand cardLast4 } }
       refunds(where: { status: { in: ["processing", "unknown"] } }, orderBy: { createdAt: asc }, take: 50) { id amount status reason order { number } }
       agencies(take: 1) { refundApprovalThresholdCents currencyCode }
@@ -42,9 +43,10 @@ export default async function CommissionsPage({ searchParams }: { searchParams: 
       parsePeriod(from, to); rec = (await platformQuery(`query($from: String!, $to: String!) { reconcileCommissions(from: $from, to: $to) }`, { from, to })).reconcileCommissions } catch (e: any) { recError = /Dates|End date|period/.test(e.message) ? e.message : 'Reconciliation could not run. Try a shorter period.' }
   }
   data.baseCurrency = data.agencies?.[0]?.currencyCode || 'USD'
-  const received = data.scheduledPayments.filter((p: any) => p.status === 'received' && !p.invoice)
-  const byAthlete = new Map<string, { id: string; name: string; ids: string[] }>()
-  for (const p of received) { if (!p.athlete) continue; const k = p.athlete.id; const cur = byAthlete.get(k) || { id: k, name: p.athlete.fullName, ids: [] as string[] }; cur.ids.push(p.id); byAthlete.set(k, cur) }
+  // One invoice per client and currency: the server refuses to mix currencies on one invoice.
+  const byAthlete = new Map<string, { id: string; name: string; currency: string; ids: string[] }>()
+  for (const p of data.readyToInvoice) { if (!p.athlete) continue; const k = `${p.athlete.id}:${p.currencyCode}`; const cur = byAthlete.get(k) || { id: p.athlete.id, name: p.athlete.fullName, currency: p.currencyCode, ids: [] as string[] }; cur.ids.push(p.id); byAthlete.set(k, cur) }
+  const multiCurrency = new Set([...byAthlete.values()].map((g) => g.id).filter((id, i, all) => all.indexOf(id) !== i))
   return (
     <PlatformPage title="Commissions">
       <ScrollTabs items={TABS.map((x) => ({ href: `/dashboard/platform/commissions?tab=${x}`, label: x, active: x === tab }))} />
@@ -53,19 +55,19 @@ export default async function CommissionsPage({ searchParams }: { searchParams: 
           {byAthlete.size > 0 && (
             <Section title="Ready to invoice">
               {[...byAthlete.values()].map((g) => (
-                <Row key={g.id}><Cell>{g.name}</Cell><Cell muted>{g.ids.length} received payments</Cell><CommandButton operation="draftCommissionInvoice" args={{ athleteId: g.id, scheduledPaymentIds: g.ids }} label="Create invoice" /></Row>
+                <Row key={`${g.id}:${g.currency}`}><Cell>{g.name}{multiCurrency.has(g.id) && ` · ${g.currency}`}</Cell><Cell muted>{g.ids.length} received payments</Cell><CommandButton operation="draftCommissionInvoice" args={{ athleteId: g.id, scheduledPaymentIds: g.ids }} label="Create invoice" /></Row>
               ))}
             </Section>
           )}
-          <Section title="Scheduled payments" hint={String(data.scheduledPayments.length)}>
-            {data.scheduledPayments.length ? data.scheduledPayments.slice(0, 80).map((p: any) => (
+          <Section title="Open payments" hint={String(data.scheduledPayments.length)}>
+            {data.scheduledPayments.length ? data.scheduledPayments.map((p: any) => (
               <Row key={p.id}>
                 <Cell><StatusLabel value={p.status} className="mr-2" />{p.athlete?.fullName}</Cell>
                 <Cell muted>{day(p.dueAt)} · {(p.commissionBps / 100).toFixed(2)}%</Cell>
                 <Cell className="tabular-nums">{moneyExact(p.grossCents, p.currencyCode)}{p.fxRateMicros != null && p.currencyCode !== p.baseCurrencyCode && <span className="block text-xs text-muted-foreground">{p.baseCurrencyCode} {formatRate(p.fxRateMicros)} · commission {moneyExact(Number(p.baseCommissionCents), p.baseCurrencyCode)}</span>}</Cell>
                 {['scheduled', 'late'].includes(p.status) && <MarkReceived paymentId={p.id} currency={p.currencyCode} baseCurrency={data.baseCurrency} commissionCents={Math.floor(Number(p.grossCents) * Number(p.commissionBps) / 10000)} />}
               </Row>
-            )) : <Empty>No scheduled payments</Empty>}
+            )) : <Empty>No open payments</Empty>}
           </Section>
         </>
       )}
