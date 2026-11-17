@@ -26,7 +26,8 @@ const QUERY = `query ClientDetail($id: ID!) {
     representationAgreement_athlete(orderBy: { createdAt: desc }) { id scope status playingCommissionBps marketingCommissionBps capBps effectiveAt expiresAt terminationNoticeDays }
     playingContract_athlete(orderBy: { createdAt: desc }) { id status startSeason endSeason totalValueCents commissionBps team { name } }
     endorsementDeal_athlete(orderBy: { createdAt: desc }) { id status termStart termEnd totalValueCents commissionBps exclusivityCategory brand { name } }
-    scheduledPayment_athlete(orderBy: { dueAt: asc }, take: 60) { id status dueAt grossCents commissionBps commissionCents currencyCode }
+    openPayments: scheduledPayment_athlete(where: { status: { in: [scheduled, late] } }, orderBy: { dueAt: asc }, take: 200) { id status dueAt grossCents commissionBps commissionCents currencyCode }
+    pastPayments: scheduledPayment_athlete(where: { status: { in: [received, waived] } }, orderBy: { dueAt: desc }, take: 60) { id status dueAt grossCents commissionBps commissionCents currencyCode }
     commissionInvoice_athlete(orderBy: { createdAt: desc }) { id number status totalCents paidCents }
     commissionLedgerEntry_athlete(orderBy: { occurredAt: desc }, take: 40) { id entryType amountCents reason occurredAt }
     clientTrustAccount_athlete { id name currencyCode }
@@ -114,7 +115,7 @@ export default async function ClientDetailPage({ params, searchParams }: { param
       )}
       {tab === 'payments' && (
         <Section title="Scheduled payments">
-          {a.scheduledPayment_athlete.length ? a.scheduledPayment_athlete.map((p: any) => (
+          {[...a.openPayments, ...a.pastPayments].length ? [...a.openPayments, ...a.pastPayments].map((p: any) => (
             <Row key={p.id}>
               <Cell><StatusLabel value={p.status} className="mr-2" />{day(p.dueAt)}</Cell>
               <Cell className="tabular-nums">{moneyExact(p.grossCents, p.currencyCode)}</Cell>
