@@ -8,6 +8,19 @@ import {paymentDates} from '../lib/terms';
 import {commission,allocateCommission,installmentAmounts,trustBalance,exactReversal} from '../lib/commission';
 import {DomainError} from '../lib/errors';
 import {assertTransition} from '../lib/stateMachines';
+import {cancelPayment} from '../utils/paymentProviderAdapter';
+// A card payment closed here because the invoice was voided or paid another way is also cancelled at the provider,
+// so a payment form the client still has open cannot take the money. Best effort: the local record is already closed.
+async function cancelOpenCardPayments(c:any,invoiceId:string,result:any){
+ const rows=await c.prisma.payment.findMany({where:{orderId:invoiceId,status:'cancelled',providerPaymentId:{not:''},errorMessage:{in:['Invoice voided before this card payment finished','Invoice paid in full by another receipt']}},include:{paymentProvider:true}});
+ for(const p of rows){
+  try{const r:any=await cancelPayment({provider:p.paymentProvider,paymentId:p.providerPaymentId,idempotencyKey:'cancel:'+p.id});
+   if(r?.status==='succeeded')await c.prisma.payment.updateMany({where:{id:p.id,status:'cancelled'},data:{status:'unknown',errorMessage:'Captured by the provider after the invoice was closed; refund it from the card processor'}});}
+  catch(e:any){console.error('[agency] could not cancel card payment '+p.id+': '+(e?.message||e));}
+ }
+ return result;
+}
+
 async function locate(context:any,model:string,id:string,include:any={}){if(!context.session)throw new DomainError('Not authorized');const row=await context.prisma[model].findUnique({where:{id},include});if(!row)throw new DomainError('Record not found');return row;}
 export const agencyMutations = {
  async draftRepresentationAgreement(_:unknown,a:any,c:any){return command(c,'canManageContracts',a.athleteId,'draftRepresentationAgreement',a,async tx=>{
@@ -71,20 +84,20 @@ export const agencyMutations = {
  for(const row of rows){await tx.commissionInvoiceLine.create({data:{invoiceId:invoice.id,scheduledPaymentId:row.id,description:'Commission on payment due '+new Date(row.dueAt).toISOString().slice(0,10),grossCents:row.grossCents,commissionBps:row.commissionBps,commissionCents:row.commissionCents,unitPriceCents:row.commissionCents,quantity:1,currencyCode:row.currencyCode}});await tx.scheduledPayment.update({where:{id:row.id},data:{invoiceId:invoice.id}});}
  await audit(tx,c,'invoice.created','CommissionInvoice',invoice.id,null,invoice,a.idempotencyKey);return invoice;
  });},
- async voidCommissionInvoice(_:unknown,a:any,c:any){const row=await locate(c,'commissionInvoice',a.invoiceId);return command(c,'canManageCommissions',row.athleteId,'voidCommissionInvoice',a,async tx=>{
+ async voidCommissionInvoice(_:unknown,a:any,c:any){const row=await locate(c,'commissionInvoice',a.invoiceId);return cancelOpenCardPayments(c,row.id,await command(c,'canManageCommissions',row.athleteId,'voidCommissionInvoice',a,async tx=>{
  const inv=await tx.commissionInvoice.findUnique({where:{id:row.id}});if(inv.paidCents>0)throw new DomainError('Reverse payments before voiding a paid invoice');if(!a.reason?.trim())throw new DomainError('Void reason required');
  for(const t of await tx.clientTrustEntry.findMany({where:{invoiceId:row.id,entryType:'commission_transfer'},select:{id:true}}))if(!await tx.clientTrustEntry.findUnique({where:{reversalKey:t.id}}))throw new DomainError('Client trust money was already moved against this invoice. Reverse the trust transfer first');
  const result=await transition(tx,c,'commissionInvoice',row.id,['draft','sent'],'void',a.idempotencyKey);
  await tx.scheduledPayment.updateMany({where:{invoiceId:row.id},data:{invoiceId:null}});
  await tx.payment.updateMany({where:{orderId:row.id,status:{in:['pending','processing','authorized']}},data:{status:'cancelled',errorMessage:'Invoice voided before this card payment finished'}});
  return result;
- });},
+ }));},
  async sendCommissionInvoice(_:unknown,a:any,c:any){const row=await locate(c,'commissionInvoice',a.invoiceId);return command(c,'canManageCommissions',row.athleteId,'sendCommissionInvoice',a,async tx=>transition(tx,c,'commissionInvoice',row.id,['draft'],'sent',a.idempotencyKey));},
- async recordInvoicePayment(_:unknown,a:any,c:any){const row=await locate(c,'commissionInvoice',a.invoiceId);return command(c,'canManageCommissions',row.athleteId,'recordInvoicePayment',a,async tx=>{
+ async recordInvoicePayment(_:unknown,a:any,c:any){const row=await locate(c,'commissionInvoice',a.invoiceId);return cancelOpenCardPayments(c,row.id,await command(c,'canManageCommissions',row.athleteId,'recordInvoicePayment',a,async tx=>{
  const done=await applyInvoiceReceipt(tx,c,row.id,a.amountCents,a.reference,'receipt:'+a.idempotencyKey,a.idempotencyKey);
  if(done.status==='paid')await tx.payment.updateMany({where:{orderId:row.id,status:{in:['pending','processing','authorized']}},data:{status:'cancelled',errorMessage:'Invoice paid in full by another receipt'}});
  return done;
- });},
+ }));},
  async reverseLedgerEntry(_:unknown,a:any,c:any){const row=await locate(c,'commissionLedgerEntry',a.entryId);return command(c,'canManageCommissions',row.athleteId,'reverseLedgerEntry',a,async tx=>{
  const original=await tx.commissionLedgerEntry.findUnique({where:{id:row.id}});const reversed=await tx.commissionLedgerEntry.findUnique({where:{reversalKey:row.id}});if(!a.reason?.trim())throw new DomainError('Reversal reason required');if(await tx.commissionLedgerEntry.findFirst({where:{reversesId:row.id,entryType:'reversal'}}))throw new DomainError('Entry already has refund or reversal postings');
  const amount=exactReversal(original.amountCents,original.entryType==='reversal',Boolean(reversed));if(original.entryType==='accrual'&&original.scheduledPaymentId&&(await tx.scheduledPayment.findUnique({where:{id:original.scheduledPaymentId}})).invoiceId)throw new DomainError('Void the invoice before reversing its accrual');
