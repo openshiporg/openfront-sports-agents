@@ -14,6 +14,7 @@ import { MarkReceived } from '../components/MarkReceived'
 import { formatRate } from '@/features/keystone/lib/fx'
 import { plural, breakdownText, entriesText } from '@/features/keystone/lib/payout'
 import { BUCKETS, BUCKET_LABEL } from '@/features/keystone/lib/aging'
+import { VoidInvoice } from '../../components/InvoiceTrustForms'
 
 const TABS = ['payments', 'invoices', 'aging', 'ledger', 'payouts', 'reconcile'] as const
 
@@ -92,6 +93,7 @@ export default async function CommissionsPage({ searchParams }: { searchParams: 
               <Cell className="tabular-nums">{moneyExact(i.paidCents, i.currencyCode)} of {moneyExact(i.totalCents, i.currencyCode)}</Cell>
               {i.status === 'draft' && <CommandButton operation="sendCommissionInvoice" args={{ invoiceId: i.id }} label="Send" />}
               {['sent', 'partially_paid'].includes(i.status) && <CommandButton operation="recordInvoicePayment" args={{ invoiceId: i.id, amountCents: i.totalCents - i.paidCents, reference: 'Payment received' }} label="Record payment" />}
+              {['draft', 'sent'].includes(i.status) && i.paidCents === 0 && <VoidInvoice invoiceId={i.id} />}
               {['sent', 'partially_paid'].includes(i.status) && <RequestApprovalButton actionType="commission_writeoff" targetId={i.id} amountCents={i.totalCents - i.paidCents} label="Write off" />}
               {i.payment_order.filter((p: any) => p.amount - p.refundedAmount > 0).map((p: any) => <RefundPayment key={p.id} paymentId={p.id} remainingCents={p.amount - p.refundedAmount} thresholdCents={data.agencies[0]?.refundApprovalThresholdCents ?? 0} label={`Refund ${p.cardBrand || 'card'} ${p.cardLast4}`.trim()} />)}
             </Row>
