@@ -114,8 +114,13 @@ export const refundMutations={
   const seen=await getPaymentStatus({provider:refund.payment.paymentProvider,paymentId:refund.payment.providerPaymentId});
   const hit=(seen.refunds||[]).find((r:any)=>r.id===refund.providerRefundId||r.metadata?.restaurantRefundKey===refund.idempotencyKey);
   if(!hit){
-   await c.prisma.$transaction((tx:any)=>audit(tx,c,'refund.checked','Payment',refund.paymentId,null,{refundId:refund.id,found:false,listComplete:seen.refundsComplete},String(a.requestId||refund.id)));
-   return {id:refund.id,status:refund.status,note:'The provider has no record of this refund. Retry the original refund request to resume it.'};
+   // The provider's full list has no refund under our key and the request is not still in flight: the provider rejected it.
+   // Mark it failed so the reserved amount is released and staff can refund again; nothing was paid out.
+   const settledNoRecord=seen.refundsComplete!==false&&!refund.providerRefundId&&Date.now()-new Date(refund.createdAt).getTime()>120000;
+   if(settledNoRecord)await c.prisma.refund.updateMany({where:{id:refund.id,status:{in:IN_FLIGHT}},data:{status:'failed'}});
+   await c.prisma.$transaction((tx:any)=>audit(tx,c,'refund.checked','Payment',refund.paymentId,null,{refundId:refund.id,found:false,listComplete:seen.refundsComplete,...(settledNoRecord?{status:'failed'}:{})},String(a.requestId||refund.id)));
+   if(settledNoRecord)throw new DomainError('The card processor has no record of this refund, so nothing was refunded. It is marked failed; issue the refund again.');
+   return {id:refund.id,status:refund.status,note:'The provider has no record of this refund yet. Check again in a few minutes.'};
   }
   const status=await settleProviderRefund(c,refund,{id:hit.id,status:hit.status,amount:hit.amount,data:hit},'check:'+refund.id+':'+hit.status);
   await c.prisma.$transaction((tx:any)=>audit(tx,c,'refund.checked','Payment',refund.paymentId,{status:refund.status},{status,providerRefundId:hit.id},'check:'+refund.id));
