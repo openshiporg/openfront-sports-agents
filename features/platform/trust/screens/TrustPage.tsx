@@ -3,6 +3,7 @@ import { PlatformPage, Section, Row, Cell, Empty, ErrorState } from '../../compo
 import { ScrollTabs } from '../../components/ScrollTabs'
 import { StatusLabel } from '../../components/StatusLabel'
 import { ReconcileStatement, ReopenReconciliation } from '../components/ReconcileStatement'
+import { PostTrustEntry } from '../../components/InvoiceTrustForms'
 import { platformQuery, moneyExact, day } from '../../lib/query'
 
 const TABS = ['balances', 'reconcile'] as const
@@ -39,7 +40,7 @@ export default async function TrustPage({ searchParams }: { searchParams: Promis
   }
   let data: any
   try {
-    data = await platformQuery(`{ clientTrustAccounts(take: 100) { id name currencyCode athlete { id fullName } clientTrustEntry_account(orderBy: { occurredAt: desc }, take: 50) { id entryType amountCents reference occurredAt clearedIn { id } } } }`)
+    data = await platformQuery(`{ clientTrustAccounts(take: 100) { id name currencyCode athlete { id fullName commissionInvoice_athlete(where: { status: { in: [sent, partially_paid] } }, orderBy: { createdAt: asc }, take: 50) { id number totalCents paidCents currencyCode } } clientTrustEntry_account(orderBy: { occurredAt: desc }, take: 50) { id entryType amountCents reference occurredAt clearedIn { id } } } }`)
   } catch (e: any) { return <PlatformPage title="Trust">{tabs}<ErrorState message={e.message} /></PlatformPage> }
   return (
     <PlatformPage title="Trust">
@@ -48,6 +49,7 @@ export default async function TrustPage({ searchParams }: { searchParams: Promis
         const bal = a.clientTrustEntry_account.reduce((n: number, e: any) => n + Number(e.amountCents), 0)
         return (
           <Section key={a.id} title={a.athlete?.fullName || a.name} hint={`Balance ${moneyExact(bal, a.currencyCode)}`}>
+            <PostTrustEntry accountId={a.id} currency={a.currencyCode} invoices={(a.athlete?.commissionInvoice_athlete || []).filter((i: any) => i.currencyCode === a.currencyCode).map((i: any) => ({ id: i.id, number: i.number, owedCents: i.totalCents - i.paidCents }))} />
             {a.clientTrustEntry_account.length ? a.clientTrustEntry_account.map((e: any) => (
               <Row key={e.id}><Cell className="font-mono text-xs uppercase">{e.entryType.replaceAll('_', ' ')}{e.clearedIn ? ' · cleared' : ''}</Cell><Cell muted>{e.reference} · {day(e.occurredAt)}</Cell><Cell className="tabular-nums">{moneyExact(e.amountCents, a.currencyCode)}</Cell></Row>
             )) : <Empty>No entries</Empty>}
