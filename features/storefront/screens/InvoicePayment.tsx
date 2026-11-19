@@ -56,10 +56,12 @@ export function InvoicePayment({ invoiceId, proof, balanceLabel }: { invoiceId: 
   }
 
   return (
-    <div className="space-y-3">
-      <div id="payment-element" className="min-h-24 rounded-2xl bg-white p-3 ring-1 ring-zinc-200" />
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
-      <Button onClick={pay} disabled={!ready || busy} className="rounded-full px-6">{busy ? 'Paying' : `Pay ${balanceLabel}`}</Button>
+    <div className="mt-8 space-y-4">
+      <h2 className="text-xl font-semibold tracking-tight">Pay by card</h2>
+      {!ready && !error ? <p className="text-sm text-zinc-600">Loading the card form…</p> : null}
+      <div id="payment-element" />
+      {error ? <p role="alert" className="text-sm text-red-700">{error}</p> : null}
+      <Button onClick={pay} disabled={!ready || busy}>{busy ? 'Paying…' : `Pay ${balanceLabel}`}</Button>
     </div>
   )
 }

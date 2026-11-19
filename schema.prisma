@@ -194,6 +194,11 @@ model Athlete {
   followerCounts                  Json?
   marketabilityNotes              String                      @default("")
   image                           String                      @default("")
+  photo_id                        String?
+  photo_filesize                  Int?
+  photo_width                     Int?
+  photo_height                    Int?
+  photo_extension                 String?
   eligibility                     Json?
   isPublic                        Boolean                     @default(false)
   lostReason                      AthleteLostReasonType?      @default(other)

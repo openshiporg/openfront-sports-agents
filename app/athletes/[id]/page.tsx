@@ -1,2 +1,3 @@
-import Page from "@/features/storefront/screens/AthletePage";
+import Page, { generateMetadata } from "@/features/storefront/screens/AthletePage";
+export { generateMetadata };
 export default Page;

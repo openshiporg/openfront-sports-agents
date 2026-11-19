@@ -24,16 +24,23 @@ async function invoiceAccess(c:any,invoiceId:string,proof?:string|null){
 }
 const invoiceView=(i:any)=>({id:i.id,number:i.number,status:i.status,totalCents:i.totalCents,paidCents:i.paidCents,balanceCents:i.totalCents-i.paidCents,currencyCode:i.currencyCode,dueAt:i.dueAt,athleteName:i.athlete?.fullName});
 
+// Published clients only, with the photo staff uploaded (its URL is signed by the image field, so it is read through the list API)
+// and the social accounts on the profile, which are public by nature.
+async function publicAthletes(c:any,where:any){
+ const rows=await c.prisma.athlete.findMany({where:{...where,isPublic:true,status:'client'},select:{id:true,fullName:true,preferredName:true,sport:true,league:true,position:true,image:true,socialHandles:true,followerCounts:true,team:{select:{name:true}}},orderBy:{fullName:'asc'},take:100});
+ const photos:any[]=rows.length?await c.sudo().query.Athlete.findMany({where:{id:{in:rows.map((r:any)=>r.id)}},query:'id photo { url width height }'}).catch(()=>[]):[];
+ const byId=new Map(photos.map((p:any)=>[p.id,p.photo]));
+ return rows.map((r:any)=>({...r,photo:byId.get(r.id)||null}));
+}
+
 export const portalQueries={
  async myAthleteSummary(_:unknown,a:any,c:any){const athlete=await portalAthlete(c);if(!athlete)throw new DomainError('Client profile not found');const [contracts,deals]=await Promise.all([c.prisma.playingContract.findMany({where:{athleteId:athlete.id},select:{id:true,status:true,startSeason:true,endSeason:true},take:100}),c.prisma.endorsementDeal.findMany({where:{athleteId:athlete.id},select:{id:true,status:true,termStart:true,termEnd:true},take:100})]);return {...athlete,contracts,deals};},
  async myDeliverables(_:unknown,a:any,c:any){const athlete=await portalAthlete(c);if(!athlete)throw new DomainError('Client profile not found');return c.prisma.deliverable.findMany({where:{deal:{athleteId:athlete.id}},select:{id:true,kind:true,status:true,dueAt:true,proofLink:true},take:100,orderBy:{dueAt:'asc'}});},
  async myInvoices(_:unknown,a:any,c:any){const athlete=await portalAthlete(c);if(!athlete)throw new DomainError('Client profile not found');return c.prisma.commissionInvoice.findMany({where:{athleteId:athlete.id,status:{in:['sent','partially_paid','paid']}},select:{id:true,number:true,status:true,totalCents:true,paidCents:true,currencyCode:true,dueAt:true},take:100,orderBy:{createdAt:'desc'}});},
  async agencyName(_:unknown,a:any,c:any){return (await c.prisma.agency.findFirst({select:{name:true}}))?.name||null;},
- async agencyRoster(_:unknown,a:any,c:any){
-  return c.prisma.athlete.findMany({where:{isPublic:true,status:'client'},select:{id:true,fullName:true,preferredName:true,sport:true,league:true,position:true,image:true,team:{select:{name:true}}},orderBy:{fullName:'asc'},take:100});
- },
+ async agencyRoster(_:unknown,a:any,c:any){return publicAthletes(c,{});},
  async agencyAthlete(_:unknown,a:any,c:any){
-  const row=await c.prisma.athlete.findFirst({where:{id:String(a.athleteId||''),isPublic:true,status:'client'},select:{id:true,fullName:true,preferredName:true,sport:true,league:true,position:true,image:true,team:{select:{name:true}}}});
+  const row=(await publicAthletes(c,{id:String(a.athleteId||'')}))[0];
   if(!row)throw new DomainError('Athlete not found');return row;
  },
  async lookupInvoice(_:unknown,a:any,c:any){
@@ -53,7 +60,7 @@ export const portalQueries={
  },
 };
 
-// ---- Stripe TEST payment of one commission invoice (adapter boundary: features/integrations/payment) ----
+// ---- Card payment of one commission invoice (adapter boundary: features/integrations/payment) ----
 async function stripeProvider(c:any){
  const provider=await c.prisma.paymentProvider.findFirst({where:{code:STRIPE_CODE,isInstalled:true}});
  if(!provider)throw new Error('Card payments are not configured');return provider;
