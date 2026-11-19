@@ -1,49 +1,39 @@
 import Link from 'next/link'
-import { Instagram, Linkedin, Youtube, Twitter } from 'lucide-react'
+import '../storefront.css'
 
-export const card = 'rounded-[28px] border border-white bg-gradient-to-b from-white to-zinc-100/80 shadow-[0_1px_0_#fff_inset,0_8px_30px_-12px_rgba(15,23,42,0.18)] ring-1 ring-zinc-200/70'
-export const pillDark = 'inline-flex h-10 items-center justify-center gap-2 rounded-full bg-gradient-to-b from-zinc-700 to-zinc-950 px-5 text-sm font-semibold text-white shadow-md ring-1 ring-zinc-900/60 transition hover:brightness-110'
-export const pillLight = 'inline-flex h-10 items-center justify-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-zinc-900 shadow-sm ring-1 ring-zinc-200 transition hover:bg-zinc-50'
-export const eyebrow = 'text-[11px] font-semibold uppercase tracking-[0.28em] text-zinc-500'
+const nav = 'inline-flex min-h-11 items-center hover:underline underline-offset-4'
 
 export function Shell({ name, mark, children }: { name?: string | null; mark?: React.ReactNode; children: React.ReactNode }) {
-  const brand = name || 'Openfront Sports Agents'
   return (
-    <div className="min-h-screen bg-gradient-to-b from-zinc-100 via-white to-zinc-200/60 text-zinc-950">
-      <div className="mx-auto max-w-6xl space-y-4 px-3 py-4 sm:px-6">
-        <header className="flex items-center justify-between gap-2">
-          <span className="hidden w-32 sm:block" />
-          <nav className={`${card} flex items-center gap-1 !rounded-full px-3 py-2 text-xs font-medium sm:gap-3`}>
-            <Link href="/" className="mr-1 flex items-center gap-2 pr-2 text-[13px] font-semibold">
-              {mark}
-              <span className="max-w-[7rem] truncate sm:max-w-[9rem]">{brand}</span>
-            </Link>
-            <Link href="/" className="hidden rounded-full px-3 py-1.5 text-zinc-600 sm:block">Home</Link>
-            <Link href="/#roster" className="rounded-full bg-zinc-200/70 px-3 py-1.5">Athletes</Link>
-            <Link href="/#services" className="hidden rounded-full px-3 py-1.5 text-zinc-600 sm:block">Services</Link>
+    <div className="shop min-h-screen bg-zinc-50 text-zinc-950">
+      <div className="mx-auto flex min-h-screen max-w-6xl flex-col px-5 md:px-8">
+        <header className="flex flex-wrap items-center justify-between gap-x-6 py-4">
+          <Link href="/" className="flex min-h-11 items-center gap-2 text-lg font-semibold tracking-tight">{mark}{name || 'Home'}</Link>
+          <nav aria-label="Main" className="flex flex-wrap items-center gap-x-6 text-sm font-medium text-zinc-700">
+            <Link href="/#athletes" className={nav}>Athletes</Link>
+            <Link href="/invoice" className={nav}>Pay an invoice</Link>
           </nav>
-          <Link href="/invoice" className={`${pillDark} h-9 shrink-0 whitespace-nowrap !px-4 text-xs`}>Pay an invoice</Link>
         </header>
-        {children}
-        <footer className={`${card} flex flex-wrap items-center justify-between gap-4 px-6 py-5 sm:px-8`}>
-          <Link href="/" className="flex items-center gap-2 text-sm font-semibold">{mark}{brand}</Link>
-          <nav className="flex gap-5 text-xs font-medium text-zinc-700">
-            <Link href="/#roster">Athletes</Link>
-            <Link href="/#services">Services</Link>
-            <Link href="/invoice">Pay an invoice</Link>
-          </nav>
-          <div className="flex gap-4 text-zinc-800" aria-hidden>
-            <Instagram className="size-4" /><Linkedin className="size-4" /><Youtube className="size-4" /><Twitter className="size-4" />
-          </div>
-        </footer>
+        <main className="flex-1 pb-16 pt-6 md:pt-10">{children}</main>
+        {name ? <footer className="border-t border-zinc-200 py-6 text-sm text-zinc-600">{name}</footer> : null}
       </div>
     </div>
   )
 }
 
-export function Initials({ name, className = '' }: { name: string; className?: string }) {
-  const t = name.split(/\s+/).map((p) => p[0]).slice(0, 2).join('').toUpperCase()
+export type Athlete = { id: string; fullName: string; sport?: string; league?: string; position?: string; image?: string; photo?: { url: string; width: number; height: number } | null; team?: { name: string } | null; socialHandles?: Record<string, string> | null; followerCounts?: Record<string, number> | null }
+
+export const athleteLine = (a: Athlete) => [a.position, a.team?.name, a.league].filter(Boolean).join(' · ')
+
+/* eslint-disable @next/next/no-img-element */
+// The athlete's photo as staff uploaded it. With no photo there is a plain panel, never a decorative fill.
+export function AthletePhoto({ athlete: a, sizes, priority }: { athlete: Athlete; sizes: string; priority?: boolean }) {
+  const src = a.photo?.url || a.image
   return (
-    <div className={`flex items-center justify-center bg-[radial-gradient(circle_at_30%_20%,#f4f4f5,#a1a1aa_55%,#27272a)] text-4xl font-semibold tracking-tight text-white/90 ${className}`}>{t}</div>
+    <div className="aspect-[4/5] overflow-hidden rounded-lg bg-zinc-200">
+      {src
+        ? <img src={src} alt={a.fullName} sizes={sizes} loading={priority ? 'eager' : 'lazy'} className="size-full object-cover" />
+        : <div className="flex size-full items-center justify-center text-sm text-zinc-500">No photo yet</div>}
+    </div>
   )
 }

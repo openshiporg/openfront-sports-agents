@@ -1,2 +1,3 @@
-import Page from "@/features/storefront/screens/InvoicePage";
+import Page, { metadata } from "@/features/storefront/screens/InvoicePage";
+export { metadata };
 export default Page;

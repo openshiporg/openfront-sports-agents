@@ -1,4 +1,4 @@
-import { text, integer, bigInt, checkbox, timestamp, calendarDay, json } from "@keystone-6/core/fields";
+import { text, integer, bigInt, checkbox, timestamp, calendarDay, json, image } from "@keystone-6/core/fields";
 import {domainList, currencyCode, cents, bps, state, rel} from "./domainFields";
 export const Athlete = domainList({
     fullName: text({validation:{isRequired:true}}),
@@ -19,6 +19,7 @@ export const Athlete = domainList({
     followerCounts: json(),
     marketabilityNotes: text(),
     image: text(),
+    photo: image({ storage: "my_images" }),
     eligibility: json(),
     isPublic: checkbox({defaultValue:false}),
     lostReason: state(['signed_elsewhere', 'declined', 'unresponsive', 'ineligible', 'compliance', 'timing', 'other'], 'other'),

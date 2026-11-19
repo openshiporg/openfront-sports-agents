@@ -20,12 +20,13 @@ export async function sendInquiry(_prev: any, form: FormData) {
     'mutation($a: ID!, $n: String!, $e: String!, $o: String, $m: String!, $k: String!) { submitInquiry(athleteId: $a, name: $n, email: $e, organization: $o, message: $m, idempotencyKey: $k) }',
     { a: String(form.get('athleteId')), n: String(form.get('name') || ''), e: String(form.get('email') || ''), o: String(form.get('organization') || ''), m: String(form.get('message') || ''), k: String(form.get('key') || randomUUID()) },
   )
-  return r.success ? { ok: true, error: null } : { ok: false, error: r.error }
+  // On an error the typed values go back to the form, so nothing has to be retyped.
+  return r.success ? { ok: true, error: null, values: null } : { ok: false, error: r.error as string, values: Object.fromEntries(['name', 'email', 'organization', 'message'].map((k) => [k, String(form.get(k) || '')])) }
 }
 
 export async function lookupInvoiceAction(_prev: any, form: FormData) {
   const r = await keystoneClient('query($e: String!, $n: String!) { lookupInvoice(email: $e, number: $n) }', { e: String(form.get('email') || ''), n: String(form.get('number') || '') })
-  if (!r.success) return { error: r.error }
+  if (!r.success) return { error: r.error as string, values: { email: String(form.get('email') || ''), number: String(form.get('number') || '') } }
   const { invoiceId, proof } = r.data.lookupInvoice
   redirect(`/invoice/${invoiceId}?proof=${encodeURIComponent(proof)}`)
 }
