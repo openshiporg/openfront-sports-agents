@@ -17,12 +17,12 @@ export default async function ConfirmationPage({ params, searchParams }: { param
   return (
     <Shell name={data.name} mark={<StoreLogoMark />}>
       <div className="max-w-2xl">
-        <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">{i.balanceCents === 0 ? 'Payment received' : i.payments.length ? 'Payment recorded' : 'No payment recorded'}</h1>
+        <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">{i.balanceCents === 0 ? 'Payment received' : i.payments.length && i.payments.every((p: any) => (p.refundedAmount || 0) >= p.amount) ? 'Payment refunded' : i.payments.length ? 'Payment recorded' : 'No payment recorded'}</h1>
         <p className="mt-2 text-zinc-700">Invoice <span className="font-semibold text-zinc-950" data-testid="confirmation-code">{i.number}</span> · commission for {i.athleteName}</p>
         <ul className="mt-6 divide-y divide-zinc-200 border-y border-zinc-200">
           {i.payments.map((p: any) => (
             <li key={p.id} className={row}>
-              <span>{[p.cardBrand && p.cardBrand[0].toUpperCase() + p.cardBrand.slice(1), p.cardLast4 && `ending ${p.cardLast4}`].filter(Boolean).join(' ') || 'Card payment'}{p.processedAt ? <span className="block text-sm text-zinc-600">{day(p.processedAt)}</span> : null}</span>
+              <span>{[p.cardBrand && p.cardBrand[0].toUpperCase() + p.cardBrand.slice(1), p.cardLast4 && `ending ${p.cardLast4}`].filter(Boolean).join(' ') || 'Card payment'}{p.processedAt ? <span className="block text-sm text-zinc-600">{day(p.processedAt)}</span> : null}{p.refundedAmount ? <span className="block text-sm text-zinc-600">Refunded {usd(p.refundedAmount, i.currencyCode)}</span> : null}</span>
               <span>{usd(p.amount, i.currencyCode)}</span>
             </li>
           ))}
