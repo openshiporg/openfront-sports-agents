@@ -72,7 +72,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
                 return (
                   <div key={di} className={`min-h-24 min-w-0 border-r p-1.5 last:border-r-0 ${d === today ? 'bg-muted/40' : ''}`}>
                     {d && <div className="text-xs text-muted-foreground">{Number(d.slice(8))}</div>}
-                    {list.slice(0, 3).map((i) => <Link key={i.type + i.id} href={i.href} className={`mt-1 block truncate text-xs hover:underline ${i.overdue ? 'text-destructive' : ''}`}>{i.athleteName.split(' ').slice(-1)[0]} · {i.title}</Link>)}
+                    {list.slice(0, 3).map((i) => <Link key={i.type + i.id} href={i.href} className={`mt-1 block truncate text-xs hover:underline ${i.overdue ? 'text-destructive' : ''}`}>{i.athleteName ? `${i.athleteName.split(' ').slice(-1)[0]} · ` : ''}{i.title}</Link>)}
                     {list.length > 3 && <div className="mt-1 text-xs text-muted-foreground">+{list.length - 3} more</div>}
                   </div>
                 )

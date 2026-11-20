@@ -81,7 +81,7 @@ export async function finalizeInvoicePayment(c:any,paymentId:string){
   await lockTransactionKey(tx,'athlete:'+invoice.athleteId);
   const current=await tx.payment.findUnique({where:{id:payment.id}});
   if(current.status==='succeeded')return current;
-  try{await applyInvoiceReceipt(tx,c,invoice.id,payment.amount,'Card payment '+payment.providerPaymentId,'receipt:payment:'+payment.id,'payment:'+payment.id);}
+  try{await applyInvoiceReceipt(tx,c,invoice.id,payment.amount,(charge?.payment_method_details?.card?.last4?'Card payment ending '+charge.payment_method_details.card.last4:'Card payment'),'receipt:payment:'+payment.id,'payment:'+payment.id);}
   catch(e:any){await tx.payment.update({where:{id:payment.id},data:{status:'unknown',errorMessage:'Captured by the provider but not applied: '+e.message}});return {...current,status:'unknown'};}
   return tx.payment.update({where:{id:payment.id},data:{status:'succeeded',processedAt:new Date(),cardBrand:charge?.payment_method_details?.card?.brand||'',cardLast4:charge?.payment_method_details?.card?.last4||''}});
  },{timeout:60000,maxWait:15000});
