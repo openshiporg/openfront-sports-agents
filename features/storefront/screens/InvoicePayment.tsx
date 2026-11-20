@@ -52,7 +52,8 @@ export function InvoicePayment({ invoiceId, proof, balanceLabel }: { invoiceId: 
     if (result.error) { setError(result.error.message || 'Payment failed'); setBusy(false); return }
     const done = await confirmPayment(paymentId.current, proof)
     if (!done.ok) { setError(done.error); setBusy(false); return }
-    router.push(`/invoice/${invoiceId}/confirmation?proof=${encodeURIComponent(proof)}`)
+    // Replace, so Back does not return to the now-paid invoice's card form.
+    router.replace(`/invoice/${invoiceId}/confirmation?proof=${encodeURIComponent(proof)}`)
   }
 
   return (

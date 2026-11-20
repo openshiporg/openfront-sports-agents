@@ -95,7 +95,7 @@ export default async function DashboardPage() {
           ))}
           {data.agreements.map((a: any) => (
             <Row key={a.id} href={link(a.athlete?.id ? `/dashboard/platform/clients/${a.athlete.id}?tab=agreements` : '/dashboard/platform/clients')}>
-              <Cell>{a.athlete?.fullName ?? 'Client'} · {a.scope} agreement</Cell>
+              <Cell>{a.athlete?.fullName ?? 'Client'} · {a.scope === 'both' ? 'playing and marketing' : a.scope} agreement</Cell>
               <Cell muted>Expires {day(a.expiresAt)}</Cell>
             </Row>
           ))}
