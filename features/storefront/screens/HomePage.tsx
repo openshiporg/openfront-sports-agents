@@ -15,14 +15,22 @@ export default async function HomePage() {
   const sports = [...new Set(athletes.map((a) => a.sport).filter(Boolean) as string[])].map((s) => s.toLowerCase())
   return (
     <Shell name={name} mark={<StoreLogoMark />}>
-      <h1 className="max-w-3xl text-balance text-3xl font-semibold tracking-tight md:text-5xl">
-        {athletes.length
-          ? <>{name || 'We'} {name ? 'represents' : 'represent'} {athletes.length} {athletes.length === 1 ? 'athlete' : 'athletes'}{sports.length ? ` in ${list(sports)}` : ''}.</>
-          : name || 'Athletes'}
-      </h1>
-      <p className="mt-4 max-w-xl text-zinc-700">
-        Working for a brand? Open an athlete to send their agent a partnership inquiry. Clients can <Link href="/invoice" className="link">pay a commission invoice</Link> here.
-      </p>
+      <section className="relative isolate overflow-hidden rounded-3xl bg-zinc-950 text-white">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/storefront/arena.webp" alt="" width={1600} height={900} loading="eager" className="absolute inset-0 -z-10 size-full object-cover" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-zinc-950/90 via-zinc-950/55 to-zinc-950/20 md:bg-gradient-to-r md:from-zinc-950/90 md:via-zinc-950/55 md:to-transparent" />
+        <div className="flex min-h-[24rem] max-w-2xl flex-col justify-end p-6 md:min-h-[28rem] md:justify-center md:p-10">
+          <h1 className="text-balance text-3xl font-semibold tracking-tight md:text-5xl">
+            {athletes.length
+              ? <>{name || 'We'} {name ? 'represents' : 'represent'} {athletes.length} {athletes.length === 1 ? 'athlete' : 'athletes'}{sports.length ? ` in ${list(sports)}` : ''}.</>
+              : name || 'Athletes'}
+          </h1>
+          <p className="mt-4 max-w-xl text-white/85">
+            Working for a brand? Open an athlete to send their agent a partnership inquiry. Clients can <Link href="/invoice" className="underline underline-offset-4">pay a commission invoice</Link> here.
+          </p>
+          {athletes.length > 0 && <a href="#athletes" className="mt-6 inline-flex min-h-11 w-fit items-center rounded-full bg-white px-5 text-sm font-semibold text-zinc-950">Meet the athletes</a>}
+        </div>
+      </section>
 
       <section id="athletes" aria-label="Athletes" className="mt-10 scroll-mt-6">
         {athletes.length ? (
